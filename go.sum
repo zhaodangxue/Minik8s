@@ -1,0 +1,8 @@
+github.com/coreos/go-iptables v0.7.0 h1:XWM3V+MPRr5/q51NuWSgU0fqMad64Zyxs8ZUoMsamr8=
+github.com/coreos/go-iptables v0.7.0/go.mod h1:Qe8Bv2Xik5FyTXwgIbLAnv2sWSBmvWdFETJConOQ//Q=
+github.com/hkwi/nlgo v0.0.0-20190926025335-08733afbfe04 h1:ArIHyC4mGVtYm0TXokco7Wso/3Wi5Y3PDynuOerN+Ag=
+github.com/hkwi/nlgo v0.0.0-20190926025335-08733afbfe04/go.mod h1:z3bABi4Q8MMLVkhLL04UCskrf2E443dPg9r6emBerDE=
+github.com/mqliang/libipvs v0.0.0-20230109035226-02d9e44c145f h1:aEwU3fptRKvkKnNPfgIGcuj8caeyLWGlxIODyBK4M6I=
+github.com/mqliang/libipvs v0.0.0-20230109035226-02d9e44c145f/go.mod h1:VDjnvZsf2OSVauwMzKFTOZXysFgrptwSFqLRElTYEtE=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
