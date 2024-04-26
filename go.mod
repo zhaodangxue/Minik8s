@@ -4,6 +4,9 @@ go 1.22.2
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/hkwi/nlgo v0.0.0-20190926025335-08733afbfe04 // indirect
+	github.com/mqliang/libipvs v0.0.0-20230109035226-02d9e44c145f
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.62.1
 	k8s.io/cri-api v0.30.0-alpha.3
