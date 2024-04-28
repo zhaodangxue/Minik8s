@@ -15,19 +15,49 @@ func getContext() context.Context {
 	return context.Background()
 }
 
+func getCriGrpcClient() (conn *grpc.ClientConn, err error) {
+	// Create a gRPC client connection
+	conn, err = grpc.Dial("unix:///run/containerd/containerd.sock", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	return
+}
+
+func getRuntimeServiceClient() (runtimeServiceClient cri.RuntimeServiceClient, err error) {
+	// Create a gRPC client connection
+	conn, err := getCriGrpcClient();
+	if err != nil {
+		return
+	}
+	// Create the runtime service client using the gRPC client connection
+	runtimeServiceClient = cri.NewRuntimeServiceClient(conn)
+	return
+}
+
+func getImageServiceClient() (imageSeviceClient cri.ImageServiceClient, err error) {
+	// Create a gRPC client connection
+	conn, err := getCriGrpcClient();
+	if err != nil {
+		return
+	}
+	// Create the runtime service client using the gRPC client connection
+	imageSeviceClient = cri.NewImageServiceClient(conn)
+	return
+}
+
 func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 
 	// Parameters
 	ctx := getContext()
 
-	// Create a gRPC client connection
-	conn, err := grpc.Dial("unix:///run/containerd/containerd.sock", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	runtimeServiceClient, err := getRuntimeServiceClient()
 	if err != nil {
+		utils.Error("getRuntimeServiceClient error:", err)
 		return
 	}
-	// Create the runtime service client using the gRPC client connection
-	runtimeServiceClient := cri.NewRuntimeServiceClient(conn)
-	imageSeviceClient := cri.NewImageServiceClient(conn)
+	imageSeviceClient, err := getImageServiceClient()
+	if err != nil {
+		utils.Error("getImageServiceClient error:", err)
+		return
+	}
 
 	// Create a pod sandbox
 	sandboxConfig := cri.PodSandboxConfig{
@@ -90,4 +120,25 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 	}
 
 	return
+}
+
+func GetPodInfo() {
+	
+	// Parameters
+	ctx := getContext()
+
+	runtimeServiceClient, err := getRuntimeServiceClient()
+	if err != nil {
+		utils.Error("getRuntimeServiceClient error:", err)
+		return
+	}
+
+	// List all pods
+	listRequest := &cri.ListPodSandboxRequest{}
+	response, err := runtimeServiceClient.ListPodSandbox(ctx, listRequest)
+	if err != nil {
+		utils.Error("ListPodSandbox error:", err)
+		return
+	}
+	utils.Info("Pods:", response.Items)
 }
