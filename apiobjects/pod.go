@@ -1,8 +1,7 @@
 package apiobjects
 
 type Pod struct {
-	TypeMeta
-	ObjectMeta
+	Object
 	Spec PodSpec
 	Status PodState
 }
