@@ -41,11 +41,12 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 		Config: &sandboxConfig,
 	}
 	response, err := runtimeServiceClient.RunPodSandbox(ctx, runRequest)
-	PodSandboxID = response.PodSandboxId
+	//PodSandboxID = response.PodSandboxId
 	if err != nil {
 		utils.Error("RunPodSandbox error:", err)
 		return
 	}
+	PodSandboxID = response.PodSandboxId
 	utils.Info("Pod sandbox created with ID:", PodSandboxID)
 
 	// Create containers
