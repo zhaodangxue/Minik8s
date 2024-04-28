@@ -2,7 +2,6 @@ package listwatch
 
 import (
 	"context"
-	"fmt"
 	"minik8s/global"
 
 	"github.com/go-redis/redis/v8"
@@ -13,18 +12,16 @@ import (
 //		Password: "",
 //		DB: 0,
 //	})
-func Init() {
-	var client = redis.NewClient(&redis.Options{
-		Addr:     global.Host + ":6379",
-		Password: "",
-		DB:       0,
-	})
-	//检查redis是否连接成功
-	err := client.Ping(context.Background()).Err()
-	if err != nil {
-		//连接失败
-		fmt.Println("redis connect failed")
-		return
-	}
-	fmt.Println("redis connect success")
+var ctx = context.Background()
+var client = redis.NewClient(&redis.Options{
+	Addr:     global.Host + ":6379",
+	Password: "",
+	DB:       0,
+})
+
+func Subscribe(topic string) *redis.PubSub {
+	return client.Subscribe(ctx, topic)
+}
+func Publish(topic string, message string) {
+	client.Publish(ctx, topic, message)
 }

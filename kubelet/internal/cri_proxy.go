@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"minik8s/apiobjects"
-
 	"minik8s/utils"
 
 	"google.golang.org/grpc"
@@ -19,7 +18,7 @@ func getContext() context.Context {
 func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 
 	// Parameters
-	ctx := getContext();
+	ctx := getContext()
 
 	// Create a gRPC client connection
 	conn, err := grpc.Dial("unix:///run/containerd/containerd.sock", grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -29,7 +28,6 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 	// Create the runtime service client using the gRPC client connection
 	runtimeServiceClient := cri.NewRuntimeServiceClient(conn)
 	imageSeviceClient := cri.NewImageServiceClient(conn)
-
 
 	// Create a pod sandbox
 	sandboxConfig := cri.PodSandboxConfig{
@@ -77,8 +75,8 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 			},
 		}
 		createContainerRequest := &cri.CreateContainerRequest{
-			PodSandboxId: PodSandboxID,
-			Config:       &containerConfig,
+			PodSandboxId:  PodSandboxID,
+			Config:        &containerConfig,
 			SandboxConfig: &sandboxConfig,
 		}
 		containerID, err1 := runtimeServiceClient.CreateContainer(ctx, createContainerRequest)
@@ -90,5 +88,5 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 		utils.Info("Container created with ID:", containerID)
 	}
 
-	return 
+	return
 }
