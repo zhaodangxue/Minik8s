@@ -1,0 +1,3 @@
+该文件夹下为apiobject对应的.yaml文件例子，演示其格式和内容
+
+实际中运行中没有对应.yaml文件的apiobject，如node，其例子将以两道下划线开头

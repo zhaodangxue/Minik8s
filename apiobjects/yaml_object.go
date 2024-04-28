@@ -1,5 +1,5 @@
 package apiobjects
 
-type yaml_object interface {
+type YamlObject interface {
 	
 }

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Node
+metadata:
+  name: node-1
+  namespace: minik8s-system # this object is not an end user object, so it is placed in the minik8s-system namespace
+  labels:
+    device: gpu
+    location: rack-1
+info:
+  ip: 10.0.0.0
+status:
+  state: healthy

@@ -1,5 +1,4 @@
-// Description: This file contains the definition of the Object, ObjectMeta, ObjectRef and TypeMeta structs.
-// These structs are used to define the basic structure of the objects that are used in the Kubernetes API.
+// Description: 定义了Kubernetes API对象的基本结构。
 package apiobjects
 
 import "time"
@@ -18,6 +17,10 @@ type ObjectMeta struct {
 	DeletionTimestamp time.Time
 }
 
+// Object is the base struct for all objects in the Kubernetes API.
+// 包含TypeMeta和ObjectMeta
+// 可以使用GetObjectRef从Object中获取ObjectRef。
+// 可以使用GetObjectPath获取Object的路径。
 type Object struct {
 	TypeMeta
 	ObjectMeta
@@ -36,6 +39,8 @@ func (obj *Object) GetObjectPath() string {
 	return obj.ApiVersion + "/" + obj.Kind + "/" + obj.Namespace + "/" + obj.Name
 }
 
+// 可以唯一标识一个对象的引用。
+// 可以使用GetObjectPath获取对象的路径。
 type ObjectRef struct {
 	TypeMeta
 	Name      string
