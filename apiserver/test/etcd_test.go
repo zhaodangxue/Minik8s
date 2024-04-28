@@ -11,6 +11,6 @@ import (
 func TestEtcd(t *testing.T) {
 	fmt.Println("TestEtcd")
 	var err error
-	err = etcd.Put("test1", "test-1")
+	err = etcd.Put("test2", "test-2")
 	assert.Nil(t, err)
 }
