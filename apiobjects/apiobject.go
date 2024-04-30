@@ -1,3 +1,4 @@
+// Description: 定义了Kubernetes API对象的基本结构。
 package apiobjects
 
 import "time"
@@ -10,8 +11,43 @@ type TypeMeta struct {
 type ObjectMeta struct {
 	Name string
 	Namespace string
-	Labels map[string]string
 	UID string
+	Labels map[string]string
 	CreationTimestamp time.Time
 	DeletionTimestamp time.Time
+}
+
+// Object is the base struct for all objects in the Kubernetes API.
+// 包含TypeMeta和ObjectMeta
+// 可以使用GetObjectRef从Object中获取ObjectRef。
+// 可以使用GetObjectPath获取Object的路径。
+type Object struct {
+	TypeMeta
+	ObjectMeta
+}
+
+func (obj *Object) GetObjectRef() ObjectRef {
+	return ObjectRef{
+		TypeMeta: obj.TypeMeta,
+		Name: obj.Name,
+		Namespace: obj.Namespace,
+		UID: obj.UID,
+	}
+}
+
+func (obj *Object) GetObjectPath() string {
+	return obj.ApiVersion + "/" + obj.Kind + "/" + obj.Namespace + "/" + obj.Name
+}
+
+// 可以唯一标识一个对象的引用。
+// 可以使用GetObjectPath获取对象的路径。
+type ObjectRef struct {
+	TypeMeta
+	Name      string
+	Namespace string
+	UID       string
+}
+
+func (ref *ObjectRef) GetObjectPath() string {
+	return ref.ApiVersion + "/" + ref.Kind + "/" + ref.Namespace + "/" + ref.Name
 }

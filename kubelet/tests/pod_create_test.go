@@ -10,17 +10,19 @@ import (
 
 func TestPodCreate(t *testing.T) {
 	pod := apiobjects.Pod{
-		TypeMeta: apiobjects.TypeMeta{
-			ApiVersion: "v1",
-			Kind:       "Pod",
-		},
-		ObjectMeta: apiobjects.ObjectMeta{
-			Name:      "test-pod",
-			Namespace: "default",
-			Labels: map[string]string{
-				"app": "test",
+		Object: apiobjects.Object{
+			TypeMeta: apiobjects.TypeMeta{
+				ApiVersion: "v1",
+				Kind:       "Pod",
 			},
-			UID: uuid.New().String(),
+			ObjectMeta: apiobjects.ObjectMeta{
+				Name:      "test-pod",
+				Namespace: "default",
+				Labels: map[string]string{
+					"app": "test",
+				},
+				UID: uuid.New().String(),
+			},
 		},
 		Spec: apiobjects.PodSpec{
 			Containers: []apiobjects.Container{
