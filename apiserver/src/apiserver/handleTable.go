@@ -10,5 +10,14 @@ import (
 type HandlerFunc = gin.HandlerFunc
 
 var PostTable = map[string]HandlerFunc{
-	route.TestPath: handler.TestHandler,
+	route.TestPostPath: handler.TestPostHandler,
+}
+var GetTable = map[string]HandlerFunc{
+	route.TestGetPath: handler.TestGetHandler,
+}
+var PutTable = map[string]HandlerFunc{
+	route.TestPutPath: handler.TestPutHandler,
+}
+var DeleteTable = map[string]HandlerFunc{
+	route.TestDeletePath: handler.TestDeleteHandler,
 }

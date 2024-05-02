@@ -26,6 +26,15 @@ func (a *apiServer) BindHandler() {
 	for URL, handler := range PostTable {
 		a.router.POST(URL, handler)
 	}
+	for URL, handler := range GetTable {
+		a.router.GET(URL, handler)
+	}
+	for URL, handler := range PutTable {
+		a.router.PUT(URL, handler)
+	}
+	for URL, handler := range DeleteTable {
+		a.router.DELETE(URL, handler)
+	}
 }
 func (a *apiServer) Watch() {
 	go listwatch.Watch(global.TestTopic(), SyncTest)
