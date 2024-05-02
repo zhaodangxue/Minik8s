@@ -14,9 +14,16 @@ Binding对象用于将Pod绑定到Node。
 - 当Pod被调度到其他Node上时，Scheduler会请求ApiServer删除旧的Binding对象，将Pod绑定到新的Node上。
 
 - 当ApiServer发现节点下线时，会删除所有与该节点相关的Binding对象。
+
+约束条件：
+
+- 同一个Pod同时最多只能对应一个Binding对象。
+  
+  因此，Binding对象的Name字段应该是Pod的Path。
+
 */
 type NodePodBinding struct {
 	Object
 	Node ObjectRef
-	Pod  ObjectRef
+	Pod  Pod
 }
