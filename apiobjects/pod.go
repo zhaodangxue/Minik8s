@@ -1,21 +1,21 @@
 package apiobjects
 
 type Pod struct {
-	Object
-	Spec PodSpec
-	Status PodState
+	Object `yaml:",inline"`
+	Spec   PodSpec  `yaml:"spec"`
+	Status PodState `yaml:"-"`
 }
 
 type PodSpec struct {
-	Containers []Container
-	Volumes []Volume
+	Containers []Container `yaml:"containers"`
+	Volumes    []Volume    `yaml:"volumes"`
 }
 
 type PodState struct {
 	PodPhase PodPhase
 	// TODO: conditions
 	HostIP string
-	PodIP string
+	PodIP  string
 }
 
 type PodPhase string
