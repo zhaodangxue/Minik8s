@@ -1,10 +1,9 @@
 package apiobjects
 
 type Node struct {
-	TypeMeta   `yaml:",inline"`
-	ObjectMeta `yaml:"metadata"`
-	Info       NodeInfo   `yaml:"info"`
-	Status     NodeStatus `yaml:"status"`
+	Object `yaml:",inline"`
+	Info   NodeInfo   `yaml:"info"`
+	Status NodeStatus `yaml:"status"`
 }
 
 type NodeInfo struct {
@@ -12,7 +11,9 @@ type NodeInfo struct {
 }
 
 type NodeStatus struct {
-	State string `yaml:"state"`
+	State      string  `yaml:"state"`
+	CpuPercent float64 `yaml:"-"`
+	MemPercent float64 `yaml:"-"`
 }
 
 const (

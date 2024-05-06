@@ -1,7 +1,10 @@
 // Description: 定义了Kubernetes API对象的基本结构。
 package apiobjects
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type TypeMeta struct {
 	ApiVersion string `yaml:"apiVersion"`
@@ -34,9 +37,8 @@ func (obj *Object) GetObjectRef() ObjectRef {
 		UID:       obj.UID,
 	}
 }
-
 func (obj *Object) GetObjectPath() string {
-	return obj.ApiVersion + "/" + obj.Kind + "/" + obj.Namespace + "/" + obj.Name
+	return "/api" + "/" + strings.ToLower(obj.Kind) + "/" + obj.Namespace + "/" + obj.Name
 }
 
 // 可以唯一标识一个对象的引用。

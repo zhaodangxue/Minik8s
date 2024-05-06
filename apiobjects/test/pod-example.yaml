@@ -30,3 +30,5 @@ spec:
     - name: volume
       hostPath:
         path: /pod
+  nodeSelector:
+    app: myApp

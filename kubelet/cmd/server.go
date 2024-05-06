@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"minik8s/apiobjects"
 	"minik8s/global"
+	"minik8s/kubelet/internal"
 	"minik8s/listwatch"
 	"minik8s/utils"
-	"minik8s/kubelet/internal"
 	"time"
-
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -18,25 +17,39 @@ type kubeletServer struct {
 	Node apiobjects.Node
 	// NodePodBindings 用于存放Node和Pod的绑定关系
 	// key: NodePodBinding.Name
-	Bindings map[string]apiobjects.NodePodBinding
+	Bindings      map[string]apiobjects.NodePodBinding
 	PodCreateChan chan apiobjects.Pod
 }
 
 var server kubeletServer = kubeletServer{}
 
-func serverInit(){
+func serverInit() {
 	server.Node = apiobjects.Node{
-		TypeMeta: apiobjects.TypeMeta{
-			ApiVersion: global.ApiVersion,
-			Kind: "Node",
-		},
-		ObjectMeta: apiobjects.ObjectMeta{
-			Name: "",
-			Namespace: global.SystemNamespace,
-			UID: uuid.NewString(),
-			Labels: map[string]string{},
-			CreationTimestamp: time.Now(),
-			DeletionTimestamp: time.Time{},
+		// TypeMeta: apiobjects.TypeMeta{
+		// 	ApiVersion: global.ApiVersion,
+		// 	Kind:       "Node",
+		// },
+		// ObjectMeta: apiobjects.ObjectMeta{
+		// 	Name:              "",
+		// 	Namespace:         global.SystemNamespace,
+		// 	UID:               uuid.NewString(),
+		// 	Labels:            map[string]string{},
+		// 	CreationTimestamp: time.Now(),
+		// 	DeletionTimestamp: time.Time{},
+		// },
+		Object: apiobjects.Object{
+			TypeMeta: apiobjects.TypeMeta{
+				ApiVersion: global.ApiVersion,
+				Kind:       "Node",
+			},
+			ObjectMeta: apiobjects.ObjectMeta{
+				Name:              "",
+				Namespace:         global.SystemNamespace,
+				UID:               uuid.NewString(),
+				Labels:            map[string]string{},
+				CreationTimestamp: time.Now(),
+				DeletionTimestamp: time.Time{},
+			},
 		},
 		Info: apiobjects.NodeInfo{
 			Ip: utils.GetLocalIP(),
@@ -57,14 +70,14 @@ func serverInit(){
 func onBingdingUpdate(message *redis.Message) {
 	binding := apiobjects.NodePodBinding{}
 	err := json.Unmarshal([]byte(message.Payload), &binding)
-	if err != nil{
+	if err != nil {
 		utils.Error("kubelet:onBingdingUpdate err=", err)
 		return
 	}
 
 	// OPT: 可以通过为每个Node设置不同的BindingTopic，减少不必要的消息处理
-	if binding.Node.Name != server.Node.Name {
-		utils.Warn("kubelet:onBingdingUpdate node not match, binding.Node.Name=", binding.Node.Name)
+	if binding.Node.ObjectMeta.Name != server.Node.Name {
+		utils.Warn("kubelet:onBingdingUpdate node not match, binding.Node.Name=", binding.Node.ObjectMeta.Name)
 		return
 	}
 
@@ -73,7 +86,7 @@ func onBingdingUpdate(message *redis.Message) {
 		return
 	}
 
-	server.Bindings[binding.Name] = binding
+	server.Bindings[binding.Name()] = binding
 	utils.Info("kubelet:onBingdingUpdate binding=", binding)
 
 	server.PodCreateChan <- binding.Pod
@@ -83,7 +96,7 @@ func podCreateHandler(pod apiobjects.Pod) {
 	// FIXME: 考虑多线程同步
 	utils.Info("kubelet:podCreateHandler pod=", pod)
 
-	internal.CreatePod(pod);
+	internal.CreatePod(pod)
 
 	// TODO: 通知apiserver更新pod状态
 }

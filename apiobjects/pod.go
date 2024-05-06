@@ -7,8 +7,9 @@ type Pod struct {
 }
 
 type PodSpec struct {
-	Containers []Container `yaml:"containers"`
-	Volumes    []Volume    `yaml:"volumes"`
+	Containers   []Container       `yaml:"containers"`
+	Volumes      []Volume          `yaml:"volumes"`
+	NodeSelector map[string]string `yaml:"nodeSelector"`
 }
 
 type PodState struct {
