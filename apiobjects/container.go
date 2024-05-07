@@ -1,18 +1,18 @@
 package apiobjects
 
 type Container struct {
-	Name string
-	Image string
-	Ports []ContainerPort
-	VolumeMounts []VolumeMount
+	Name         string          `yaml:"name"`
+	Image        string          `yaml:"image"`
+	Ports        []ContainerPort `yaml:"ports"`
+	VolumeMounts []VolumeMount   `yaml:"volumeMounts"`
 }
 
 type ContainerPort struct {
-	ContainerPort int32
-	HostPort int32
+	ContainerPort int32 `yaml:"containerPort"`
+	HostPort      int32 `yaml:"hostPort"`
 }
 
 type VolumeMount struct {
-	Name string
-	MountPath string
+	Name      string `yaml:"name"`
+	MountPath string `yaml:"mountPath"`
 }

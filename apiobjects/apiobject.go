@@ -1,20 +1,23 @@
 // Description: 定义了Kubernetes API对象的基本结构。
 package apiobjects
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type TypeMeta struct {
-	ApiVersion string
-	Kind string
+	ApiVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
 }
 
 type ObjectMeta struct {
-	Name string
-	Namespace string
-	UID string
-	Labels map[string]string
-	CreationTimestamp time.Time
-	DeletionTimestamp time.Time
+	Name              string            `yaml:"name"`
+	Namespace         string            `yaml:"namespace"`
+	UID               string            `yaml:"uid"`
+	Labels            map[string]string `yaml:"labels"`
+	CreationTimestamp time.Time         `yaml:"-"`
+	DeletionTimestamp time.Time         `yaml:"-"`
 }
 
 // Object is the base struct for all objects in the Kubernetes API.
@@ -22,21 +25,20 @@ type ObjectMeta struct {
 // 可以使用GetObjectRef从Object中获取ObjectRef。
 // 可以使用GetObjectPath获取Object的路径。
 type Object struct {
-	TypeMeta
-	ObjectMeta
+	TypeMeta   `yaml:",inline"`
+	ObjectMeta `yaml:"metadata"`
 }
 
 func (obj *Object) GetObjectRef() ObjectRef {
 	return ObjectRef{
-		TypeMeta: obj.TypeMeta,
-		Name: obj.Name,
+		TypeMeta:  obj.TypeMeta,
+		Name:      obj.Name,
 		Namespace: obj.Namespace,
-		UID: obj.UID,
+		UID:       obj.UID,
 	}
 }
-
 func (obj *Object) GetObjectPath() string {
-	return obj.ApiVersion + "/" + obj.Kind + "/" + obj.Namespace + "/" + obj.Name
+	return "/api" + "/" + strings.ToLower(obj.Kind) + "/" + obj.Namespace + "/" + obj.Name
 }
 
 // 可以唯一标识一个对象的引用。
@@ -50,4 +52,17 @@ type ObjectRef struct {
 
 func (ref *ObjectRef) GetObjectPath() string {
 	return ref.ApiVersion + "/" + ref.Kind + "/" + ref.Namespace + "/" + ref.Name
+}
+
+type Base_test struct {
+	ApiVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
+}
+type TestYaml struct {
+	Base_test `yaml:",inline"`
+	Spec      test_spec `yaml:"spec"`
+}
+type test_spec struct {
+	Replicas int32  `yaml:"replicas"`
+	Name     string `yaml:"name"`
 }

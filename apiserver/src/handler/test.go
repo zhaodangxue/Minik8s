@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/utils"
 	"net/http"
@@ -88,4 +89,41 @@ func TestDeleteHandler(c *gin.Context) {
 	etcd.Delete(path)
 	c.String(http.StatusOK, "delete TestBody uuid:%s name:%s success", uid, name)
 	fmt.Println("test-delete-success")
+}
+func TestCtlHandler(c *gin.Context) {
+	fmt.Println("test-ctl")
+	obj := apiobjects.TestYaml{}
+	err := utils.ReadUnmarshal(c.Request.Body, &obj)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	var TestJson []byte
+	TestJson, err = json.Marshal(obj)
+	if err != nil {
+		fmt.Println(err)
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	etcd.Put("/test/ctl", string(TestJson))
+	c.String(http.StatusOK, "ok")
+	fmt.Println("test-ctl-success")
+}
+func TestCtlGetHandler(c *gin.Context) {
+	fmt.Println("test-ctl-get")
+	value, _ := etcd.Get("/test/ctl")
+	var TestJson apiobjects.TestYaml
+	err := json.Unmarshal([]byte(value), &TestJson)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, TestJson)
+	fmt.Println("test-ctl-get-success")
+}
+func TestCtlDeleteHandler(c *gin.Context) {
+	fmt.Println("test-ctl-delete")
+	etcd.Delete("/test/ctl")
+	c.String(http.StatusOK, "delete TestYaml success")
+	fmt.Println("test-ctl-delete-success")
 }

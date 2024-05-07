@@ -18,12 +18,17 @@ Binding对象用于将Pod绑定到Node。
 约束条件：
 
 - 同一个Pod同时最多只能对应一个Binding对象。
-  
-  因此，Binding对象的Name字段应该是Pod的Path。
 
+	因此，Binding对象的Name字段应该是Pod的Path。
 */
 type NodePodBinding struct {
-	Object
-	Node ObjectRef
+	Node Node
 	Pod  Pod
+}
+
+func (npd *NodePodBinding) GetBindingPath() string {
+	return "/api" + "/binding" + "/" + npd.Pod.Namespace + "/" + npd.Pod.Name + "/" + npd.Node.ObjectMeta.Name
+}
+func (npd *NodePodBinding) Name() string {
+	return npd.GetBindingPath()
 }

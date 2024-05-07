@@ -7,8 +7,6 @@ import (
 	"minik8s/listwatch"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var apiServer apiserver.ApiServer
@@ -16,15 +14,9 @@ var apiServer apiserver.ApiServer
 func TestRedis(t *testing.T) {
 	fmt.Println("TestRedis")
 	apiServer = apiserver.New()
-	flag := make(chan bool)
-	go apiServer.RUN(flag)
+	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	a := false
-	a = <-flag
-	assert.Equal(t, true, a)
-	if a {
-		fmt.Println("apiServer is running")
-		listwatch.Publish(global.TestTopic(), "test-111")
-	}
+	fmt.Println("apiServer is running")
+	listwatch.Publish(global.TestTopic(), "test-111")
 	time.Sleep(3 * time.Second)
 }

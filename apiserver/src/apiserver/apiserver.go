@@ -1,6 +1,7 @@
 package apiserver
 
 import (
+	"fmt"
 	"log"
 	"minik8s/global"
 	"minik8s/listwatch"
@@ -9,10 +10,11 @@ import (
 )
 
 type ApiServer interface {
-	RUN(flag chan bool)
+	RUN()
 }
 
 func New() ApiServer {
+
 	return &apiServer{
 		router: gin.Default(),
 	}
@@ -44,10 +46,10 @@ func (a *apiServer) Watch() {
 //		ig := ipgen.New(url, mask)
 //		return ig.ClearIfNotInit(ip)
 //	}
-func (a *apiServer) RUN(flag chan bool) {
+func (a *apiServer) RUN() {
 	a.router = gin.Default()
 	a.BindHandler()
 	a.Watch()
-	flag <- true
+	fmt.Println("apiServer is running")
 	log.Fatal(a.router.Run(":8080"))
 }

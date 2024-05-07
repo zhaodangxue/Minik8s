@@ -1,6 +1,6 @@
 package global
 
-const Host = "10.119.13.140"
+const Host = "106.15.10.160"
 
 const ApiVersion = "v1"
 
