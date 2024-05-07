@@ -27,8 +27,8 @@ type NodePodBinding struct {
 }
 
 func (npd *NodePodBinding) GetBindingPath() string {
-	return "/api" + "/binding" + "/" + npd.Pod.Namespace + "/" + npd.Pod.Name + "/" + npd.Node.ObjectMeta.Name
+	return "/api" + "/binding" + "/" + npd.Pod.Namespace + "/" + npd.Pod.Name
 }
 func (npd *NodePodBinding) Name() string {
-	return npd.GetBindingPath()
+	return npd.GetBindingPath() + "/" + npd.Node.ObjectMeta.Name
 }

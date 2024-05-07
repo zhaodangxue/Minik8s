@@ -68,7 +68,7 @@ func TestScheduler(t *testing.T) {
 	node2.ObjectMeta.Namespace = "minik8s-system"
 	node2.TypeMeta.Kind = "Node"
 	node1.Status.CpuPercent = 0.5
-	node2.Status.CpuPercent = 0.3
+	node2.Status.CpuPercent = 0.6
 	url_node1 := node1.Object.GetObjectPath()
 	url_node2 := node2.Object.GetObjectPath()
 	node1_JSON, _ := json.Marshal(node1)
@@ -111,5 +111,5 @@ func TestScheduler(t *testing.T) {
 	assert.Equal(t, 1, len(val))
 	var binding apiobjects.NodePodBinding
 	json.Unmarshal([]byte(val[0]), &binding)
-	assert.Equal(t, "node2", binding.Node.ObjectMeta.Name)
+	assert.Equal(t, "node1", binding.Node.ObjectMeta.Name)
 }

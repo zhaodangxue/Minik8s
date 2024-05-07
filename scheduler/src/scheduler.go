@@ -79,13 +79,13 @@ func (s *scheduler) Schedule(pod *apiobjects.Pod) error {
 		return fmt.Errorf("no available node satisfy strategy")
 	}
 	s.SendScheduleInfoToApiServer(pod, node)
-	binding := apiobjects.NodePodBinding{
-		Node: *node,
-		Pod:  *pod,
-	}
-	updateMsg, _ := json.Marshal(binding)
-	topics := global.PodUpdateTopic(*pod)
-	listwatch.Publish(topics, string(updateMsg))
+	// binding := apiobjects.NodePodBinding{
+	// 	Node: *node,
+	// 	Pod:  *pod,
+	// }
+	// updateMsg, _ := json.Marshal(binding)
+	// topics := global.PodUpdateTopic(*pod)
+	// listwatch.Publish(topics, string(updateMsg))
 	fmt.Printf("schedule pod %s to node %s\n", pod.ObjectMeta.Name, node.ObjectMeta.Name)
 	return nil
 }

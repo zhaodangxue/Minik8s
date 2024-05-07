@@ -6,6 +6,19 @@ import (
 	"time"
 )
 
+type ActionType byte
+
+const (
+	Create ActionType = iota //从0开始，依次加1
+	Update
+	Delete
+)
+
+type TopicMessage struct {
+	ActionType ActionType
+	Object     string
+}
+
 type TypeMeta struct {
 	ApiVersion string `yaml:"apiVersion"`
 	Kind       string `yaml:"kind"`
