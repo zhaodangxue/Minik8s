@@ -9,6 +9,7 @@ import (
 	"minik8s/listwatch"
 	"minik8s/utils"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,5 +46,29 @@ func NodePodBindingHandler(c *gin.Context) {
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.BindingTopic(), string(topicMessageJson))
+	c.String(http.StatusOK, "ok")
+}
+func PodApplyHandler(c *gin.Context) {
+	pod := apiobjects.Pod{}
+	err := utils.ReadUnmarshal(c.Request.Body, &pod)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	if pod.ObjectMeta.Namespace == "" {
+		pod.ObjectMeta.Namespace = global.DefaultNamespace
+	}
+	url_pod := pod.GetObjectPath()
+	val, _ := etcd.Get(url_pod)
+	if val != "" {
+		c.String(http.StatusOK, "pod already exists")
+		return
+	}
+	pod.ObjectMeta.UID = utils.NewUUID()
+	pod.CreationTimestamp = time.Now()
+	podJson, _ := json.Marshal(pod)
+	etcd.Put(url_pod, string(podJson))
+	fmt.Printf("receive pod name: %s namespace: %s uuid: %s", pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, pod.ObjectMeta.UID)
+	listwatch.Publish(global.SchedulerPodUpdateTopic(), string(podJson))
 	c.String(http.StatusOK, "ok")
 }

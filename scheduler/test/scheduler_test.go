@@ -68,7 +68,7 @@ func TestScheduler(t *testing.T) {
 	node2.ObjectMeta.Namespace = "minik8s-system"
 	node2.TypeMeta.Kind = "Node"
 	node1.Status.CpuPercent = 0.5
-	node2.Status.CpuPercent = 0.6
+	node2.Status.CpuPercent = 0.7
 	url_node1 := node1.Object.GetObjectPath()
 	url_node2 := node2.Object.GetObjectPath()
 	node1_JSON, _ := json.Marshal(node1)

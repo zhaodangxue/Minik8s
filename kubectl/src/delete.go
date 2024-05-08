@@ -24,6 +24,11 @@ func deleteTest() (string, error) {
 	val, err := utils.Delete(url)
 	return val, err
 }
+func deleteSpecifiedPod(np, apiObjName string) (string, error) {
+	url := route.Prefix + route.PodPath + "/" + np + "/" + apiObjName
+	val, err := utils.Delete(url)
+	return val, err
+}
 func RunDelete(cmd *cobra.Command, args []string) {
 	apiObjType := args[0]
 	apiObjName := args[1]
@@ -37,11 +42,30 @@ func RunDelete(cmd *cobra.Command, args []string) {
 			fmt.Println(val)
 		}
 	case "pod":
-		fmt.Printf("Delete pod Name:%s, Namespace:%s", apiObjName, np)
+		var val string
+		val, err = deleteSpecifiedPod(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
 	default:
 		fmt.Println("delete: not support this type")
 	}
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+func RunDelete_test(apiObjType, apiObjName string) error {
+	np := namespace
+	var err error
+	var val string
+	switch apiObjType {
+	case "test":
+		_, err = deleteTest()
+	case "pod":
+		val, err = deleteSpecifiedPod(np, apiObjName)
+		fmt.Println(val)
+	default:
+		fmt.Println("delete: not support this type")
+	}
+	return err
 }

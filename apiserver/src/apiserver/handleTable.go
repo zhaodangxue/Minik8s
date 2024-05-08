@@ -13,11 +13,14 @@ var PostTable = map[string]HandlerFunc{
 	route.TestPostPath:       handler.TestPostHandler,
 	route.TestCtlPath:        handler.TestCtlHandler,
 	route.NodePodBindingPath: handler.NodePodBindingHandler,
+	route.PodPath:            handler.PodApplyHandler,
 }
 var GetTable = map[string]HandlerFunc{
-	route.TestGetPath: handler.TestGetHandler,
-	route.TestCtlPath: handler.TestCtlGetHandler,
-	route.NodePath:    handler.NodeGetHandler,
+	route.TestGetPath:      handler.TestGetHandler,
+	route.TestCtlPath:      handler.TestCtlGetHandler,
+	route.NodePath:         handler.NodeGetHandler,
+	route.PodPathNamespace: handler.PodGetWithNamespaceHandler,
+	route.PodPathDetail:    handler.PodGetDetailHandler,
 }
 var PutTable = map[string]HandlerFunc{
 	route.TestPutPath: handler.TestPutHandler,
@@ -25,4 +28,5 @@ var PutTable = map[string]HandlerFunc{
 var DeleteTable = map[string]HandlerFunc{
 	route.TestDeletePath: handler.TestDeleteHandler,
 	route.TestCtlPath:    handler.TestCtlDeleteHandler,
+	route.PodPathDetail:  handler.PodDeleteHandler,
 }

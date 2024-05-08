@@ -1,7 +1,8 @@
 package apiobjects
 
 type Volume struct {
-	Name string `yaml:"name"`
+	Name         string `yaml:"name"`
+	VolumeSource `yaml:",inline"`
 }
 type VolumeSource struct {
 	EmptyDir *EmptyDirVolumeSource `yaml:"emptyDir"`

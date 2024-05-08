@@ -39,7 +39,15 @@ func RunApply(cmd *cobra.Command, args []string) error {
 		}
 		url := route.Prefix + route.TestCtlPath
 		utils.ApplyApiObject(url, test)
-		// case ctlutils.Pod:
+	case ctlutils.Pod:
+		pod := apiobjects.Pod{}
+		err = yaml.Unmarshal(content, &pod)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.PodPath
+		utils.ApplyApiObject(url, pod)
 		// case ctlutils.Node:
 		// default:
 	}
@@ -62,7 +70,15 @@ func RunApply_test(file_path string) error {
 		}
 		url := route.Prefix + route.TestCtlPath
 		utils.ApplyApiObject(url, test)
-		// case ctlutils.Pod:
+	case ctlutils.Pod:
+		pod := apiobjects.Pod{}
+		err = yaml.Unmarshal(content, &pod)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.PodPath
+		utils.ApplyApiObject(url, pod)
 		// case ctlutils.Node:
 		// default:
 	}
