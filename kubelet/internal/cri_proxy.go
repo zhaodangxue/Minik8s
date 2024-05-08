@@ -66,6 +66,9 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 			Namespace: pod.ObjectMeta.Namespace,
 			Uid:       pod.UID,
 		},
+		Linux: &cri.LinuxPodSandboxConfig{
+			CgroupParent: "/",
+		},
 	}
 	runRequest := &cri.RunPodSandboxRequest{
 		Config: &sandboxConfig,
@@ -136,9 +139,12 @@ func GetPodInfo() {
 	// List all pods
 	listRequest := &cri.ListPodSandboxRequest{}
 	response, err := runtimeServiceClient.ListPodSandbox(ctx, listRequest)
+	listStatRequest := &cri.ListPodSandboxStatsRequest{}
+	response1, err := runtimeServiceClient.ListPodSandboxStats(ctx, listStatRequest)
 	if err != nil {
 		utils.Error("ListPodSandbox error:", err)
 		return
 	}
 	utils.Info("Pods:", response.Items)
+	utils.Info("Pod stats:", response1.Stats)
 }
