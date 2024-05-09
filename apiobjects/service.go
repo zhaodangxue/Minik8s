@@ -2,7 +2,7 @@ package apiobjects
 
 import "encoding/json"
 
-// a sevice struct for k8s service
+// a sevice example for k8s service
 /*
 apiVersion: v1
 kind: Service
@@ -26,13 +26,13 @@ spec:
 type MetaData struct {
 	Name             string            `json:"name,omitempty"`
 	Namespace        string            `json:"namespace,omitempty"`
-	UID              string            `yaml:"uid"`
+	UID              string            `json:"uid,omitempty"` // 一个service的唯一标识
 	Labels           map[string]string `json:"labels,omitempty"`
 }
 
 type Service struct {
 	APIVersion string `json:"apiVersion,omitempty"`
-	Kind       string   `yaml:"kind"`
+	Kind       string   `json:"kind",omitempty`
 	Data MetaData `json:"metadata"`
 
 	// 定义了service的规范

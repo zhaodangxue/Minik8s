@@ -21,7 +21,7 @@ func Run() {
 
 }
 
-/* ========== Start Service Handler ========== */
+/* ========== Service Handler ========== */
 
 type proxyServiceHandler struct {
 }
@@ -44,7 +44,7 @@ func (p proxyServiceHandler) HandleDelete(message []byte) {
 func (p proxyServiceHandler) HandleUpdate(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
-	
+
 	for _, p := range svc.Spec.Ports {
 		ipvs.AddService(svc.Status.ClusterIP, uint16(p.Port))
 	}
@@ -55,7 +55,7 @@ func (p proxyServiceHandler) GetType() string {
 	return "service"
 }
 
-/* ========== Start Endpoint Handler ========== */
+/* ========== Endpoint Handler ========== */
 
 type proxyEndpointHandler struct {
 }
