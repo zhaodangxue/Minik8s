@@ -39,5 +39,5 @@ func (e *Endpoint) UnMarshalJSON(data []byte) error {
 }
 
 func (e *Endpoint) Union(other *Endpoint) {
-	return
+	
 }
