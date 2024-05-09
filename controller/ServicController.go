@@ -43,9 +43,18 @@ func (s svcServiceHandler) HandleCreate(message []byte) {
 
 	//TODO 发送http给apiserver,更新service,带有分配好的cluster ip
 	//utils.SendHttp(utils.HttpMethodPut, "http://apiserver:8080/api/v1/service", svc.MarshalJSON())
+	svcByte,err := svc.MarshalJSON()
+	if err != nil {
+		fmt.Println("error")
+	}
+	response, err :=utils.PostWithString("http://apiserver:8080/api/v1/service/"+svc.Data.Namespace+"/"+svc.Data.Name, string(svcByte))
+	if err != nil{
+		print("create service error")
+	}
+	fmt.Println(response)
 
 	//TODO 遍历pod列表，找到符合selector条件的pod，记录并创建该svc对应的endpoint。
-	//createEndpoints(svc)
+	createEndpointsFromPodList(svc)
 
 	log.Info("[svc controller] Create service. Cluster IP:", svc.Status.ClusterIP)
 }
@@ -58,8 +67,22 @@ func (s svcServiceHandler) HandleDelete(message []byte) {
 	indexLast, _ := strconv.Atoi(index[len(index)-1])
 	print(indexLast)
 	IPMap[indexLast] = false
+    //删除service
+	response, err :=utils.Delete("http://apiserver:8080/api/v1/service/"+svc.Data.Namespace+"/"+svc.Data.Name)
+	if err != nil{
+		print("delete service error")
+	}
+	fmt.Println(response)
 
 	//todo 删除对应的endpoints
+	for _, edpt := range *svcToEndpoints[svc.Status.ClusterIP] {
+		response, err :=utils.Delete("http://apiserver:8080/api/v1/endpoint/"+edpt.Data.Namespace+"/"+edpt.Data.Name)
+		if err != nil{
+			print("delete endpoints error")
+		}
+		fmt.Println(response)
+	}
+	delete(svcToEndpoints, svc.Status.ClusterIP)
 
 
 	log.Info("[svc controller] Delete service. Cluster IP:", svc.Status.ClusterIP)
@@ -75,7 +98,16 @@ func (s svcServiceHandler) HandleUpdate(message []byte) {
 		return
 	}
 	//TODO检查标签是否更改。如果是，则删除旧的endpoints并添加新的endpoints
-	
+	if !IsLabelEqual(oldSvc.Spec.Selector, svc.Spec.Selector) {
+		for _, edpt := range *svcToEndpoints[svc.Status.ClusterIP] {
+			response, err :=utils.Delete("http://apiserver:8080/api/v1/endpoint/"+edpt.Data.Namespace+"/"+edpt.Data.Name)
+			if err != nil{
+				print("delete endpoints error")
+			}
+			fmt.Println(response)
+		}
+		createEndpointsFromPodList(svc)
+	}
 
 	svcList[svc.Status.ClusterIP] = svc
 	log.Info("[svc controller] Update service. Cluster IP:", svc.Status.ClusterIP)
@@ -97,4 +129,26 @@ func allocateClusterIP() string {
 	}
 	log.Fatal("[svc controller] Cluster IP used up!")
 	return ""
+}
+
+func createEndpointsFromPodList(svc *apiobjects.Service) {
+	//从apiserver获取pod列表
+    //podList, err := utils.GetPodList()    
+
+	var edptList []*apiobjects.Endpoint
+	// for _, p := range podList {
+    //     //筛选符合selector条件的pod
+	// }
+
+	//更新service对应的endpoints
+	svcToEndpoints[svc.Status.ClusterIP] = &edptList
+}
+
+func IsLabelEqual(a map[string]string, b map[string]string) bool {
+	for k, v := range a {
+		if b[k] != v {
+			return false
+		}
+	}
+	return true
 }

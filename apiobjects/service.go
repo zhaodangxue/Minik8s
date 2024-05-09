@@ -32,7 +32,6 @@ type MetaData struct {
 
 type Service struct {
 	APIVersion string `json:"apiVersion,omitempty"`
-	Kind       string   `json:"kind",omitempty`
 	Data MetaData `json:"metadata"`
 
 	// 定义了service的规范

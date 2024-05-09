@@ -8,7 +8,6 @@ import (
 func TestService(t *testing.T) {
 	service := &Service{
 		APIVersion: "app/v1",
-		Kind: 	 "Service",
 		Data: MetaData{
 			Name: "dns-service",
 		},
