@@ -37,11 +37,12 @@ func (s svcServiceHandler) HandleCreate(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 
-	// 1. allocate Cluster ip and update service
+	//分配cluster ip，更新serviceList
 	svc.Status.ClusterIP = allocateClusterIP()
 	svcList[svc.Status.ClusterIP] = svc
 
 	//TODO 发送http给apiserver,更新service,带有分配好的cluster ip
+	//utils.SendHttp(utils.HttpMethodPut, "http://apiserver:8080/api/v1/service", svc.MarshalJSON())
 
 	//TODO 遍历pod列表，找到符合selector条件的pod，记录并创建该svc对应的endpoint。
 	//createEndpoints(svc)
