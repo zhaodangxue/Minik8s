@@ -28,6 +28,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("%#v\n", svcs)
+	print("service list is empty\n")
 
 	svc := libipvs.Service{
 		Address:       net.ParseIP("172.192.168.1"),

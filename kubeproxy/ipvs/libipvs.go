@@ -15,15 +15,16 @@ import (
  var handler libipvs.IPVSHandle
 
 func Init() {
-	handle ,err := libipvs.New()
-	if handle == nil {
+	h, err := libipvs.New()
+	handler = h
+	if err != nil {
 		fmt.Println(err.Error())
 	}
-
 	_, err = exec.Command("sysctl", []string{"net.ipv4.vs.conntrack=1"}...).CombinedOutput()
 
 	if err != nil {
 		fmt.Println(err.Error())
+		print("sysctl error")
 	}
 }
 
@@ -42,8 +43,8 @@ func AddService(ip string, port uint16) {
 }
 
 func addService(ip string, port uint16) *libipvs.Service {
-	// Create a service struct and add it to the ipvs.
-	// Equal to the cmd: ipvsadm -A -t 10.10.0.1:8410 -s rr
+	//创建一个service结构体并将其添加到ipvs。
+	// 等价于命令 ipvsadm -A -t 10.10.0.1:8410 -s rr
 	svc := &libipvs.Service{
 		Address:       net.ParseIP(ip),
 		AddressFamily: syscall.AF_INET,
@@ -51,21 +52,21 @@ func addService(ip string, port uint16) *libipvs.Service {
 		Port:          port,
 		SchedName:     libipvs.RoundRobin,
 	}
+    print(svc.Address.String() + ":" + strconv.Itoa(int(svc.Port)))
 
 	if err := handler.NewService(svc); err != nil {
 		fmt.Println(err.Error())
 	}
-
-	// Bind the ip address to the NIC (flannel.1 here)
-	// Equal to the cmd: ip addr add 10.10.0.1/24 dev flannel.1
+	//绑定ip地址到flannel.1网卡上
+	// 等价于命令ip addr add 10.10.0.1/24 dev flannel.1
 	args := []string{"addr", "add", ip + "/24", "dev", "flannel.1"}
 	_, err := exec.Command("ip", args...).CombinedOutput()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	// Configure the iptable: add SNAT rule
-	// Equal to the cmd: iptables -t nat -A POSTROUTING -m ipvs  --vaddr 10.9.0.1 --vport 12 -j MASQUERADE
+	//配置iptables:添加SNAT规则
+	// 等价于命令iptables -t nat -A POSTROUTING -m ipvs  --vaddr 10.9.0.1 --vport 12 -j MASQUERADE
 	args = []string{"-t", "nat", "-A", "POSTROUTING", "-m", "ipvs", "--vaddr", ip, "--vport", strconv.Itoa(int(svc.Port)), "-j", "MASQUERADE"}
 	_, err = exec.Command("iptables", args...).CombinedOutput()
 	if err != nil {
@@ -114,6 +115,7 @@ func bindEndpoint(svc *libipvs.Service, ip string, port uint16) *libipvs.Destina
 	}
 
 	//print(svc.Address.String() + ":" + strconv.Itoa(int(svc.Port)))
+	//等价于命令ipvsadm -a -t 10.10.0.1:8410(服务的IP和端口) -r 10.6.4.1:1234(endpoint的IP和端口) -m(使用MASQUERADING模式)                     
 	args := []string{"-a", "-t", svc.Address.String() + ":" + strconv.Itoa(int(svc.Port)), "-r", ip + ":" + strconv.Itoa(int(port)), "-m"}
 	_, err := exec.Command("ipvsadm", args...).CombinedOutput()
 	if err != nil {
