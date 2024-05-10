@@ -20,7 +20,7 @@ func TestPost(t *testing.T) {
 	etcd.Clear()
 	apiServer = apiserver.New()
 	flag := make(chan bool)
-	go apiServer.RUN(flag)
+	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
 	a := false
 	a = <-flag
@@ -41,7 +41,7 @@ func TestGet(t *testing.T) {
 	etcd.Clear()
 	apiServer = apiserver.New()
 	flag := make(chan bool)
-	go apiServer.RUN(flag)
+	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
 	a := false
 	a = <-flag
@@ -57,7 +57,7 @@ func TestPut(t *testing.T) {
 	etcd.Clear()
 	apiServer = apiserver.New()
 	flag := make(chan bool)
-	go apiServer.RUN(flag)
+	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
 	a := false
 	a = <-flag
@@ -80,7 +80,7 @@ func TestDelete(t *testing.T) {
 	etcd.Clear()
 	apiServer = apiserver.New()
 	flag := make(chan bool)
-	go apiServer.RUN(flag)
+	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
 	a := false
 	a = <-flag

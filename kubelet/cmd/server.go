@@ -25,17 +25,31 @@ var server kubeletServer = kubeletServer{}
 
 func serverInit() {
 	server.Node = apiobjects.Node{
-		TypeMeta: apiobjects.TypeMeta{
-			ApiVersion: global.ApiVersion,
-			Kind:       "Node",
-		},
-		ObjectMeta: apiobjects.ObjectMeta{
-			Name:              "",
-			Namespace:         global.SystemNamespace,
-			UID:               uuid.NewString(),
-			Labels:            map[string]string{},
-			CreationTimestamp: time.Now(),
-			DeletionTimestamp: time.Time{},
+		// TypeMeta: apiobjects.TypeMeta{
+		// 	ApiVersion: global.ApiVersion,
+		// 	Kind:       "Node",
+		// },
+		// ObjectMeta: apiobjects.ObjectMeta{
+		// 	Name:              "",
+		// 	Namespace:         global.SystemNamespace,
+		// 	UID:               uuid.NewString(),
+		// 	Labels:            map[string]string{},
+		// 	CreationTimestamp: time.Now(),
+		// 	DeletionTimestamp: time.Time{},
+		// },
+		Object: apiobjects.Object{
+			TypeMeta: apiobjects.TypeMeta{
+				ApiVersion: global.ApiVersion,
+				Kind:       "Node",
+			},
+			ObjectMeta: apiobjects.ObjectMeta{
+				Name:              "",
+				Namespace:         global.SystemNamespace,
+				UID:               uuid.NewString(),
+				Labels:            map[string]string{},
+				CreationTimestamp: time.Now(),
+				DeletionTimestamp: time.Time{},
+			},
 		},
 		Info: apiobjects.NodeInfo{
 			Ip: utils.GetLocalIP(),
@@ -72,7 +86,7 @@ func onBingdingUpdate(message *redis.Message) {
 		return
 	}
 
-	server.Bindings[binding.Name] = binding
+	server.Bindings[binding.Name()] = binding
 	utils.Info("kubelet:onBingdingUpdate binding=", binding)
 
 	server.PodCreateChan <- binding.Pod
