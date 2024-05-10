@@ -8,8 +8,9 @@ type Container struct {
 }
 
 type ContainerPort struct {
-	ContainerPort int32 `yaml:"containerPort"`
-	HostPort      int32 `yaml:"hostPort"`
+	Name          string `yaml:"name"`
+	ContainerPort int32  `yaml:"containerPort"`
+	HostPort      int32  `yaml:"hostPort"`
 }
 
 type VolumeMount struct {

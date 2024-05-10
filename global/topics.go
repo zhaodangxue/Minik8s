@@ -7,7 +7,8 @@ const (
 	podStatusTopic          = "pod-status"           // Pod发生增减的时候，通知其他组件
 	testTopic               = "test"                 // 测试
 	bindingTopic            = "binding"              // Pod和Node的绑定
-	serviceTopic            = "service"              // Service的增删改查
+	serviceUpdateTopic      = "service-update"       // Service的增改查
+	serviceDeleteTopic      = "service-delete"       // Service的删除
 	strategyUpdateTopic     = "strategy-update"      // 策略更新
 	schedulerPodUpdateTopic = "scheduler-pod-update" // Scheduler更新Pod信息
 )
@@ -24,9 +25,13 @@ func TestTopic() string {
 func BindingTopic() string {
 	return bindingTopic
 }
-func ServiceTopic() string {
-	return serviceTopic
+func ServiceUpdateTopic() string {
+	return serviceUpdateTopic
 }
+func ServiceDeleteTopic() string {
+	return serviceDeleteTopic
+}
+
 func StrategyUpdateTopic() string {
 	return strategyUpdateTopic
 }
