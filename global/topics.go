@@ -10,6 +10,7 @@ const (
 	serviceTopic            = "service"              // Service的增删改查
 	strategyUpdateTopic     = "strategy-update"      // 策略更新
 	schedulerPodUpdateTopic = "scheduler-pod-update" // Scheduler更新Pod信息
+	podRelevantTopic        = "pod-relevant"         // Pod相关的信息
 )
 
 func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -32,4 +33,7 @@ func StrategyUpdateTopic() string {
 }
 func SchedulerPodUpdateTopic() string {
 	return schedulerPodUpdateTopic
+}
+func PodRelevantTopic() string {
+	return podRelevantTopic
 }

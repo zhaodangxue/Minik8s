@@ -60,15 +60,25 @@ func PodApplyHandler(c *gin.Context) {
 	}
 	url_pod := pod.GetObjectPath()
 	val, _ := etcd.Get(url_pod)
-	if val != "" {
-		c.String(http.StatusOK, "pod already exists")
-		return
-	}
 	pod.ObjectMeta.UID = utils.NewUUID()
 	pod.CreationTimestamp = time.Now()
+	var topicMessage apiobjects.TopicMessage
+	if val != "" {
+		topicMessage.ActionType = apiobjects.Update
+		podJson, _ := json.Marshal(pod)
+		topicMessage.Object = string(podJson)
+		topicMessageJson, _ := json.Marshal(topicMessage)
+		etcd.Put(url_pod, string(podJson))
+		listwatch.Publish(global.PodRelevantTopic(), string(topicMessageJson))
+		c.String(http.StatusOK, "pod has configed")
+		return
+	}
+	topicMessage.ActionType = apiobjects.Create
 	podJson, _ := json.Marshal(pod)
+	topicMessage.Object = string(podJson)
+	topicMessageJson, _ := json.Marshal(topicMessage)
 	etcd.Put(url_pod, string(podJson))
 	fmt.Printf("receive pod name: %s namespace: %s uuid: %s", pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, pod.ObjectMeta.UID)
-	listwatch.Publish(global.SchedulerPodUpdateTopic(), string(podJson))
+	listwatch.Publish(global.PodRelevantTopic(), string(topicMessageJson))
 	c.String(http.StatusOK, "ok")
 }

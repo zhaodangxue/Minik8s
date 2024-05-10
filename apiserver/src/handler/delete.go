@@ -36,8 +36,13 @@ func PodDeleteHandler(c *gin.Context) {
 	msg.ActionType = apiobjects.Delete
 	msg.Object = val_binding
 	msgJson, _ := json.Marshal(msg)
+	var msg2 apiobjects.TopicMessage
+	msg2.ActionType = apiobjects.Delete
+	msg2.Object = val
+	msgJson2, _ := json.Marshal(msg2)
 	etcd.Delete(url)
 	etcd.Delete(binding.GetBindingPath())
+	listwatch.Publish(global.PodRelevantTopic(), string(msgJson2))
 	listwatch.Publish(global.BindingTopic(), string(msgJson))
 	ret := "delete podname:" + podName + " namespace:" + np + " success"
 	c.String(200, ret)
