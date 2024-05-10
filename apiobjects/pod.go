@@ -21,21 +21,20 @@ type PodState struct {
 
 type PodPhase string
 
-// These are the valid statuses of pods.
+// PodPhase是Pod的状态。
 const (
 	// Created意味着Pod已经在系统中被创建，但是还没有被所调度到的Node启动。
 	PodCreated PodPhase = "Created"
-	// PodPending means the pod has been accepted by the system, but one or more of the containers
-	// has not been started. This includes time before being bound to a node, as well as time spent
-	// pulling images onto the host.
+	// PodPending 意味着Pod已经被调度到了一个Node上，并在Node上被创建，但尚处于NotReady状态。
+	// 亦即还有一些条件没有满足，Pod中的容器还尚未全部被启动。
 	PodPending PodPhase = "Pending"
-	// PodRunning means the pod has been bound to a node and all of the containers have been started.
-	// At least one container is still running or is in the process of being restarted.
+	// PodRunning 对应Sandbox的Ready状态，意味着Pod中的容器已经被启动。
 	PodRunning PodPhase = "Running"
-	// PodSucceeded means that all containers in the pod have voluntarily terminated
-	// with a container exit code of 0, and the system is not going to restart any of these containers.
+	// PodSucceeded 意味着Pod中的所有容器都已经成功地终止，并且不会再重启。
 	PodSucceeded PodPhase = "Succeeded"
-	// PodFailed means that all containers in the pod have terminated, and at least one container has
-	// terminated in a failure (exited with a non-zero exit code or was stopped by the system).
+	// PodFailed 意味着Pod中的所有容器都已经终止，并且至少有一个容器是非正常终止的。
 	PodFailed PodPhase = "Failed"
+	// PodUnknown 意味着Pod的状态无法被获取。
+	// Kubelet获取Pod的状态失败时，会将Pod的状态设置为Unknown。
+	PodUnknown PodPhase = "Unknown"
 )
