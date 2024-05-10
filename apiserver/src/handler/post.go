@@ -80,22 +80,22 @@ func ServiceCreateHandler(c *gin.Context) {
 		c.String(http.StatusOK, err.Error())
 		return
 	}
-	if svc.Data.Namespace == ""{
-       svc.Data.Namespace = "default";
+	if svc.Data.Namespace == "" {
+		svc.Data.Namespace = "default"
 	}
 
-	url:= svc.GetObjectPath()
-	val,_ := etcd.Get(url)
-	if val != ""{
-		c.String(http.StatusOK,"service/" +svc.Data.Namespace+"/"+svc.Data.Name+ "/already exists")
+	url := svc.GetObjectPath()
+	val, _ := etcd.Get(url)
+	if val != "" {
+		c.String(http.StatusOK, "service/"+svc.Data.Namespace+"/"+svc.Data.Name+"/already exists")
 		return
 	}
 	//svc.Data.UID = utils.NewUUID();
-	svcJson,_ := json.Marshal(svc)
-	etcd.Put(url,string(svcJson))
-	fmt.Printf("service create: %s\n",string(svcJson))
-    listwatch.Publish(global.ServiceUpdateTopic(),string(svcJson))
-    c.String(http.StatusOK,"ok")
+	svcJson, _ := json.Marshal(svc)
+	etcd.Put(url, string(svcJson))
+	fmt.Printf("service create: %s\n", string(svcJson))
+	listwatch.Publish(global.ServiceUpdateTopic(), string(svcJson))
+	c.String(http.StatusOK, "ok")
 }
 
 func ServiceUpdateHandler(c *gin.Context) {
@@ -105,15 +105,15 @@ func ServiceUpdateHandler(c *gin.Context) {
 		c.String(http.StatusOK, err.Error())
 		return
 	}
-	url:= svc.GetObjectPath()
-	val,_ := etcd.Get(url)
-	if val == ""{
-		c.String(http.StatusOK,"service/" +svc.Data.Namespace+"/"+svc.Data.Name+ "/not found")
+	url := svc.GetObjectPath()
+	val, _ := etcd.Get(url)
+	if val == "" {
+		c.String(http.StatusOK, "service/"+svc.Data.Namespace+"/"+svc.Data.Name+"/not found")
 		return
 	}
-	svcJson,_ := json.Marshal(svc)
-	etcd.Put(url,string(svcJson))
-	fmt.Printf("service update: %s\n",string(svcJson))
-	listwatch.Publish(global.ServiceUpdateTopic(),string(svcJson))
-	c.String(http.StatusOK,"ok")
+	svcJson, _ := json.Marshal(svc)
+	etcd.Put(url, string(svcJson))
+	fmt.Printf("service update: %s\n", string(svcJson))
+	listwatch.Publish(global.ServiceUpdateTopic(), string(svcJson))
+	c.String(http.StatusOK, "ok")
 }
