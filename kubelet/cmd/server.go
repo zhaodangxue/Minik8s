@@ -24,7 +24,7 @@ type kubeletServer struct {
 	Node apiobjects.Node
 	// Pods 用于存放当前Pod的状态
 	// key: Pod的Path
-	Pods      map[string]apiobjects.Pod
+	Pods      map[string]internal.PodWrapper
 	// PodCreateChan 用于通知kubelet主循环创建Pod
 	PodCreateChan chan apiobjects.Pod
 
@@ -81,7 +81,7 @@ func serverInit() {
 			State: apiobjects.NodeStateHealthy,
 		},
 	}
-	server.Bindings = make(map[string]apiobjects.NodePodBinding)
+	server.Pods = make(map[string]internal.PodWrapper)
 	server.PodCreateChan = make(chan apiobjects.Pod, 100)
 	server.PodStatusCheckerChan = make(chan Empty, 1)
 	server.NodeHealthyReportChan = make(chan Empty, 1)
@@ -129,11 +129,17 @@ func podCreateHandler(pod apiobjects.Pod) {
 	// FIXME: 考虑多线程同步
 	utils.Info("kubelet:podCreateHandler pod=", pod)
 
-	internal.CreatePod(pod)
+	PodSandboxId ,err := internal.CreatePod(pod)
 
-	// TODO: 通知apiserver更新pod状态
+	if err != nil {
+		utils.Error("kubelet:podCreateHandler CreatePod error:", err)
+	}
+	
+	podWrapper := internal.PodWrapper{Pod: pod, PodSandboxId: PodSandboxId}
 
-
+	server.Pods[pod.GetObjectPath()] = podWrapper
+	
+	// 等待pod状态检查线程自动检查
 }
 
 // 在指定时间间隔内在信道上发送空消息
@@ -147,6 +153,13 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 // 定时被调用，检查pod状态
 func podStatusChecker() {
 	// TODO: 定时被调用，检查pod状态
+	for _, podWrapper := range server.Pods {
+		response, err := internal.GetPodInfo(podWrapper.PodSandboxId);
+		if err != nil {
+			utils.Error("kubelet:podStatusChecker GetPodInfo error:", err)
+		}
+		
+	}
 }
 
 // 定时被调用，上报node的健康状态

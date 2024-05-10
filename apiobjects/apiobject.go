@@ -8,6 +8,8 @@ import (
 
 type ActionType byte
 
+// TODO: give kind a seperate type
+
 const (
 	Create ActionType = iota //从0开始，依次加1
 	Update
