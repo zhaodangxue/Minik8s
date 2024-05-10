@@ -14,17 +14,17 @@ import (
 )
 
 // kubeletServer 用于存放kubelet的状态
-// 
+//
 // Node: 用于存放Node的信息
-// 
+//
 // Bindings: 用于存放Node和Pod的绑定关系
-// 
+//
 // PodCreateChan: 用于存放需要创建的Pod
 type kubeletServer struct {
 	Node apiobjects.Node
 	// Pods 用于存放当前Pod的状态
 	// key: Pod的Path
-	Pods      map[string]internal.PodWrapper
+	Pods map[string]internal.PodWrapper
 	// PodCreateChan 用于通知kubelet主循环创建Pod
 	PodCreateChan chan apiobjects.Pod
 
@@ -129,16 +129,18 @@ func podCreateHandler(pod apiobjects.Pod) {
 	// FIXME: 考虑多线程同步
 	utils.Info("kubelet:podCreateHandler pod=", pod)
 
-	PodSandboxId ,err := internal.CreatePod(pod)
+	pod.Status.HostIP = server.Node.Info.Ip
+
+	PodSandboxId, err := internal.CreatePod(pod)
 
 	if err != nil {
 		utils.Error("kubelet:podCreateHandler CreatePod error:", err)
 	}
-	
+
 	podWrapper := internal.PodWrapper{Pod: pod, PodSandboxId: PodSandboxId}
 
 	server.Pods[pod.GetObjectPath()] = podWrapper
-	
+
 	// 等待pod状态检查线程自动检查
 }
 
@@ -152,13 +154,28 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 
 // 定时被调用，检查pod状态
 func podStatusChecker() {
-	// TODO: 定时被调用，检查pod状态
+	var changedPods []*apiobjects.Pod
 	for _, podWrapper := range server.Pods {
-		response, err := internal.GetPodInfo(podWrapper.PodSandboxId);
+		new_pod_state, err := internal.GetPodInfo(podWrapper.PodSandboxId)
 		if err != nil {
 			utils.Error("kubelet:podStatusChecker GetPodInfo error:", err)
 		}
-		
+
+		var is_diff bool
+		is_diff, err = internal.MergePodStates(&podWrapper.Pod, &new_pod_state)
+		if err != nil {
+			utils.Error("kubelet:podStatusChecker MergePodStates error:", err)
+		}
+		if is_diff {
+			utils.Info("kubelet:podStatusChecker pod state changed, pod=", podWrapper.Pod)
+			changedPods = append(changedPods, &podWrapper.Pod)
+		}
+	}
+
+	// Send changed pods to apiserver
+	if len(changedPods) > 0 {
+		utils.Info("kubelet:podStatusChecker changedPods=", changedPods)
+		internal.SendPodStatus(changedPods)
 	}
 }
 

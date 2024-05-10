@@ -163,6 +163,7 @@ func convertSandboxInfoToPod (response *cri.PodSandboxStatusResponse) (pod apiob
 	pod.ObjectMeta.Namespace = response.Status.Metadata.Namespace
 	pod.ObjectMeta.Labels = response.Status.Labels
 	pod.ObjectMeta.UID = response.Status.Metadata.Uid
+
 	pod.CreationTimestamp = utils.NanoUnixToTime(response.Status.CreatedAt)
 	pod.Status.PodIP = response.Status.Network.Ip
 	pod.Status.PodPhase = SandboxStateToPodPhase(response.Status.State)
