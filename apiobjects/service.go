@@ -27,7 +27,6 @@ type MetaData struct {
 	Name             string            `json:"name,omitempty"`
 	Namespace        string            `json:"namespace,omitempty"`
 	UID              string            `json:"uid,omitempty"` // 一个service的唯一标识
-	Labels           map[string]string `json:"labels,omitempty"`
 }
 
 type Service struct {
@@ -56,7 +55,7 @@ type ServicePort struct {
 	//一个service可以有多个端口，每个端口都有一个不同的name
 	Name string `json:"name"`
 
-	// 代表了service的IP协议
+	// 协议
 	Protocol Protocol `json:"protocol"`
 
 	// 对外暴露的端口
@@ -95,6 +94,14 @@ type ServiceStatus struct {
 
 	//ClusterIP是service的IP地址，通常是由master随机分配的
 	ClusterIP string `json:"clusterIP"`
+}
+
+func (s *Service) GetType() string{
+	return "service"
+}
+
+func (s *Service) GetObjectPath() string{
+	return "/api/service/" + s.Data.Namespace + "/" + s.Data.Name
 }
 
 func (s *Service) UnMarshalJSON(data []byte) error {

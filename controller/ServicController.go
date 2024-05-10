@@ -31,7 +31,7 @@ type svcServiceHandler struct {
 type svcPodHandler struct {
 }
 
-/* ========== Start Service Handler ========== */
+/* ========== Service Handler ========== */
 
 func (s svcServiceHandler) HandleCreate(message []byte) {
 	svc := &apiobjects.Service{}
@@ -40,14 +40,13 @@ func (s svcServiceHandler) HandleCreate(message []byte) {
 	//分配cluster ip，更新serviceList
 	svc.Status.ClusterIP = allocateClusterIP()
 	svcList[svc.Status.ClusterIP] = svc
-
 	//TODO 发送http给apiserver,更新service,带有分配好的cluster ip
-	//utils.SendHttp(utils.HttpMethodPut, "http://apiserver:8080/api/v1/service", svc.MarshalJSON())
 	svcByte,err := svc.MarshalJSON()
 	if err != nil {
 		fmt.Println("error")
 	}
-	response, err :=utils.PostWithString("http://apiserver:8080/api/v1/service/"+svc.Data.Namespace+"/"+svc.Data.Name, string(svcByte))
+	//response, err :=utils.PostWithString("http://apiserver:8080/api/service/"+svc.Data.Namespace+"/"+svc.Data.Name, string(svcByte))
+	response, err :=utils.PostWithString("http://apiserver:8080/api/service", string(svcByte))
 	if err != nil{
 		print("create service error")
 	}
@@ -68,7 +67,7 @@ func (s svcServiceHandler) HandleDelete(message []byte) {
 	print(indexLast)
 	IPMap[indexLast] = false
     //删除service
-	response, err :=utils.Delete("http://apiserver:8080/api/v1/service/"+svc.Data.Namespace+"/"+svc.Data.Name)
+	response, err :=utils.Delete("http://apiserver:8080/api/service/delete/"+svc.Data.Namespace+"/"+svc.Data.Name)
 	if err != nil{
 		print("delete service error")
 	}
@@ -76,15 +75,13 @@ func (s svcServiceHandler) HandleDelete(message []byte) {
 
 	//todo 删除对应的endpoints
 	for _, edpt := range *svcToEndpoints[svc.Status.ClusterIP] {
-		response, err :=utils.Delete("http://apiserver:8080/api/v1/endpoint/"+edpt.Data.Namespace+"/"+edpt.Data.Name)
+		response, err :=utils.Delete("http://apiserver:8080/api/endpoint/"+edpt.Data.Namespace+"/"+edpt.Data.Name)
 		if err != nil{
 			print("delete endpoints error")
 		}
 		fmt.Println(response)
 	}
 	delete(svcToEndpoints, svc.Status.ClusterIP)
-
-
 	log.Info("[svc controller] Delete service. Cluster IP:", svc.Status.ClusterIP)
 }
 
@@ -117,9 +114,41 @@ func (s svcServiceHandler) GetType() string{
 	return "service"
 }
 
+/* ========== Pod Handler ========== */
+func (s svcPodHandler) HandleCreate(message []byte) {
+
+}
+
+func (s svcPodHandler) HandleDelete(message []byte) {
+	//pod := &apiobjects.Pod{}
+
+	//todo删除对应的endpoints
+
+}
+
+func (s svcPodHandler) HandleUpdate(message []byte) {
+	pod := &apiobjects.Pod{}
+    //todo 获取更新后的Pod
+	
+    //遍历service列表，检查所有的service，如果有对应这个Pod的endpoint,且Pod更新之后不符合selector条件，则删除对应的endpoints
+	//                                如果没有对应这个Pod的endpoint,但Pod更新之后符合selector条件，则创建对应的endpoints
+	for _, svc := range svcList {
+		exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
+		fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
+		if !exist && fit {
+			createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)
+		} else if exist && !fit {
+			deleteEndpoints(svc, pod)
+		}
+		// TODO: handle the change of POD IP
+	}
+}
+
+func (s svcPodHandler) GetType() string{
+	return "pod"
+}
 
 /* ========== Util Function ========== */
-
 func allocateClusterIP() string {
 	for i, used := range IPMap {
 		if i != 0 && !used {
@@ -151,4 +180,74 @@ func IsLabelEqual(a map[string]string, b map[string]string) bool {
 		}
 	}
 	return true
+}
+
+func isEndpointExist(edptList *[]*apiobjects.Endpoint, podIP string) bool {
+	for _, edpt := range *edptList {
+		if edpt.Spec.DestIP == podIP {
+			return true
+		}
+	}
+	return false
+}
+
+
+func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, pod *apiobjects.Pod) {
+	logInfo := "[svc controller] Create endpoints."
+
+	for _, port := range svc.Spec.Ports {
+		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
+		spec := apiobjects.EndpointSpec{
+			SvcIP:    svc.Status.ClusterIP,
+			SvcPort:  port.Port,
+			DestIP:   pod.Status.PodIP,
+			DestPort: dstPort,
+		}
+		edpt := &apiobjects.Endpoint{
+			Spec: spec,
+			Data: apiobjects.MetaData{
+				Name:      svc.Data.Name + "-" + pod.Name,
+				Namespace: svc.Data.Namespace,
+			},
+		}
+		//TODO 发送http给apiserver,更新edpt
+
+		*edptList = append(*edptList, edpt)
+		logInfo += fmt.Sprintf("srcIP:%s:%d, dstIP:%s:%d ; ", svc.Status.ClusterIP, port.Port, pod.Status.PodIP, dstPort)
+	}
+
+	log.Info(logInfo)
+
+}
+
+func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
+	for _, c := range containers {
+		for _, p := range c.Ports {
+			if p.Name == targetPort {
+				return p.ContainerPort
+			}
+		}
+	}
+	log.Fatal("[svc controller] No Match for Target Port!")
+	return 0
+}
+
+func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
+	logInfo := "[svc controller] Delete endpoints."
+
+	edptList := svcToEndpoints[svc.Status.ClusterIP]
+	var newEdptList []*apiobjects.Endpoint
+	for key, edpt := range *edptList {
+		if edpt.Spec.DestIP == pod.Status.PodIP {
+			edpt := (*edptList)[key]
+			//TODO 发送http给apiserver,更新edpt
+
+			logInfo += fmt.Sprintf("srcIP:%s:%d, dstIP:%s:%d ; ", edpt.Spec.SvcIP, edpt.Spec.SvcPort, edpt.Spec.DestIP, edpt.Spec.DestPort)
+		} else {
+			newEdptList = append(newEdptList, edpt)
+		}
+	}
+	svcToEndpoints[svc.Status.ClusterIP] = &newEdptList
+
+	log.Info(logInfo)
 }
