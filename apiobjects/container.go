@@ -6,7 +6,7 @@ type Container struct {
 	Ports        []ContainerPort   `yaml:"ports"`
 	VolumeMounts []VolumeMount     `yaml:"volumeMounts"`
 	Labels       map[string]string `yaml:"labels"`
-	Status       ContainerStatus   `yaml:"-"`
+	Status       *ContainerStatus   `yaml:"-"`
 }
 
 type ContainerState int32

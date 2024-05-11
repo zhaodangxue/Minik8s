@@ -6,9 +6,11 @@ import (
 	"minik8s/utils"
 )
 
-func SendPodStatus(changedPods []*apiobjects.Pod) (err error) {
+func SendPodStatus(pods []*apiobjects.Pod) (err error) {
 	// Send changed pods to apiserver
-	for _, pod := range changedPods {
-		utils.PostWithJson(route.Prefix + route.NodePath, pod)
+	for _, pod := range pods {
+		utils.PutWithJson(route.Prefix + route.NodePath, pod)
 	}
+
+	return
 }

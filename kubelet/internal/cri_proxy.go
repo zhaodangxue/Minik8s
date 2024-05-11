@@ -147,12 +147,18 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 	return
 }
 
-func convertCriContainerToMiniK8sContainer (response *cri.Container) (container apiobjects.Container) {
-	container.Name = response.Metadata.Name
-	container.Image = response.Image.Image
-	container.Labels = response.Labels
-	container.Status.State = apiobjects.ContainerState(response.State)
-	container.Status.CreatedAt = response.CreatedAt
+func convertCriContainerToMiniK8sContainer (response *cri.ContainerStatusResponse) (container apiobjects.Container) {
+	container.Name = response.Status.Metadata.Name
+	container.Image = response.Status.Image.Image
+	container.Labels = response.Status.Labels
+	container.Status = new(apiobjects.ContainerStatus)
+	container.Status.State = apiobjects.ContainerState(response.Status.State)
+	container.Status.CreatedAt = response.Status.CreatedAt
+	container.Status.StartedAt = response.Status.StartedAt
+	container.Status.FinishedAt = response.Status.FinishedAt
+	container.Status.ExitCode = response.Status.ExitCode
+	container.Status.Reason = response.Status.Reason
+	container.Status.Message = response.Status.Message
 	return
 }
 
@@ -163,8 +169,8 @@ func convertSandboxInfoToPod (response *cri.PodSandboxStatusResponse) (pod apiob
 	pod.ObjectMeta.Namespace = response.Status.Metadata.Namespace
 	pod.ObjectMeta.Labels = response.Status.Labels
 	pod.ObjectMeta.UID = response.Status.Metadata.Uid
-
-	pod.CreationTimestamp = utils.NanoUnixToTime(response.Status.CreatedAt)
+	pod.ObjectMeta.CreationTimestamp = utils.NanoUnixToTime(response.Status.CreatedAt)
+	
 	pod.Status.PodIP = response.Status.Network.Ip
 	pod.Status.PodPhase = SandboxStateToPodPhase(response.Status.State)
 	return
@@ -200,7 +206,13 @@ func GetPodInfo(sandboxId string) (response apiobjects.Pod, err error) {
 	}
 
 	for _, container := range response_containers.Containers {
-		response.Spec.Containers = append(response.Spec.Containers, convertCriContainerToMiniK8sContainer(container))
+		containerRequest := &cri.ContainerStatusRequest{ContainerId: container.Id}
+		containerStatusResponse, err := runtimeServiceClient.ContainerStatus(ctx, containerRequest)
+		if err != nil {
+			utils.Error("ContainerStatus error:", err)
+			continue
+		}
+		response.Spec.Containers = append(response.Spec.Containers, convertCriContainerToMiniK8sContainer(containerStatusResponse))
 	}
 
 	utils.Debug("Pod sandbox status:", response)
@@ -227,6 +239,25 @@ func ListPods() (sandboxs []*cri.PodSandbox, err error) {
 	}
 	utils.Debug("Pod sandboxes:", response.Items)
 	sandboxs = response.Items
+
+	return
+}
+
+func GetAllPods() (pods []*apiobjects.Pod, err error) {
+	sandboxs, err := ListPods()
+	if err != nil {
+		utils.Error("ListPods error:", err)
+		return
+	}
+
+	for _, sandbox := range sandboxs {
+		pod, err := GetPodInfo(sandbox.Id)
+		if err != nil {
+			utils.Error("GetPodInfo error:", err)
+			continue
+		}
+		pods = append(pods, &pod)
+	}
 
 	return
 }

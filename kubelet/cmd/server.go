@@ -24,7 +24,7 @@ type kubeletServer struct {
 	Node apiobjects.Node
 	// Pods 用于存放当前Pod的状态
 	// key: Pod的Path
-	Pods map[string]internal.PodWrapper
+	Pods map[string]*internal.PodWrapper
 	// PodCreateChan 用于通知kubelet主循环创建Pod
 	PodCreateChan chan apiobjects.Pod
 
@@ -81,7 +81,7 @@ func serverInit() {
 			State: apiobjects.NodeStateHealthy,
 		},
 	}
-	server.Pods = make(map[string]internal.PodWrapper)
+	server.Pods = make(map[string]*internal.PodWrapper)
 	server.PodCreateChan = make(chan apiobjects.Pod, 100)
 	server.PodStatusCheckerChan = make(chan Empty, 1)
 	server.NodeHealthyReportChan = make(chan Empty, 1)
@@ -139,7 +139,7 @@ func podCreateHandler(pod apiobjects.Pod) {
 
 	podWrapper := internal.PodWrapper{Pod: pod, PodSandboxId: PodSandboxId}
 
-	server.Pods[pod.GetObjectPath()] = podWrapper
+	server.Pods[pod.GetObjectPath()] = &podWrapper
 
 	// 等待pod状态检查线程自动检查
 }
@@ -154,28 +154,27 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 
 // 定时被调用，检查pod状态
 func podStatusChecker() {
-	var changedPods []*apiobjects.Pod
-	for _, podWrapper := range server.Pods {
-		new_pod_state, err := internal.GetPodInfo(podWrapper.PodSandboxId)
-		if err != nil {
-			utils.Error("kubelet:podStatusChecker GetPodInfo error:", err)
-		}
-
-		var is_diff bool
-		is_diff, err = internal.MergePodStates(&podWrapper.Pod, &new_pod_state)
-		if err != nil {
-			utils.Error("kubelet:podStatusChecker MergePodStates error:", err)
-		}
-		if is_diff {
-			utils.Info("kubelet:podStatusChecker pod state changed, pod=", podWrapper.Pod)
-			changedPods = append(changedPods, &podWrapper.Pod)
-		}
+	pods, err := internal.GetAllPods()
+	if err != nil {
+		utils.Error("kubelet:podStatusChecker GetAllPods error:", err)
+		return
 	}
 
-	// Send changed pods to apiserver
-	if len(changedPods) > 0 {
-		utils.Info("kubelet:podStatusChecker changedPods=", changedPods)
-		internal.SendPodStatus(changedPods)
+	// Check all pods
+	for _, pod := range pods {
+		podWrapper, ok := server.Pods[pod.GetObjectPath()]
+		if !ok {
+			utils.Warn("kubelet:podStatusChecker pod not found in server.Pods, pod=", pod)
+			continue
+		}
+		pod.Status.HostIP = server.Node.Info.Ip
+		podWrapper.Pod = *pod
+	}
+
+	// Send all pods to apiserver
+	err = internal.SendPodStatus(pods)
+	if err != nil {
+		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
 	}
 }
 
@@ -188,7 +187,7 @@ func main() {
 
 	serverInit()
 
-	listwatch.Watch(global.BindingTopic(), onBingdingUpdate)
+	go listwatch.Watch(global.BindingTopic(), onBingdingUpdate)
 	go timedInformer(server.PodStatusCheckerChan, PodStatusCheckInterval)
 	go timedInformer(server.NodeHealthyReportChan, NodeHealthyReportInterval)
 
