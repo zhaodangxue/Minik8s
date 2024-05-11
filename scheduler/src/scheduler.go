@@ -90,8 +90,16 @@ func (s *scheduler) Schedule(pod *apiobjects.Pod) error {
 	return nil
 }
 func (s *scheduler) doSchedule(msg *redis.Message) {
+	topicMessage := apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if topicMessage.ActionType == apiobjects.Delete {
+		return
+	}
 	pod := &apiobjects.Pod{}
-	err := json.Unmarshal([]byte(msg.Payload), pod)
+	err = json.Unmarshal([]byte(topicMessage.Object), pod)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -102,5 +110,5 @@ func (s *scheduler) doSchedule(msg *redis.Message) {
 }
 func (s *scheduler) Start() {
 	go listwatch.Watch(global.StrategyUpdateTopic(), s.handleStrategyChange)
-	listwatch.Watch(global.SchedulerPodUpdateTopic(), s.doSchedule)
+	listwatch.Watch(global.PodRelevantTopic(), s.doSchedule)
 }

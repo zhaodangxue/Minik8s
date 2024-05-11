@@ -86,3 +86,36 @@ func TestRunDescribe(t *testing.T) {
 	err = command.RunDescribe_test("pod", "pod")
 	assert.Nil(t, err)
 }
+func TestRunApplyPV(t *testing.T) {
+	fmt.Println("TestRunApplyPV")
+	etcd.Clear()
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunApply_test("./persistent_volumn.yaml")
+	assert.Nil(t, err)
+}
+func TestRunApplyPVC(t *testing.T) {
+	fmt.Println("TestRunApplyPVC")
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunApply_test("./persistent_volumn_claim.yaml")
+	assert.Nil(t, err)
+}
+func TestRunGetPV(t *testing.T) {
+	fmt.Println("TestRunGetPV")
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunGet_test("pv", "nfsserver")
+	assert.Nil(t, err)
+}
+func TestRunGetPVC(t *testing.T) {
+	fmt.Println("TestRunGetPVC")
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunGet_test("pvc", "pvc-sc-example")
+	assert.Nil(t, err)
+}
