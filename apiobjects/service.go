@@ -24,48 +24,49 @@ spec:
     targetPort: p2 # 转发的端口，pod对应的端口
 */
 type MetaData struct {
-	Name             string            `json:"name,omitempty"`
-	Namespace        string            `json:"namespace,omitempty"`
-	UID              string            `json:"uid,omitempty"` // 一个service的唯一标识
+	Name      string `json:"name,omitempty" yaml:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	UID       string `json:"uid,omitempty" yaml:"uid,omitempty"` // 一个service的唯一标识
 }
 
 type Service struct {
-	APIVersion string `json:"apiVersion,omitempty"`
-	Data MetaData `json:"metadata"`
+	APIVersion string   `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"` // api版本
+	Data       MetaData `json:"metadata" yaml:"metadata"`
 
 	// 定义了service的规范
-	Spec ServiceSpec `json:"spec,omitempty"`
+	Spec ServiceSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
 
 	// 表示service的状态
-	Status ServiceStatus `json:"status,omitempty"`
+	Status ServiceStatus `json:"status,omitempty" yaml:"status,omitempty"`
 }
 type ServiceSpec struct {
 	// 只有 ClusterIP 类型
-	Type ServiceType `json:"type,omitempty"`
+	Type ServiceType `json:"type,omitempty" yaml:"type,omitempty"`
 
 	// 这个服务的所有端口
-	Ports []ServicePort `json:"ports"`
+	Ports []ServicePort `json:"ports" yaml:"ports"`
 
 	//通过这个selector来选择pod
-	Selector map[string]string `json:"selector"`
+	Selector map[string]string `json:"selector" yaml:"selector"`
 }
 
 // service的一个端口
 type ServicePort struct {
 	//一个service可以有多个端口，每个端口都有一个不同的name
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 
 	// 协议
-	Protocol Protocol `json:"protocol"`
+	Protocol Protocol `json:"protocol" yaml:"protocol"`
 
 	// 对外暴露的端口
-	Port int32 `json:"port"`
+	Port int32 `json:"port" yaml:"port"`
 
-    // 转发的端口，pod对应的端口
-	TargetPort string `json:"targetPort"`
+	// 转发的端口，pod对应的端口
+	TargetPort string `json:"targetPort" yaml:"targetPort"`
 }
 
 type ServiceType string
+
 const (
 	ServiceTypeClusterIP ServiceType = "ClusterIP"
 
@@ -77,6 +78,7 @@ const (
 )
 
 type Protocol string
+
 const (
 	ProtocolTCP Protocol = "TCP"
 
@@ -90,17 +92,17 @@ type ServiceStatus struct {
 		CREATING: 等待分配cluster ip
 		CREATED: cluster ip分配完成
 	*/
-	Phase string `json:"phase,omitempty"`
+	Phase string `json:"phase,omitempty" yaml:"phase,omitempty"`
 
 	//ClusterIP是service的IP地址，通常是由master随机分配的
-	ClusterIP string `json:"clusterIP"`
+	ClusterIP string `json:"clusterIP" yaml:"clusterIP"`
 }
 
-func (s *Service) GetType() string{
+func (s *Service) GetType() string {
 	return "service"
 }
 
-func (s *Service) GetObjectPath() string{
+func (s *Service) GetObjectPath() string {
 	return "/api/service/" + s.Data.Namespace + "/" + s.Data.Name
 }
 

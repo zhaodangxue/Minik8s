@@ -8,16 +8,23 @@ package kubeproxy
 */
 
 import (
-	"minik8s/kubeproxy/ipvs"
+	"encoding/json"
+	"fmt"
 	"minik8s/apiobjects"
+	"minik8s/global"
+	"minik8s/kubeproxy/ipvs"
+	"minik8s/listwatch"
 	"strconv"
+
+	"github.com/go-redis/redis/v8"
 )
 
 func Run() {
 	ipvs.Init()
 	//ipvs.TestConfig()
-	//var p proxyServiceHandler
-	//var e proxyEndpointHandler
+	var p proxyServiceHandler
+	var e proxyEndpointHandler
+	listwatch.Watch(global.ServiceTopic(), p.HandleService)
 
 }
 
@@ -26,8 +33,52 @@ func Run() {
 type proxyServiceHandler struct {
 }
 
-func (p proxyServiceHandler) HandleCreate(message []byte) {
+func (p proxyServiceHandler) HandleService(msg *redis.Message) {
+	topicMessage := &apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	switch topicMessage.ActionType {
+	case apiobjects.Create:
+		//调用Handleupdate
+		svc := &apiobjects.Service{}
+		err2 := json.Unmarshal([]byte(topicMessage.Object), svc)
+		if err2 != nil {
+			fmt.Println(err2)
+		}
+		svcJson, _ := json.Marshal(svc)
+		p.HandleUpdate([]byte(svcJson))
+	default:
+		fmt.Println("error")
+	}
+}
+func (e proxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
+	topicMessage := &apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	switch topicMessage.ActionType {
+	case apiobjects.Create:
+		//调用HandleCreate
+		edpt := &apiobjects.Endpoint{}
+		err := json.Unmarshal([]byte(topicMessage.Object), edpt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		edptJson, _ := json.Marshal(edpt)
+		e.HandleCreate([]byte(edptJson))
+	case apiobjects.Delete:
+		//调用ServiceController删除endpoint
+		//ss.HandleDelete([]byte(topicMessage.Object))
+	case apiobjects.Update:
+		//调用ServiceController更新endpoint
+		//ss.HandleUpdate([]byte(topicMessage.Object))
+	}
+}
 
+func (p proxyServiceHandler) HandleCreate(message []byte) {
 }
 
 func (p proxyServiceHandler) HandleDelete(message []byte) {
@@ -48,7 +99,6 @@ func (p proxyServiceHandler) HandleUpdate(message []byte) {
 	for _, p := range svc.Spec.Ports {
 		ipvs.AddService(svc.Status.ClusterIP, uint16(p.Port))
 	}
-
 }
 
 func (p proxyServiceHandler) GetType() string {

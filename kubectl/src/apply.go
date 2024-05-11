@@ -50,6 +50,16 @@ func RunApply(cmd *cobra.Command, args []string) error {
 		utils.ApplyApiObject(url, pod)
 		// case ctlutils.Node:
 		// default:
+	case ctlutils.Service:
+		service := apiobjects.Service{}
+		err = yaml.Unmarshal(content, &service)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.ServiceApplyPath
+		//TODO service格式是否符合要求
+		utils.ApplyApiObject(url, service)
 	}
 	return nil
 }

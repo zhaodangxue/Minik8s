@@ -17,10 +17,12 @@ const (
 	NodePathDetail     = "/api/node/:namespace/:name"
 	NodePodBindingPath = "/api/binding/:podnamespace/:podname/:nodename"
 
-	ServiceCreatePath = "/api/service"
-	ServiceUpdatePath = "/api/service/update/:namespace/:name"
-	ServiceDeletePath = "/api/service/delete/:namespace/:name"
+	ServiceApplyPath   = "/api/service/apply"
+	ServiceCreatePath  = "/api/service"
+	ServiceUpdatePath  = "/api/service/update/:namespace/:name"
+	ServiceDeletePath  = "/api/service/delete/:namespace/:name"
 	EndpointCreaetPath = "/api/endpoint"
-	EndpointUpdatePath = "/api/endpoint/update/:namespace/:name"
-	EndpointDeletePath = "/api/endpoint/delete/:namespace/:name"
+	EndpointDeletePath = "/api/endpoint/delete/:serviceName/:namespace/:name"
+
+	GetAllPodsPath = "/api/get/allpods"
 )

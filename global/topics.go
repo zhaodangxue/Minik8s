@@ -7,8 +7,9 @@ const (
 	podStatusTopic          = "pod-status"           // Pod发生增减的时候，通知其他组件
 	testTopic               = "test"                 // 测试
 	bindingTopic            = "binding"              // Pod和Node的绑定
-	serviceUpdateTopic      = "service-update"       // Service的增改查
-	serviceDeleteTopic      = "service-delete"       // Service的删除
+	serviceTopic            = "service"              // servicecontroller处理之后对Service真正执行增删改查之后publish，由各个node上的kube-proxy监听
+	serviceCmdTopic         = "service-cmd"          // apiserver收到kubctl对Service的增删改查命令,初步处理之后publish，由servicecontroller监听
+	endpointTopic           = "endpoint"             // Endpoint的增删
 	strategyUpdateTopic     = "strategy-update"      // 策略更新
 	schedulerPodUpdateTopic = "scheduler-pod-update" // Scheduler更新Pod信息
 )
@@ -25,11 +26,14 @@ func TestTopic() string {
 func BindingTopic() string {
 	return bindingTopic
 }
-func ServiceUpdateTopic() string {
-	return serviceUpdateTopic
+func ServiceTopic() string {
+	return serviceTopic
 }
-func ServiceDeleteTopic() string {
-	return serviceDeleteTopic
+func ServiceCmdTopic() string {
+	return serviceCmdTopic
+}
+func EndpointTopic() string {
+	return endpointTopic
 }
 
 func StrategyUpdateTopic() string {

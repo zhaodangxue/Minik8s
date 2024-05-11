@@ -15,6 +15,7 @@ const (
 	Node
 	Pv
 	Pvc
+	Service
 )
 
 func (a ApiObjectType) String() string {
@@ -29,6 +30,8 @@ func (a ApiObjectType) String() string {
 		return "pv"
 	case Pvc:
 		return "pvc"
+	case Service:
+		return "service"
 	default:
 		return "unknown"
 	}
@@ -60,6 +63,8 @@ func ParseApiObjectType(s []byte) ApiObjectType {
 		return Pv
 	case "persistentvolumeclaim":
 		return Pvc
+	case "service":
+		return Service
 	default:
 		return Unknown
 	}
