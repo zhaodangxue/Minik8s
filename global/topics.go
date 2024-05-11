@@ -12,6 +12,9 @@ const (
 	endpointTopic           = "endpoint"             // Endpoint的增删
 	strategyUpdateTopic     = "strategy-update"      // 策略更新
 	schedulerPodUpdateTopic = "scheduler-pod-update" // Scheduler更新Pod信息
+	podRelevantTopic        = "pod-relevant"         // Pod相关的信息
+	pvRelevantTopic         = "pv-relevant"          // PV相关的信息
+	pvcRelevantTopic        = "pvc-relevant"         // PVC相关的信息
 )
 
 func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -41,4 +44,13 @@ func StrategyUpdateTopic() string {
 }
 func SchedulerPodUpdateTopic() string {
 	return schedulerPodUpdateTopic
+}
+func PodRelevantTopic() string {
+	return podRelevantTopic
+}
+func PvRelevantTopic() string {
+	return pvRelevantTopic
+}
+func PvcRelevantTopic() string {
+	return pvcRelevantTopic
 }

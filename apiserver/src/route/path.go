@@ -24,5 +24,13 @@ const (
 	EndpointCreaetPath = "/api/endpoint"
 	EndpointDeletePath = "/api/endpoint/delete/:serviceName/:namespace/:name"
 
-	GetAllPodsPath = "/api/get/allpods"
+	GetAllPodsPath   = "/api/get/allpods"
+	PVPath           = "/api/persistentvolume"
+	PVPathNamespace  = "/api/persistentvolume/:namespace"
+	PVPathSpecified  = "/api/persistentvolume/:namespace/:name"
+	PVPathDetail     = "/api/persistentvolume/:namespace/:name/:storageclass"
+	PVCPath          = "/api/persistentvolumeclaim"
+	PVCPathNamespace = "/api/persistentvolumeclaim/:namespace"
+	PVCPathSpecified = "/api/persistentvolumeclaim/:namespace/:name"
+	PVCPathDetail    = "/api/persistentvolumeclaim/:namespace/:name/:storageclass"
 )

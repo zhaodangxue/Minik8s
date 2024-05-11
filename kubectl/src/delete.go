@@ -29,6 +29,16 @@ func deleteSpecifiedPod(np, apiObjName string) (string, error) {
 	val, err := utils.Delete(url)
 	return val, err
 }
+func deleteSpecifiedPV(np, apiObjName string) (string, error) {
+	url := route.Prefix + route.PVPath + "/" + np + "/" + apiObjName
+	val, err := utils.Delete(url)
+	return val, err
+}
+func deleteSpecifiedPVC(np, apiObjName string) (string, error) {
+	url := route.Prefix + route.PVCPath + "/" + np + "/" + apiObjName
+	val, err := utils.Delete(url)
+	return val, err
+}
 func RunDelete(cmd *cobra.Command, args []string) {
 	apiObjType := args[0]
 	apiObjName := args[1]
@@ -44,6 +54,18 @@ func RunDelete(cmd *cobra.Command, args []string) {
 	case "pod":
 		var val string
 		val, err = deleteSpecifiedPod(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
+	case "pv":
+		var val string
+		val, err = deleteSpecifiedPV(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
+	case "pvc":
+		var val string
+		val, err = deleteSpecifiedPVC(np, apiObjName)
 		if err == nil {
 			fmt.Println(val)
 		}
@@ -63,6 +85,12 @@ func RunDelete_test(apiObjType, apiObjName string) error {
 		_, err = deleteTest()
 	case "pod":
 		val, err = deleteSpecifiedPod(np, apiObjName)
+		fmt.Println(val)
+	case "pv":
+		val, err = deleteSpecifiedPV(np, apiObjName)
+		fmt.Println(val)
+	case "pvc":
+		val, err = deleteSpecifiedPVC(np, apiObjName)
 		fmt.Println(val)
 	default:
 		fmt.Println("delete: not support this type")

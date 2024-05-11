@@ -32,3 +32,13 @@ func (npd *NodePodBinding) GetBindingPath() string {
 func (npd *NodePodBinding) Name() string {
 	return npd.GetBindingPath() + "/" + npd.Node.ObjectMeta.Name
 }
+
+type PVCPodBinding struct {
+	PVCName      string
+	PVCNamespace string
+	Pods         []PodAbstract
+}
+
+func (ppb *PVCPodBinding) GetBindingPath() string {
+	return "/api" + "/PVCbinding" + "/" + ppb.PVCNamespace + "/" + ppb.PVCName
+}

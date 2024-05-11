@@ -76,3 +76,39 @@ func GetAllPodsHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, pods)
 }
+
+func PVGetWithNamespaceHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	var pvs []*apiobjects.PersistentVolume
+	values, err := etcd.Get_prefix(route.PVPath + "/" + namespace)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, value := range values {
+		var pv apiobjects.PersistentVolume
+		err := json.Unmarshal([]byte(value), &pv)
+		if err != nil {
+			fmt.Println(err)
+		}
+		pvs = append(pvs, &pv)
+	}
+	c.JSON(http.StatusOK, pvs)
+}
+
+func PVCGetWithNamespaceHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	var pvcs []*apiobjects.PersistentVolumeClaim
+	values, err := etcd.Get_prefix(route.PVCPath + "/" + namespace)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, value := range values {
+		var pvc apiobjects.PersistentVolumeClaim
+		err := json.Unmarshal([]byte(value), &pvc)
+		if err != nil {
+			fmt.Println(err)
+		}
+		pvcs = append(pvcs, &pvc)
+	}
+	c.JSON(http.StatusOK, pvcs)
+}

@@ -67,8 +67,8 @@ func TestScheduler(t *testing.T) {
 	node2.ObjectMeta.Name = "node2"
 	node2.ObjectMeta.Namespace = "minik8s-system"
 	node2.TypeMeta.Kind = "Node"
-	node1.Status.CpuPercent = 0.5
-	node2.Status.CpuPercent = 0.7
+	node1.Status.CpuPercent = 0.7
+	node2.Status.CpuPercent = 0.3
 	url_node1 := node1.Object.GetObjectPath()
 	url_node2 := node2.Object.GetObjectPath()
 	node1_JSON, _ := json.Marshal(node1)
@@ -93,7 +93,11 @@ func TestScheduler(t *testing.T) {
 	pod_Json, _ := json.Marshal(pod)
 	url_pod := pod.Object.GetObjectPath()
 	etcd.Put(url_pod, string(pod_Json))
-	listwatch.Publish(global.SchedulerPodUpdateTopic(), string(pod_Json))
+	topicMessage := apiobjects.TopicMessage{}
+	topicMessage.ActionType = apiobjects.Create
+	topicMessage.Object = string(pod_Json)
+	topicMessage_Json, _ := json.Marshal(topicMessage)
+	listwatch.Publish(global.PodRelevantTopic(), string(topicMessage_Json))
 	time.Sleep(5 * time.Second)
 	url_binding := "/api/binding"
 	val, _ := etcd.Get_prefix(url_binding)
@@ -103,13 +107,16 @@ func TestScheduler(t *testing.T) {
 	pod.Spec.Containers[0].Name = "redis"
 	pod.Spec.Containers[0].Image = "redis"
 	pod_Json, _ = json.Marshal(pod)
+	topicMessage.ActionType = apiobjects.Update
+	topicMessage.Object = string(pod_Json)
+	topicMessage_Json, _ = json.Marshal(topicMessage)
 	etcd.Put(url_pod, string(pod_Json))
-	listwatch.Publish(global.SchedulerPodUpdateTopic(), string(pod_Json))
+	listwatch.Publish(global.PodRelevantTopic(), string(topicMessage_Json))
 	time.Sleep(5 * time.Second)
 	url_binding = "/api/binding"
 	val, _ = etcd.Get_prefix(url_binding)
 	assert.Equal(t, 1, len(val))
 	var binding apiobjects.NodePodBinding
 	json.Unmarshal([]byte(val[0]), &binding)
-	assert.Equal(t, "node1", binding.Node.ObjectMeta.Name)
+	assert.Equal(t, "node2", binding.Node.ObjectMeta.Name)
 }

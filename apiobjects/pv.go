@@ -1,18 +1,20 @@
 package apiobjects
 
 type PersistentVolume struct {
-	TypeMeta   `yaml:",inline"`
-	ObjectMeta `yaml:"metadata"`
-	Spec       PersistentVolumeSpec `yaml:"spec"`
+	Object `yaml:",inline"`
+	Spec   PersistentVolumeSpec `yaml:"spec"`
+	Status PVPhase              `yaml:"-"`
 }
 type PersistentVolumeSpec struct {
-	Capacity                      capacity `yaml:"capacity"`
-	VolumeMode                    string   `yaml:"volumeMode"`
-	AccessModes                   []string `yaml:"accessModes"`
-	PersistentVolumeReclaimPolicy string   `yaml:"persistentVolumeReclaimPolicy"`
-	StorageClassName              string   `yaml:"storageClassName"`
-	MountOptions                  []string `yaml:"mountOptions"`
-	NFS                           NFS      `yaml:"nfs"`
+	Capacity                      capacity                      `yaml:"capacity"`
+	VolumeMode                    string                        `yaml:"volumeMode"`
+	AccessModes                   []string                      `yaml:"accessModes"`
+	PersistentVolumeReclaimPolicy string                        `yaml:"persistentVolumeReclaimPolicy"`
+	StorageClassName              string                        `yaml:"storageClassName"`
+	MountOptions                  []string                      `yaml:"mountOptions"`
+	NFS                           NFS                           `yaml:"nfs"`
+	PVCBinding                    PersistentVolumeClaimAbstract `yaml:"-"` // 用于绑定PVC
+	PVPath                        string                        `yaml:"-"` // 用于绑定PV
 }
 type capacity struct {
 	Storage string `yaml:"storage"`
@@ -20,4 +22,16 @@ type capacity struct {
 type NFS struct {
 	Server string `yaml:"server"`
 	Path   string `yaml:"path"`
+}
+type PVPhase string
+
+const (
+	Available PVPhase = "Available"
+	Bound     PVPhase = "Bound"
+	Failed    PVPhase = "Failed"
+)
+
+type PersistentVolumeClaimAbstract struct {
+	PVCname      string
+	PVCnamespace string
 }

@@ -48,6 +48,24 @@ func RunApply(cmd *cobra.Command, args []string) error {
 		}
 		url := route.Prefix + route.PodPath
 		utils.ApplyApiObject(url, pod)
+	case ctlutils.Pv:
+		pv := apiobjects.PersistentVolume{}
+		err = yaml.Unmarshal(content, &pv)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.PVPath
+		utils.ApplyApiObject(url, pv)
+	case ctlutils.Pvc:
+		pvc := apiobjects.PersistentVolumeClaim{}
+		err = yaml.Unmarshal(content, &pvc)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.PVCPath
+		utils.ApplyApiObject(url, pvc)
 		// case ctlutils.Node:
 		// default:
 	case ctlutils.Service:
@@ -89,6 +107,24 @@ func RunApply_test(file_path string) error {
 		}
 		url := route.Prefix + route.PodPath
 		utils.ApplyApiObject(url, pod)
+	case ctlutils.Pv:
+		pv := apiobjects.PersistentVolume{}
+		err = yaml.Unmarshal(content, &pv)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.PVPath
+		utils.ApplyApiObject(url, pv)
+	case ctlutils.Pvc:
+		pvc := apiobjects.PersistentVolumeClaim{}
+		err = yaml.Unmarshal(content, &pvc)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.PVCPath
+		utils.ApplyApiObject(url, pvc)
 		// case ctlutils.Node:
 		// default:
 	}

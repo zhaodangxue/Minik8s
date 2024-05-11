@@ -29,3 +29,7 @@ spec:
     - name: volume
       hostPath:
         path: /pod
+    - name: nfs-volume
+      nfs:
+        path: /exports
+        server: 192.168.10.1
