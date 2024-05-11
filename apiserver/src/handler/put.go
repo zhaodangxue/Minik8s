@@ -12,8 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-func PodPutHandler(c *gin.Context){
+func PodStatePutHandler(c *gin.Context) {
 
 	pod := apiobjects.Pod{}
 	err := utils.ReadUnmarshal(c.Request.Body, &pod)
@@ -37,7 +36,7 @@ func PodPutHandler(c *gin.Context){
 	// FIXME: publish correctly
 	topicMessage := apiobjects.TopicMessage{ActionType: apiobjects.Update, Object: string(podJson)}
 	topicMessageJson, _ := json.Marshal(topicMessage)
-	listwatch.Publish(global.SchedulerPodUpdateTopic(), string(topicMessageJson))
+	listwatch.Publish(global.PodStateTopic(), string(topicMessageJson))
 
 	c.String(http.StatusOK, "ok")
 }
