@@ -33,6 +33,10 @@ func RunGet(cmd *cobra.Command, args []string) {
 		err = ctlutils.PrintTestStatusTable()
 	case "pod":
 		err = ctlutils.PrintPodStatusTable(np)
+	case "pv":
+		err = ctlutils.PrintPVTable(namespace)
+	case "pvc":
+		err = ctlutils.PrintPVCTable(namespace)
 	case "node":
 		fmt.Printf("Name:%s", apiObjName)
 	}
@@ -49,6 +53,10 @@ func RunGet_test(apiObjType string, apiObjName string) error {
 		err = ctlutils.PrintTestStatusTable()
 	case "pod":
 		err = ctlutils.PrintPodStatusTable(np)
+	case "pv":
+		err = ctlutils.PrintPVTable(namespace)
+	case "pvc":
+		err = ctlutils.PrintPVCTable(namespace)
 	case "node":
 		fmt.Printf("get node Name:%s", apiObjName)
 	}

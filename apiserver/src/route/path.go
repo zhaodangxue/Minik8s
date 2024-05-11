@@ -16,4 +16,12 @@ const (
 	NodePath           = "/api/node"
 	NodePathDetail     = "/api/node/:namespace/:name"
 	NodePodBindingPath = "/api/binding/:podnamespace/:podname/:nodename"
+	PVPath             = "/api/persistentvolume"
+	PVPathNamespace    = "/api/persistentvolume/:namespace"
+	PVPathSpecified    = "/api/persistentvolume/:namespace/:name"
+	PVPathDetail       = "/api/persistentvolume/:namespace/:name/:storageclass"
+	PVCPath            = "/api/persistentvolumeclaim"
+	PVCPathNamespace   = "/api/persistentvolumeclaim/:namespace"
+	PVCPathSpecified   = "/api/persistentvolumeclaim/:namespace/:name"
+	PVCPathDetail      = "/api/persistentvolumeclaim/:namespace/:name/:storageclass"
 )
