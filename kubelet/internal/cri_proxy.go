@@ -162,21 +162,23 @@ func convertCriContainerToMiniK8sContainer (response *cri.ContainerStatusRespons
 	return
 }
 
-func convertSandboxInfoToPod (response *cri.PodSandboxStatusResponse) (pod apiobjects.Pod) {
-	pod.TypeMeta.ApiVersion = global.ApiVersion
-	pod.TypeMeta.Kind = "Pod"
-	pod.ObjectMeta.Name = response.Status.Metadata.Name
-	pod.ObjectMeta.Namespace = response.Status.Metadata.Namespace
-	pod.ObjectMeta.Labels = response.Status.Labels
-	pod.ObjectMeta.UID = response.Status.Metadata.Uid
-	pod.ObjectMeta.CreationTimestamp = utils.NanoUnixToTime(response.Status.CreatedAt)
+func convertSandboxInfoToPod (response *cri.PodSandboxStatusResponse) (podWrapper PodWrapper) {
+	podWrapper.Pod.TypeMeta.ApiVersion = global.ApiVersion
+	podWrapper.Pod.TypeMeta.Kind = "Pod"
+	podWrapper.Pod.ObjectMeta.Name = response.Status.Metadata.Name
+	podWrapper.Pod.ObjectMeta.Namespace = response.Status.Metadata.Namespace
+	podWrapper.Pod.ObjectMeta.Labels = response.Status.Labels
+	podWrapper.Pod.ObjectMeta.UID = response.Status.Metadata.Uid
+	podWrapper.Pod.ObjectMeta.CreationTimestamp = utils.NanoUnixToTime(response.Status.CreatedAt)
 	
-	pod.Status.PodIP = response.Status.Network.Ip
-	pod.Status.PodPhase = SandboxStateToPodPhase(response.Status.State)
+	podWrapper.Pod.Status.PodIP = response.Status.Network.Ip
+	podWrapper.Pod.Status.PodPhase = SandboxStateToPodPhase(response.Status.State)
+
+	podWrapper.PodSandboxId = response.Status.Id
 	return
 }
 
-func GetPodInfo(sandboxId string) (response apiobjects.Pod, err error) {
+func GetPodInfo(sandboxId string) (response PodWrapper, err error) {
 	
 	// Parameters
 	ctx := getContext()
@@ -212,7 +214,7 @@ func GetPodInfo(sandboxId string) (response apiobjects.Pod, err error) {
 			utils.Error("ContainerStatus error:", err)
 			continue
 		}
-		response.Spec.Containers = append(response.Spec.Containers, convertCriContainerToMiniK8sContainer(containerStatusResponse))
+		response.Pod.Spec.Containers = append(response.Pod.Spec.Containers, convertCriContainerToMiniK8sContainer(containerStatusResponse))
 	}
 
 	utils.Debug("Pod sandbox status:", response)
@@ -243,7 +245,7 @@ func ListPods() (sandboxs []*cri.PodSandbox, err error) {
 	return
 }
 
-func GetAllPods() (pods []*apiobjects.Pod, err error) {
+func GetAllPods() (pods []*PodWrapper, err error) {
 	sandboxs, err := ListPods()
 	if err != nil {
 		utils.Error("ListPods error:", err)
@@ -260,4 +262,8 @@ func GetAllPods() (pods []*apiobjects.Pod, err error) {
 	}
 
 	return
+}
+
+func DeletePod(pod *PodWrapper){
+	// TODO
 }

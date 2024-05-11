@@ -154,25 +154,26 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 
 // 定时被调用，检查pod状态
 func podStatusChecker() {
-	pods, err := internal.GetAllPods()
+	podWrappers, err := internal.GetAllPods()
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker GetAllPods error:", err)
 		return
 	}
 
 	// Check all pods
-	for _, pod := range pods {
-		podWrapper, ok := server.Pods[pod.GetObjectPath()]
+	for _, pod := range podWrappers {
+		podWrapper, ok := server.Pods[pod.Pod.GetObjectPath()]
 		if !ok {
-			utils.Warn("kubelet:podStatusChecker pod not found in server.Pods, pod=", pod)
+			utils.Warn("kubelet:podStatusChecker pod not found in server.Pods, deleting, pod=", pod)
+			internal.DeletePod(pod)
 			continue
 		}
-		pod.Status.HostIP = server.Node.Info.Ip
-		podWrapper.Pod = *pod
+		pod.Pod.Status.HostIP = server.Node.Info.Ip
+		podWrapper.Pod = pod.Pod
 	}
 
 	// Send all pods to apiserver
-	err = internal.SendPodStatus(pods)
+	err = internal.SendPodStatus(podWrappers)
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
 	}
