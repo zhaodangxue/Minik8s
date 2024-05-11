@@ -1,10 +1,11 @@
 package global
 
-import "minik8s/apiobjects"
+//import "minik8s/apiobjects"
 
 const (
-	podUpdateTopic          = "pod-update"           // 已经存在的Pod的内部信息更新
-	podStatusTopic          = "pod-status"           // Pod发生增减的时候，通知其他组件
+	//podUpdateTopic          = "pod-update"           // 已经存在的Pod的内部信息更新
+	//podStatusTopic          = "pod-status"           // Pod发生增减的时候，通知其他组件
+	podStateTopic           = "pod-state"            // Pod的状态变化
 	testTopic               = "test"                 // 测试
 	bindingTopic            = "binding"              // Pod和Node的绑定
 	serviceTopic            = "service"              // servicecontroller处理之后对Service真正执行增删改查之后publish，由各个node上的kube-proxy监听
@@ -17,11 +18,15 @@ const (
 	pvcRelevantTopic        = "pvc-relevant"         // PVC相关的信息
 )
 
-func PodUpdateTopic(pod apiobjects.Pod) string {
-	return podUpdateTopic + "-" + pod.Name + "-" + pod.Namespace
-}
-func PodStatusTopic() string {
-	return podStatusTopic
+//	func PodUpdateTopic(pod apiobjects.Pod) string {
+//		return podUpdateTopic + "-" + pod.Name + "-" + pod.Namespace
+//	}
+//
+//	func PodStatusTopic() string {
+//		return podStatusTopic
+//	}
+func PodStateTopic() string {
+	return podStateTopic
 }
 func TestTopic() string {
 	return testTopic

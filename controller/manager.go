@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
-	"minik8s/apiserver/src/route"
+	//"minik8s/apiserver/src/route"
 	"minik8s/global"
 	"minik8s/listwatch"
-	"minik8s/utils"
+	//"minik8s/utils"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -64,6 +64,6 @@ func Run() {
 	var ss svcServiceHandler
 
 	listwatch.Watch(global.ServiceCmdTopic(), ss.HandleService)
-	listwatch.Watch(global.PodStatusTopic(), se.HandleEndpoints)
+	listwatch.Watch(global.PodStateTopic(), se.HandleEndpoints)
 
 }

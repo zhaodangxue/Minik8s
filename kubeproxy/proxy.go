@@ -23,7 +23,7 @@ func Run() {
 	ipvs.Init()
 	//ipvs.TestConfig()
 	var p proxyServiceHandler
-	var e proxyEndpointHandler
+	//var e proxyEndpointHandler
 	listwatch.Watch(global.ServiceTopic(), p.HandleService)
 
 }

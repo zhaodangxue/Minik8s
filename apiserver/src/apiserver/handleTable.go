@@ -33,16 +33,15 @@ var GetTable = map[string]HandlerFunc{
 	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
 }
 var PutTable = map[string]HandlerFunc{
-	route.TestPutPath: handler.TestPutHandler,
+	route.TestPutPath:  handler.TestPutHandler,
+	route.PodStatePath: handler.PodStatePutHandler,
 }
 var DeleteTable = map[string]HandlerFunc{
 	route.TestDeletePath:     handler.TestDeleteHandler,
 	route.TestCtlPath:        handler.TestCtlDeleteHandler,
 	route.ServiceDeletePath:  handler.ServiceDeleteHandler,
 	route.EndpointDeletePath: handler.EndpointDeleteHandler,
-	//route.TestDeletePath:     handler.TestDeleteHandler,
-	//route.TestCtlPath:        handler.TestCtlDeleteHandler,
-	//route.PodPathDetail:      handler.PodDeleteHandler,
-	route.PVCPathSpecified: handler.PVCDeleteHandler,
-	route.PVPathSpecified:  handler.PVDeleteHandler,
+	route.PodPathDetail:      handler.PodDeleteHandler,
+	route.PVCPathSpecified:   handler.PVCDeleteHandler,
+	route.PVPathSpecified:    handler.PVDeleteHandler,
 }
