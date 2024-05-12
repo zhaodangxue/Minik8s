@@ -170,10 +170,11 @@ func podStatusChecker() {
 		}
 		pod.Pod.Status.HostIP = server.Node.Info.Ip
 		podWrapper.Pod = pod.Pod
+
 	}
 
 	// Send all pods to apiserver
-	err = internal.SendPodStatus(podWrappers)
+	err = internal.SendPodStatus(server.Pods)
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
 	}
