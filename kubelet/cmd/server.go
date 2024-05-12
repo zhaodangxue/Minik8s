@@ -47,6 +47,8 @@ type Empty struct{}
 var server kubeletServer = kubeletServer{}
 
 func serverInit() {
+	uid := uuid.NewString()
+	name := "node-" + uid[:6]
 	server.Node = apiobjects.Node{
 		// TypeMeta: apiobjects.TypeMeta{
 		// 	ApiVersion: global.ApiVersion,
@@ -66,9 +68,9 @@ func serverInit() {
 				Kind:       "Node",
 			},
 			ObjectMeta: apiobjects.ObjectMeta{
-				Name:              "",
+				Name:              name,
 				Namespace:         global.SystemNamespace,
-				UID:               uuid.NewString(),
+				UID:               uid,
 				Labels:            map[string]string{},
 				CreationTimestamp: time.Now(),
 				DeletionTimestamp: time.Time{},
@@ -183,6 +185,13 @@ func podStatusChecker() {
 // 定时被调用，上报node的健康状态
 func nodeHealthyReport() {
 	// TODO: 定时被调用，上报node的健康状态
+	utils.Info("kubelet:nodeHealthyReport")
+	node := &server.Node
+	node.Status.State = apiobjects.NodeStateHealthy
+	err := internal.SendNodeStatus(node)
+	if err != nil {
+		utils.Error("kubelet:nodeHealthyReport SendNodeStatus error:", err)
+	}
 }
 
 func main() {

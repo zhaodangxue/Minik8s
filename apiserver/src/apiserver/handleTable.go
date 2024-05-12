@@ -29,6 +29,7 @@ var GetTable = map[string]HandlerFunc{
 var PutTable = map[string]HandlerFunc{
 	route.TestPutPath:  handler.TestPutHandler,
 	route.PodStatePath: handler.PodStatePutHandler,
+	route.NodePath:     handler.NodeHealthHandler,
 }
 var DeleteTable = map[string]HandlerFunc{
 	route.TestDeletePath:   handler.TestDeleteHandler,

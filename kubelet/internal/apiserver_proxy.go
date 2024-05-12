@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
 )
@@ -12,5 +13,11 @@ func SendPodStatus(pods map[string]*PodWrapper) (err error) {
 		utils.PutWithJson(route.Prefix + route.PodStatePath, pod.Pod)
 	}
 
+	return
+}
+
+func SendNodeStatus(node *apiobjects.Node) (err error) {
+	// Send node status to apiserver
+	_, err = utils.PutWithJson(route.Prefix + route.NodePath, node)
 	return
 }

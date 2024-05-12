@@ -40,3 +40,21 @@ func PodStatePutHandler(c *gin.Context) {
 
 	c.String(http.StatusOK, "ok")
 }
+
+func NodeHealthHandler(c *gin.Context) {
+	node := apiobjects.Node{}
+	err := utils.ReadUnmarshal(c.Request.Body, &node)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	url_node := node.GetObjectPath()
+	nodeJson, err := json.Marshal(node)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	etcd.Put(url_node, string(nodeJson))
+	utils.Info("NodeHealthHandler: receive node: ", node)
+	// CHECK: No publish for node health. Should we publish it?
+}
