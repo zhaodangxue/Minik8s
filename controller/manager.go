@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
-	"strings"
+	//"strings"
 
 	//"minik8s/apiserver/src/route"
 	"minik8s/global"
@@ -13,8 +13,8 @@ import (
 	//"minik8s/utils"
 
 	"github.com/go-redis/redis/v8"
-	"go.etcd.io/etcd/client/v3/namespace"
-	"golang.org/x/sys/windows/svc"
+	//"go.etcd.io/etcd/client/v3/namespace"
+	//"golang.org/x/sys/windows/svc"
 )
 
 func (ss *svcServiceHandler)HandleService(msg *redis.Message){
@@ -78,6 +78,6 @@ func Run() {
 	var ss svcServiceHandler
 
 	listwatch.Watch(global.ServiceCmdTopic(), ss.HandleService)
-	listwatch.Watch(global.PodStateTopic(), se.HandleEndpoints)
+	 go listwatch.Watch(global.PodStateTopic(), se.HandleEndpoints)
 
 }

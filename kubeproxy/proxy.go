@@ -25,7 +25,7 @@ func Run() {
 	var p proxyServiceHandler
 	var e proxyEndpointHandler
 	listwatch.Watch(global.ServiceTopic(), p.HandleService)
-	listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
+	go listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
 
 }
 
