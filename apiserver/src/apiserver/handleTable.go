@@ -37,11 +37,12 @@ var PutTable = map[string]HandlerFunc{
 	route.PodStatePath: handler.PodStatePutHandler,
 }
 var DeleteTable = map[string]HandlerFunc{
-	route.TestDeletePath:     handler.TestDeleteHandler,
-	route.TestCtlPath:        handler.TestCtlDeleteHandler,
-	route.ServiceDeletePath:  handler.ServiceDeleteHandler,
-	route.EndpointDeletePath: handler.EndpointDeleteHandler,
-	route.PodPathDetail:      handler.PodDeleteHandler,
-	route.PVCPathSpecified:   handler.PVCDeleteHandler,
-	route.PVPathSpecified:    handler.PVDeleteHandler,
+	route.TestDeletePath:       handler.TestDeleteHandler,
+	route.TestCtlPath:          handler.TestCtlDeleteHandler,
+	route.ServiceDeletePath:    handler.ServiceDeleteHandler,
+	route.ServiceCmdDeletePath: handler.ServiceCmdDeleteHandler,
+	route.EndpointDeletePath:   handler.EndpointDeleteHandler,
+	route.PodPathDetail:        handler.PodDeleteHandler,
+	route.PVCPathSpecified:     handler.PVCDeleteHandler,
+	route.PVPathSpecified:      handler.PVDeleteHandler,
 }

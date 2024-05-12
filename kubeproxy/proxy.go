@@ -23,8 +23,9 @@ func Run() {
 	ipvs.Init()
 	//ipvs.TestConfig()
 	var p proxyServiceHandler
-	//var e proxyEndpointHandler
+	var e proxyEndpointHandler
 	listwatch.Watch(global.ServiceTopic(), p.HandleService)
+	listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
 
 }
 
@@ -49,6 +50,15 @@ func (p proxyServiceHandler) HandleService(msg *redis.Message) {
 		}
 		svcJson, _ := json.Marshal(svc)
 		p.HandleUpdate([]byte(svcJson))
+	case apiobjects.Delete:
+		//调用HandleDelete
+		svc := &apiobjects.Service{}
+		err2 := json.Unmarshal([]byte(topicMessage.Object), svc)
+		if err2 != nil {
+			fmt.Println(err2)
+		}
+		svcJson, _ := json.Marshal(svc)
+		p.HandleDelete([]byte(svcJson))
 	default:
 		fmt.Println("error")
 	}
@@ -102,7 +112,7 @@ func (p proxyServiceHandler) HandleUpdate(message []byte) {
 }
 
 func (p proxyServiceHandler) GetType() string {
-	return "service"
+	return "proxyserviceHandler"
 }
 
 /* ========== Endpoint Handler ========== */
@@ -132,5 +142,5 @@ func (e proxyEndpointHandler) HandleUpdate(message []byte) {
 }
 
 func (e proxyEndpointHandler) GetType() string {
-	return "endpoint"
+	return "proxyendpointHandler"
 }

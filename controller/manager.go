@@ -4,12 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+	"strings"
+
 	//"minik8s/apiserver/src/route"
 	"minik8s/global"
 	"minik8s/listwatch"
+
 	//"minik8s/utils"
 
 	"github.com/go-redis/redis/v8"
+	"go.etcd.io/etcd/client/v3/namespace"
+	"golang.org/x/sys/windows/svc"
 )
 
 func (ss *svcServiceHandler)HandleService(msg *redis.Message){
@@ -18,6 +23,7 @@ func (ss *svcServiceHandler)HandleService(msg *redis.Message){
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Println("HandleServiceApply")
 	switch topicMessage.ActionType {
 	case apiobjects.Create:
 		//调用ServiceController分配cluster ip，更新serviceList
@@ -26,14 +32,22 @@ func (ss *svcServiceHandler)HandleService(msg *redis.Message){
 		if err2 != nil {
 			fmt.Println(err2)
 		}
+		fmt.Println("HandleServiceApply ",svc.Data.Name)
 		svcJson, _ := json.Marshal(svc)
 		ss.HandleCreate([]byte(svcJson))
 	case apiobjects.Delete:
 		//调用ServiceController删除service
-		//ss.HandleDelete([]byte(topicMessage.Object))
+		svc := &apiobjects.Service{}
+        err2 := json.Unmarshal([]byte(topicMessage.Object),svc)
+		if err2 != nil {
+			fmt.Println(err2)	
+		}
+		fmt.Println("HandleServiceDelete ",svc.Data.Name)
+		svcJson, _ := json.Marshal(svc)
+		ss.HandleDelete([]byte(svcJson))
 	case apiobjects.Update:
 		//调用ServiceController更新service
-		//ss.HandleUpdate([]byte(topicMessage.Object))
+		
 	default:
 		fmt.Println("error")
 	}

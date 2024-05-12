@@ -39,6 +39,11 @@ func deleteSpecifiedPVC(np, apiObjName string) (string, error) {
 	val, err := utils.Delete(url)
 	return val, err
 }
+func deleteSpecifiedService(np, apiObjName string) (string, error) {
+	url := route.Prefix + "/api/service/cmd/delete/" + np + "/" + apiObjName
+	val, err := utils.Delete(url)
+	return val, err
+}
 func RunDelete(cmd *cobra.Command, args []string) {
 	apiObjType := args[0]
 	apiObjName := args[1]
@@ -66,6 +71,12 @@ func RunDelete(cmd *cobra.Command, args []string) {
 	case "pvc":
 		var val string
 		val, err = deleteSpecifiedPVC(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
+	case "service":
+		var val string
+		val, err = deleteSpecifiedService(np, apiObjName)
 		if err == nil {
 			fmt.Println(val)
 		}

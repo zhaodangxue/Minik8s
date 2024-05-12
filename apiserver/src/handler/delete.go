@@ -26,11 +26,32 @@ func ServiceDeleteHandler(c *gin.Context) {
 	etcd.Delete("/api/service/" + namespace + "/" + name)
 	topicMessage := apiobjects.TopicMessage{
 		ActionType: action,
-		Object:     string(namespace + "/" + name),
+		Object:     string(val),
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	c.String(http.StatusOK, "delete service namespace:%s name:%s success", namespace, name)
 	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
+}
+
+func ServiceCmdDeleteHandler(c *gin.Context) {
+	//svc := apiobjects.Service{}
+	//err := utils.ReadUnmarshal(c.Request.Body, &svc)
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	action := apiobjects.Delete
+	val, _ := etcd.Get("/api/service/" + namespace + "/" + name)
+	if val == "" {
+		c.String(http.StatusOK, "service/"+namespace+"/"+name+"/not found")
+		return
+	}
+	//etcd.Delete("/api/service/" + namespace + "/" + name)
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(val),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	c.String(http.StatusOK, "delete service namespace:%s name:%s cmd:%s success", namespace, name)
+	listwatch.Publish(global.ServiceCmdTopic(), string(topicMessageJson))
 }
 
 func EndpointDeleteHandler(c *gin.Context) {
