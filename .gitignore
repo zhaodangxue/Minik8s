@@ -1,3 +1,5 @@
-.vscode
+.vscode/launch.json
 
 **/main
+
+build
