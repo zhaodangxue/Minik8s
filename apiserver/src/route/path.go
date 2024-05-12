@@ -11,6 +11,7 @@ const (
 	TestDeletePath     = "/api/test/delete/:name/:uid"
 	TestCtlPath        = "/api/test/ctl"
 	PodPath            = "/api/pod"
+	PodStatePath	   = "/api/podstate"
 	PodPathNamespace   = "/api/pod/:namespace"
 	PodPathDetail      = "/api/pod/:namespace/:name"
 	NodePath           = "/api/node"

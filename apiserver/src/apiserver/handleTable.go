@@ -31,7 +31,8 @@ var GetTable = map[string]HandlerFunc{
 	route.PVCPath:          persistentvolume_handler.PVCSGetHandler,
 }
 var PutTable = map[string]HandlerFunc{
-	route.TestPutPath: handler.TestPutHandler,
+	route.TestPutPath:  handler.TestPutHandler,
+	route.PodStatePath: handler.PodStatePutHandler,
 }
 var DeleteTable = map[string]HandlerFunc{
 	route.TestDeletePath:   handler.TestDeleteHandler,
