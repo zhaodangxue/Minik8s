@@ -188,7 +188,7 @@ func createEndpointsFromPodList(svc *apiobjects.Service) {
 	var edptList []*apiobjects.Endpoint
 	for _, pod := range podlist {
 	    //筛选符合selector条件的pod
-		if pod.Status.PodPhase == apiobjects.PodRunning && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
+		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
 			createEndpoints(&edptList, svc, &pod)
 		}
 	}

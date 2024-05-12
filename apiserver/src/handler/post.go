@@ -116,6 +116,7 @@ func PVApplyHandler(c *gin.Context) {
 		pvJson, _ := json.Marshal(pv)
 		topicMessage.Object = string(pvJson)
 		topicMessageJson, _ := json.Marshal(topicMessage)
+		etcd.Delete_prefix(pv.GetObjectPath())
 		etcd.Put(url_pv, string(pvJson))
 		listwatch.Publish(global.PvRelevantTopic(), string(topicMessageJson))
 		c.String(http.StatusOK, "pv has configed")
@@ -158,6 +159,12 @@ func PVCApplyHandler(c *gin.Context) {
 		c.String(http.StatusOK, "pvc has configed")
 		return
 	}
+	var PVCPodBinding apiobjects.PVCPodBinding
+	PVCPodBinding.PVCName = pvc.ObjectMeta.Name
+	PVCPodBinding.PVCNamespace = pvc.ObjectMeta.Namespace
+	url_pvc_binding := PVCPodBinding.GetBindingPath()
+	PVCPodBindingJson, _ := json.Marshal(PVCPodBinding)
+	etcd.Put(url_pvc_binding, string(PVCPodBindingJson))
 	topicMessage.ActionType = apiobjects.Create
 	pvcJson, _ := json.Marshal(pvc)
 	topicMessage.Object = string(pvcJson)

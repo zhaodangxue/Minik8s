@@ -145,6 +145,7 @@ func PVCDeleteHandler(c *gin.Context) {
 	msg.ActionType = apiobjects.Delete
 	msg.Object = val
 	msgJson, _ := json.Marshal(msg)
+	etcd.Delete(url_pvc_binding)
 	etcd.Delete(url)
 	listwatch.Publish(global.PvcRelevantTopic(), string(msgJson))
 	ret := "delete pvcname:" + pvcName + " namespace:" + np + " success"
@@ -165,7 +166,7 @@ func PVDeleteHandler(c *gin.Context) {
 		c.String(200, err.Error())
 		return
 	}
-	if pv.Status == apiobjects.Bound {
+	if pv.Status == apiobjects.PVBound {
 		c.String(200, "pv is used by pvc")
 		return
 	}
