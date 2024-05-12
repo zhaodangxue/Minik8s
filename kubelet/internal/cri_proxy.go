@@ -24,7 +24,7 @@ func getCriGrpcClient() (conn *grpc.ClientConn, err error) {
 
 func getRuntimeServiceClient() (runtimeServiceClient cri.RuntimeServiceClient, err error) {
 	// Create a gRPC client connection
-	conn, err := getCriGrpcClient();
+	conn, err := getCriGrpcClient()
 	if err != nil {
 		return
 	}
@@ -35,7 +35,7 @@ func getRuntimeServiceClient() (runtimeServiceClient cri.RuntimeServiceClient, e
 
 func getImageServiceClient() (imageSeviceClient cri.ImageServiceClient, err error) {
 	// Create a gRPC client connection
-	conn, err := getCriGrpcClient();
+	conn, err := getCriGrpcClient()
 	if err != nil {
 		return
 	}
@@ -67,11 +67,11 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 			Namespace: pod.ObjectMeta.Namespace,
 			Uid:       pod.UID,
 		},
-		Hostname: "",
-		Labels:   pod.ObjectMeta.Labels,
-		Annotations: make(map[string]string),
-		Linux: &cri.LinuxPodSandboxConfig{},
-		Windows: nil,
+		Hostname:     "",
+		Labels:       pod.ObjectMeta.Labels,
+		Annotations:  make(map[string]string),
+		Linux:        &cri.LinuxPodSandboxConfig{},
+		Windows:      nil,
 		PortMappings: nil,
 	}
 	runRequest := &cri.RunPodSandboxRequest{
@@ -111,16 +111,16 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 			Image: &cri.ImageSpec{
 				Image: container.Image,
 			},
-			Command: []string{"/bin/sh", "-c", "sleep 1000"},
-			Args:    nil,
+			Command:    []string{"/bin/sh", "-c", "sleep 1000"},
+			Args:       nil,
 			WorkingDir: "/root",
-			Envs: nil,
-			Labels: container.Labels,
-			Mounts: nil,
-			Devices: nil,
+			Envs:       nil,
+			Labels:     container.Labels,
+			Mounts:     nil,
+			Devices:    nil,
 		}
 
-		sandboxConfig.Metadata.Attempt = 1;
+		sandboxConfig.Metadata.Attempt = 1
 
 		createContainerRequest := &cri.CreateContainerRequest{
 			PodSandboxId:  PodSandboxID,
@@ -147,7 +147,7 @@ func CreatePod(pod apiobjects.Pod) (PodSandboxID string, err error) {
 	return
 }
 
-func convertCriContainerToMiniK8sContainer (response *cri.ContainerStatusResponse) (container apiobjects.Container) {
+func convertCriContainerToMiniK8sContainer(response *cri.ContainerStatusResponse) (container apiobjects.Container) {
 	container.Name = response.Status.Metadata.Name
 	container.Image = response.Status.Image.Image
 	container.Labels = response.Status.Labels
@@ -162,7 +162,7 @@ func convertCriContainerToMiniK8sContainer (response *cri.ContainerStatusRespons
 	return
 }
 
-func convertSandboxInfoToPod (response *cri.PodSandboxStatusResponse) (podWrapper PodWrapper) {
+func convertSandboxInfoToPod(response *cri.PodSandboxStatusResponse) (podWrapper PodWrapper) {
 	podWrapper.Pod.TypeMeta.ApiVersion = global.ApiVersion
 	podWrapper.Pod.TypeMeta.Kind = "Pod"
 	podWrapper.Pod.ObjectMeta.Name = response.Status.Metadata.Name
@@ -170,7 +170,7 @@ func convertSandboxInfoToPod (response *cri.PodSandboxStatusResponse) (podWrappe
 	podWrapper.Pod.ObjectMeta.Labels = response.Status.Labels
 	podWrapper.Pod.ObjectMeta.UID = response.Status.Metadata.Uid
 	podWrapper.Pod.ObjectMeta.CreationTimestamp = utils.NanoUnixToTime(response.Status.CreatedAt)
-	
+
 	podWrapper.Pod.Status.PodIP = response.Status.Network.Ip
 	podWrapper.Pod.Status.PodPhase = SandboxStateToPodPhase(response.Status.State)
 
@@ -179,7 +179,7 @@ func convertSandboxInfoToPod (response *cri.PodSandboxStatusResponse) (podWrappe
 }
 
 func GetPodInfo(sandboxId string) (response PodWrapper, err error) {
-	
+
 	// Parameters
 	ctx := getContext()
 
@@ -190,7 +190,7 @@ func GetPodInfo(sandboxId string) (response PodWrapper, err error) {
 	}
 
 	// Get pod sandbox status
-	podStatusRequest := &cri.PodSandboxStatusRequest{PodSandboxId: sandboxId,Verbose: true}
+	podStatusRequest := &cri.PodSandboxStatusRequest{PodSandboxId: sandboxId, Verbose: true}
 	var response_raw *cri.PodSandboxStatusResponse = nil
 	response_raw, err = runtimeServiceClient.PodSandboxStatus(ctx, podStatusRequest)
 	response = convertSandboxInfoToPod(response_raw)
@@ -218,7 +218,7 @@ func GetPodInfo(sandboxId string) (response PodWrapper, err error) {
 	}
 
 	utils.Debug("Pod sandbox status:", response)
-	return 
+	return
 }
 
 func ListPods() (sandboxs []*cri.PodSandbox, err error) {
@@ -264,6 +264,29 @@ func GetAllPods() (pods []*PodWrapper, err error) {
 	return
 }
 
-func DeletePod(pod *PodWrapper){
-	// TODO
+func DeletePod(pod *PodWrapper) (err error) {
+	ctx := getContext()
+
+	runtimeServiceClient, err := getRuntimeServiceClient()
+	if err != nil {
+		utils.Error("getRuntimeServiceClient error:", err)
+		return
+	}
+
+	stopRequest := &cri.StopPodSandboxRequest{PodSandboxId: pod.PodSandboxId}
+	_, err = runtimeServiceClient.StopPodSandbox(ctx, stopRequest)
+	if err != nil {
+		utils.Error("StopPodSandbox error:", err)
+		return
+	}
+	utils.Info("Pod sandbox stopped with ID:", pod.PodSandboxId)
+
+	removeRequest := &cri.RemovePodSandboxRequest{PodSandboxId: pod.PodSandboxId}
+	_, err = runtimeServiceClient.RemovePodSandbox(ctx, removeRequest)
+	if err != nil {
+		utils.Error("RemovePodSandbox error:", err)
+		return
+	}
+	utils.Info("Pod sandbox removed with ID:", pod.PodSandboxId)
+	return
 }

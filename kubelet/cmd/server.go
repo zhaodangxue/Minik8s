@@ -156,30 +156,42 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 
 // 定时被调用，检查pod状态
 func podStatusChecker() {
-	podWrappers, err := internal.GetAllPods()
+	utils.Info("kubelet:podStatusChecker")
+	podsNotInCluster, err := internal.GetAllPods()
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker GetAllPods error:", err)
 		return
 	}
 
 	// Check all pods
-	for _, pod := range podWrappers {
+	for _, pod := range podsNotInCluster {
 		podWrapper, ok := server.Pods[pod.Pod.GetObjectPath()]
 		if !ok {
-			utils.Warn("kubelet:podStatusChecker pod not found in server.Pods, deleting, pod=", pod)
-			internal.DeletePod(pod)
-			continue
+			utils.Warn("kubelet:podStatusChecker running pod not in kubelet internal list: ", pod)
+			
+			utils.Info("kubelet:podStatusChecker adding pod: ", pod.Pod.GetObjectPath())
+			new_pod := new(internal.PodWrapper)
+			new_pod.PodSandboxId = pod.PodSandboxId
+			server.Pods[pod.Pod.GetObjectPath()] = new_pod
+			podWrapper = new_pod
 		}
 		pod.Pod.Status.HostIP = server.Node.Info.Ip
 		podWrapper.Pod = pod.Pod
-
 	}
 
 	// Send all pods to apiserver
-	err = internal.SendPodStatus(server.Pods)
+	podsNotInCluster, err = internal.SendPodStatus(server.Pods)
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
+	} else {
+		// Delete pods not in cluster
+		for _, pod := range podsNotInCluster {
+			utils.Info("kubelet:podStatusChecker deleting pod not in cluster: ", pod.Pod.GetObjectPath())
+			delete(server.Pods, pod.Pod.GetObjectPath())
+			internal.DeletePod(pod);
+		}
 	}
+
 }
 
 // 定时被调用，上报node的健康状态

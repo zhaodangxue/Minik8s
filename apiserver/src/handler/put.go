@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"minik8s/apiobjects"
+	"minik8s/apiserver/api"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/global"
 	"minik8s/listwatch"
@@ -25,8 +26,11 @@ func PodStatePutHandler(c *gin.Context) {
 	}
 	url_pod := pod.GetObjectPath()
 	val, _ := etcd.Get(url_pod)
+	httpError := api.HttpError{}
 	if val == "" {
-		c.String(http.StatusBadRequest, "pod not exists")
+		httpError.Code = api.ApiserverErrorCode_UPDATE_POD_NOT_FOUND
+		httpError.Message = "Pod not found"
+		c.JSON(http.StatusBadRequest, httpError)
 		return
 	}
 	podJson, _ := json.Marshal(pod)
@@ -38,7 +42,7 @@ func PodStatePutHandler(c *gin.Context) {
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.PodStateTopic(), string(topicMessageJson))
 
-	c.String(http.StatusOK, "ok")
+	c.JSON(http.StatusOK, httpError)
 }
 
 func NodeHealthHandler(c *gin.Context) {
