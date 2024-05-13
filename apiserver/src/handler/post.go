@@ -116,6 +116,7 @@ func PVApplyHandler(c *gin.Context) {
 		pvJson, _ := json.Marshal(pv)
 		topicMessage.Object = string(pvJson)
 		topicMessageJson, _ := json.Marshal(topicMessage)
+		etcd.Delete_prefix(pv.GetObjectPath())
 		etcd.Put(url_pv, string(pvJson))
 		listwatch.Publish(global.PvRelevantTopic(), string(topicMessageJson))
 		c.String(http.StatusOK, "pv has configed")
@@ -158,6 +159,12 @@ func PVCApplyHandler(c *gin.Context) {
 		c.String(http.StatusOK, "pvc has configed")
 		return
 	}
+	var PVCPodBinding apiobjects.PVCPodBinding
+	PVCPodBinding.PVCName = pvc.ObjectMeta.Name
+	PVCPodBinding.PVCNamespace = pvc.ObjectMeta.Namespace
+	url_pvc_binding := PVCPodBinding.GetBindingPath()
+	PVCPodBindingJson, _ := json.Marshal(PVCPodBinding)
+	etcd.Put(url_pvc_binding, string(PVCPodBindingJson))
 	topicMessage.ActionType = apiobjects.Create
 	pvcJson, _ := json.Marshal(pvc)
 	topicMessage.Object = string(pvcJson)
@@ -165,5 +172,133 @@ func PVCApplyHandler(c *gin.Context) {
 	etcd.Put(url_pvc, string(pvcJson))
 	fmt.Printf("receive pvc name: %s namespace: %s uuid: %s", pvc.ObjectMeta.Name, pvc.ObjectMeta.Namespace, pvc.ObjectMeta.UID)
 	listwatch.Publish(global.PvcRelevantTopic(), string(topicMessageJson))
+	c.String(http.StatusOK, "ok")
+}
+
+func ServiceCreateHandler(c *gin.Context) {
+	svc := apiobjects.Service{}
+	action := apiobjects.Create
+	err := utils.ReadUnmarshal(c.Request.Body, &svc)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	if svc.Data.Namespace == "" {
+		svc.Data.Namespace = "default"
+	}
+
+	url := svc.GetObjectPath()
+	val, _ := etcd.Get(url)
+	if val != "" {
+		c.String(http.StatusOK, "service/"+svc.Data.Namespace+"/"+svc.Data.Name+"/already exists")
+		return
+	}
+	//svc.Data.UID = utils.NewUUID()
+	svc.Status.Phase = "CREATED"
+	svcJson, _ := json.Marshal(svc)
+	etcd.Put(url, string(svcJson))
+	fmt.Printf("service create: %s\n", string(svcJson))
+
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(svcJson),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
+	c.String(http.StatusOK, "ok")
+}
+
+func ServiceUpdateHandler(c *gin.Context) {
+	svc := apiobjects.Service{}
+	action := apiobjects.Update
+	err := utils.ReadUnmarshal(c.Request.Body, &svc)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	url := svc.GetObjectPath()
+	val, _ := etcd.Get(url)
+	if val == "" {
+		c.String(http.StatusOK, "service/"+svc.Data.Namespace+"/"+svc.Data.Name+"/not found")
+		return
+	}
+	svcJson, _ := json.Marshal(svc)
+	etcd.Put(url, string(svcJson))
+	fmt.Printf("service update: %s\n", string(svcJson))
+
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(svcJson),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
+	c.String(http.StatusOK, "ok")
+}
+
+func EndpointCreateHandler(c *gin.Context) {
+	endpoint := apiobjects.Endpoint{}
+	action := apiobjects.Create
+	err := utils.ReadUnmarshal(c.Request.Body, &endpoint)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	if endpoint.ServiceName == "" {
+		c.String(http.StatusOK, "endpoint service name is empty")
+		return
+	}
+	if endpoint.Data.Namespace == "" {
+		endpoint.Data.Namespace = "default"
+	}
+	url := endpoint.GetObjectPath()
+	val, _ := etcd.Get(url)
+	if val != "" {
+		c.String(http.StatusOK, "endpoint/"+endpoint.Data.Namespace+"/"+endpoint.Data.Name+"/already exists")
+		return
+	}
+	//endpoint.Data.UID = utils.NewUUID()
+	endpointJson, _ := json.Marshal(endpoint)
+	etcd.Put(url, string(endpointJson))
+	fmt.Printf("endpoint create: %s\n", string(endpointJson))
+
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(endpointJson),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
+	c.String(http.StatusOK, "ok")
+}
+
+func ServiceApplyHandler(c *gin.Context) {
+	svc := apiobjects.Service{}
+	action := apiobjects.Create
+	err := utils.ReadUnmarshal(c.Request.Body, &svc)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	if svc.Data.Namespace == "" {
+		svc.Data.Namespace = global.DefaultNamespace
+	}
+	url_svc := svc.GetObjectPath()
+	val, _ := etcd.Get(url_svc)
+	if val != "" {
+		c.String(http.StatusOK, "service already exists")
+		return
+	}
+	svc.Data.UID = utils.NewUUID()
+	svc.Status.Phase = "CREATING"
+	svcJson, _ := json.Marshal(svc)
+	//etcd.Put(url_svc, string(svcJson))
+	fmt.Printf("receive service name: %s namespace: %s uuid: %s", svc.Data.Name, svc.Data.Namespace, svc.Data.UID)
+
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(svcJson),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	listwatch.Publish(global.ServiceCmdTopic(), string(topicMessageJson))
+
 	c.String(http.StatusOK, "ok")
 }

@@ -97,6 +97,7 @@ func TestRunApplyPV(t *testing.T) {
 }
 func TestRunApplyPVC(t *testing.T) {
 	fmt.Println("TestRunApplyPVC")
+	etcd.Clear()
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)

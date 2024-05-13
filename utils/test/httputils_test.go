@@ -19,8 +19,12 @@ func TestPost(t *testing.T) {
 	fmt.Println("TestPost")
 	etcd.Clear()
 	apiServer = apiserver.New()
+	flag := make(chan bool)
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
+	a := false
+	a = <-flag
+	assert.Equal(t, true, a)
 	obj := handler.TestBody{
 		Body:    "test",
 		Name:    "test",
@@ -36,8 +40,12 @@ func TestGet(t *testing.T) {
 	fmt.Println("TestGet")
 	etcd.Clear()
 	apiServer = apiserver.New()
+	flag := make(chan bool)
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
+	a := false
+	a = <-flag
+	assert.Equal(t, true, a)
 	etcd.Put("/test/get", `{"body":"test","name":"test","uid":"100","num":1,"percent":1}`)
 	var TestJson handler.TestBody
 	err := utils.GetUnmarshal(route.Prefix+route.TestGetPath, &TestJson)
@@ -48,8 +56,12 @@ func TestPut(t *testing.T) {
 	fmt.Println("TestPut")
 	etcd.Clear()
 	apiServer = apiserver.New()
+	flag := make(chan bool)
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
+	a := false
+	a = <-flag
+	assert.Equal(t, true, a)
 	etcd.Put("/test/put/zbm/100", `{"body":"test","name":"zbm","uid":"100","num":1,"percent":1}`)
 	obj := handler.TestBody{
 		Body:    "test2",
@@ -67,8 +79,12 @@ func TestDelete(t *testing.T) {
 	fmt.Println("TestDelete")
 	etcd.Clear()
 	apiServer = apiserver.New()
+	flag := make(chan bool)
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
+	a := false
+	a = <-flag
+	assert.Equal(t, true, a)
 	etcd.Put("/test/delete/zbm/100", `{"body":"test","name":"zbm","uid":"100","num":1,"percent":1}`)
 	response, err := utils.Delete(route.Prefix + "/api/test/delete" + "/zbm/100")
 	fmt.Println(response)

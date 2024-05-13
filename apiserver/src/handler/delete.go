@@ -7,9 +7,74 @@ import (
 	"minik8s/apiserver/src/etcd"
 	"minik8s/global"
 	"minik8s/listwatch"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+func ServiceDeleteHandler(c *gin.Context) {
+	//svc := apiobjects.Service{}
+	//err := utils.ReadUnmarshal(c.Request.Body, &svc)
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	action := apiobjects.Delete
+	val, _ := etcd.Get("/api/service/" + namespace + "/" + name)
+	if val == "" {
+		c.String(http.StatusOK, "service/"+namespace+"/"+name+"/not found")
+		return
+	}
+	etcd.Delete("/api/service/" + namespace + "/" + name)
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(val),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	c.String(http.StatusOK, "delete service namespace:%s name:%s success", namespace, name)
+	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
+}
+
+func ServiceCmdDeleteHandler(c *gin.Context) {
+	//svc := apiobjects.Service{}
+	//err := utils.ReadUnmarshal(c.Request.Body, &svc)
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	action := apiobjects.Delete
+	val, _ := etcd.Get("/api/service/" + namespace + "/" + name)
+	if val == "" {
+		c.String(http.StatusOK, "service/"+namespace+"/"+name+"/not found")
+		return
+	}
+	//etcd.Delete("/api/service/" + namespace + "/" + name)
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(val),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	c.String(http.StatusOK, "delete service namespace:%s name:%s cmd:%s success", namespace, name)
+	listwatch.Publish(global.ServiceCmdTopic(), string(topicMessageJson))
+}
+
+func EndpointDeleteHandler(c *gin.Context) {
+	//edpt := apiobjects.Endpoint{}
+	//err := utils.ReadUnmarshal(c.Request.Body, &edpt)
+	serviceName := c.Param("serviceName")
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	action := apiobjects.Delete
+	val, _ := etcd.Get("/api/endpoint/" + serviceName + "/" + namespace + "/" + name)
+	if val == "" {
+		c.String(http.StatusOK, "endpoint/"+namespace+"/"+name+"/not found")
+		return
+	}
+	etcd.Delete("/api/endpoint/" + serviceName + "/" + namespace + "/" + name)
+	topicMessage := apiobjects.TopicMessage{
+		ActionType: action,
+		Object:     string(serviceName + "/" + namespace + "/" + name),
+	}
+	topicMessageJson, _ := json.Marshal(topicMessage)
+	c.String(http.StatusOK, "delete endpoint namespace:%s name:%s success", namespace, name)
+	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
+}
 
 func PodDeleteHandler(c *gin.Context) {
 	np := c.Param("namespace")
@@ -80,6 +145,7 @@ func PVCDeleteHandler(c *gin.Context) {
 	msg.ActionType = apiobjects.Delete
 	msg.Object = val
 	msgJson, _ := json.Marshal(msg)
+	etcd.Delete(url_pvc_binding)
 	etcd.Delete(url)
 	listwatch.Publish(global.PvcRelevantTopic(), string(msgJson))
 	ret := "delete pvcname:" + pvcName + " namespace:" + np + " success"
@@ -100,7 +166,7 @@ func PVDeleteHandler(c *gin.Context) {
 		c.String(200, err.Error())
 		return
 	}
-	if pv.Status == apiobjects.Bound {
+	if pv.Status == apiobjects.PVBound {
 		c.String(200, "pv is used by pvc")
 		return
 	}

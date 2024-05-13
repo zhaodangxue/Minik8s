@@ -26,9 +26,9 @@ type NFS struct {
 type PVPhase string
 
 const (
-	Available PVPhase = "Available"
-	Bound     PVPhase = "Bound"
-	Failed    PVPhase = "Failed"
+	PVAvailable PVPhase = "Available"
+	PVBound     PVPhase = "Bound"
+	PVFailed    PVPhase = "Failed"
 )
 
 type PersistentVolumeClaimAbstract struct {
