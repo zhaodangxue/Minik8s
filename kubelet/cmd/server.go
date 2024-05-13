@@ -88,12 +88,6 @@ func serverInit() {
 	server.PodCreateChan = make(chan apiobjects.Pod, 100)
 	server.PodStatusCheckerChan = make(chan Empty, 1)
 	server.NodeHealthyReportChan = make(chan Empty, 1)
-
-	// TODO: 解决pod启动问题
-	// 获取server的Bindings，或通知apiserver Node重启(通过node的状态变化)
-	
-
-	// TODO: 通知apiserver更新node状态
 }
 
 func onBingdingUpdate(message *redis.Message) {
@@ -118,12 +112,28 @@ func onBingdingUpdate(message *redis.Message) {
 		}
 		utils.Info("kubelet:onBingdingUpdate create pod with binding=", binding)
 		server.PodCreateChan <- binding.Pod
-	case apiobjects.Update:
-		// TODO
-		utils.Warn("kubelet:onBingdingUpdate Update not implemented")
 	case apiobjects.Delete:
-		// TODO
-		utils.Warn("kubelet:onBingdingUpdate Delete not implemented")
+		binding := apiobjects.NodePodBinding{}
+		err := json.Unmarshal([]byte(topicMessage.Object), &binding)
+		if err != nil {
+			utils.Error("kubelet:onBingdingUpdate parsing delete binding, err=", err)
+			return
+		}
+		if binding.Node.GetObjectRef() != server.Node.GetObjectRef() {
+			utils.Warn("kubelet:onBingdingUpdate node not match, binding.Node.Name=", binding.Node.ObjectMeta.Name)
+			return
+		}
+		utils.Info("kubelet:onBingdingUpdate delete pod with binding=", binding)
+		pod, ok := server.Pods[binding.Pod.GetObjectPath()]
+		if !ok {
+			utils.Warn("kubelet:onBingdingUpdate pod not found, binding.Pod.Name=", binding.Pod.ObjectMeta.Name)
+			return
+		}
+		cri.DeletePod(pod.Status.SandboxId)
+		delete(server.Pods, binding.Pod.GetObjectPath())
+		utils.Info("kubelet:onBingdingUpdate delete pod with binding=", binding)
+	case apiobjects.Update:
+		utils.Warn("kubelet:onBingdingUpdate Update not implemented")
 	default:
 		utils.Warn("kubelet:onBingdingUpdate unknown actionType=", topicMessage.ActionType)
 	}
