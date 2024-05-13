@@ -91,6 +91,7 @@ func serverInit() {
 
 	// TODO: 解决pod启动问题
 	// 获取server的Bindings，或通知apiserver Node重启(通过node的状态变化)
+	
 
 	// TODO: 通知apiserver更新node状态
 }

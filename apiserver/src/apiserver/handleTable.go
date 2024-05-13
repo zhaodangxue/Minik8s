@@ -25,6 +25,8 @@ var GetTable = map[string]HandlerFunc{
 	route.PodPathDetail:    handler.PodGetDetailHandler,
 	route.PVPathNamespace:  handler.PVGetWithNamespaceHandler,
 	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
+
+	route.NodePodBindingAllPath: handler.NodePodBindingAllHandler,
 }
 var PutTable = map[string]HandlerFunc{
 	route.TestPutPath:  handler.TestPutHandler,

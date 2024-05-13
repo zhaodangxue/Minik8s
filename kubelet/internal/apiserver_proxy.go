@@ -15,7 +15,7 @@ func SendPodStatus(pods map[string]*apiobjects.Pod) (podsToDelete []*apiobjects.
 	podsToDelete = make([]*apiobjects.Pod, 0)
 
 	for _, pod := range pods {
-		responseStr, err := utils.PutWithJson(route.Prefix + route.PodStatePath, pod)
+		responseStr, err := utils.PutWithJson(route.Prefix+route.PodStatePath, pod)
 		if err != nil {
 			utils.Error("SendPodStatus: PutWithJson failed: ", err)
 			continue
@@ -38,6 +38,15 @@ func SendPodStatus(pods map[string]*apiobjects.Pod) (podsToDelete []*apiobjects.
 
 func SendNodeStatus(node *apiobjects.Node) (err error) {
 	// Send node status to apiserver
-	_, err = utils.PutWithJson(route.Prefix + route.NodePath, node)
+	_, err = utils.PutWithJson(route.Prefix+route.NodePath, node)
+	return
+}
+
+func GetAllBindings() (bindings []apiobjects.NodePodBinding, err error) {
+	// Get all bindings from apiserver
+	err = utils.GetUnmarshal(route.Prefix+route.NodePodBindingAllPath, &bindings)
+	if err != nil {
+		return
+	}
 	return
 }
