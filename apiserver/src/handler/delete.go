@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
+	apiserver_utils "minik8s/apiserver/src/utils"
 	"minik8s/global"
 	"minik8s/listwatch"
 
@@ -50,38 +51,26 @@ func PodDeleteHandler(c *gin.Context) {
 func PVCDeleteHandler(c *gin.Context) {
 	np := c.Param("namespace")
 	pvcName := c.Param("name")
-	url := "/api/persistentvolume" + "/" + np + "/" + pvcName
-	val, _ := etcd.Get(url)
-	if val == "" {
+	url := "/api/persistentvolumeclaim" + "/" + np + "/" + pvcName
+	val, _ := etcd.Get_prefix(url)
+	if val[0] == "" {
 		c.String(200, "pvc not found")
 		return
 	}
-	var PVCPodBinding apiobjects.PVCPodBinding
-	PVCPodBinding.PVCName = pvcName
-	PVCPodBinding.PVCNamespace = np
-	url_pvc_binding := PVCPodBinding.GetBindingPath()
-	val_binding, _ := etcd.Get(url_pvc_binding)
-	err := json.Unmarshal([]byte(val_binding), &PVCPodBinding)
-	if err != nil {
-		c.String(200, err.Error())
-		return
-	}
-	if len(PVCPodBinding.Pods) != 0 {
-		c.String(200, "pvc is used by pod")
-		return
-	}
 	var pvc apiobjects.PersistentVolumeClaim
-	err = json.Unmarshal([]byte(val), &pvc)
+	err := json.Unmarshal([]byte(val[0]), &pvc)
 	if err != nil {
 		c.String(200, err.Error())
 		return
+	}
+	if len(pvc.PodBinding) != 0 {
+		c.String(200, "pvc is used by pod")
 	}
 	var msg apiobjects.TopicMessage
 	msg.ActionType = apiobjects.Delete
-	msg.Object = val
+	msg.Object = val[0]
 	msgJson, _ := json.Marshal(msg)
-	etcd.Delete(url_pvc_binding)
-	etcd.Delete(url)
+	etcd.Delete(url + "/" + pvc.Spec.StorageClassName)
 	listwatch.Publish(global.PvcRelevantTopic(), string(msgJson))
 	ret := "delete pvcname:" + pvcName + " namespace:" + np + " success"
 	c.String(200, ret)
@@ -89,14 +78,14 @@ func PVCDeleteHandler(c *gin.Context) {
 func PVDeleteHandler(c *gin.Context) {
 	np := c.Param("namespace")
 	pvName := c.Param("name")
-	url := "/api/persistentvolumeclaim" + "/" + np + "/" + pvName
-	val, _ := etcd.Get(url)
-	if val == "" {
+	url := "/api/persistentvolume" + "/" + np + "/" + pvName
+	val, _ := etcd.Get_prefix(url)
+	if val[0] == "" {
 		c.String(200, "pv not found")
 		return
 	}
 	var pv apiobjects.PersistentVolume
-	err := json.Unmarshal([]byte(val), &pv)
+	err := json.Unmarshal([]byte(val[0]), &pv)
 	if err != nil {
 		c.String(200, err.Error())
 		return
@@ -107,9 +96,16 @@ func PVDeleteHandler(c *gin.Context) {
 	}
 	var msg apiobjects.TopicMessage
 	msg.ActionType = apiobjects.Delete
-	msg.Object = val
+	msg.Object = val[0]
 	msgJson, _ := json.Marshal(msg)
-	etcd.Delete(url)
+	if pv.Dynamic == 1 {
+		err = apiserver_utils.DeletePVPath(pv.ObjectMeta.Name)
+		if err != nil {
+			c.String(200, err.Error())
+			return
+		}
+	}
+	etcd.Delete(url + "/" + pv.Spec.StorageClassName)
 	listwatch.Publish(global.PvRelevantTopic(), string(msgJson))
 	ret := "delete pvname:" + pvName + " namespace:" + np + " success"
 	c.String(200, ret)

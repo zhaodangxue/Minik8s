@@ -104,7 +104,7 @@ func PVApplyHandler(c *gin.Context) {
 	}
 	pv.ObjectMeta.UID = utils.NewUUID()
 	pv.CreationTimestamp = time.Now()
-	pv.Spec.PVPath = "/home/kubelet/volumes/pv-" + pv.ObjectMeta.UID
+	pv.Dynamic = 0
 	if pv.Spec.StorageClassName == "" {
 		pv.Spec.StorageClassName = "default"
 	}
@@ -112,14 +112,14 @@ func PVApplyHandler(c *gin.Context) {
 	val, _ := etcd.Get(url_pv)
 	var topicMessage apiobjects.TopicMessage
 	if val != "" {
-		topicMessage.ActionType = apiobjects.Update
-		pvJson, _ := json.Marshal(pv)
-		topicMessage.Object = string(pvJson)
-		topicMessageJson, _ := json.Marshal(topicMessage)
-		etcd.Delete_prefix(pv.GetObjectPath())
-		etcd.Put(url_pv, string(pvJson))
-		listwatch.Publish(global.PvRelevantTopic(), string(topicMessageJson))
-		c.String(http.StatusOK, "pv has configed")
+		// topicMessage.ActionType = apiobjects.Update
+		// pvJson, _ := json.Marshal(pv)
+		// topicMessage.Object = string(pvJson)
+		// topicMessageJson, _ := json.Marshal(topicMessage)
+		// etcd.Delete_prefix(pv.GetObjectPath())
+		// etcd.Put(url_pv, string(pvJson))
+		// listwatch.Publish(global.PvRelevantTopic(), string(topicMessageJson))
+		c.String(http.StatusOK, "pv has already exist,please delete it first")
 		return
 	}
 	topicMessage.ActionType = apiobjects.Create
@@ -150,21 +150,16 @@ func PVCApplyHandler(c *gin.Context) {
 	val, _ := etcd.Get(url_pvc)
 	var topicMessage apiobjects.TopicMessage
 	if val != "" {
-		topicMessage.ActionType = apiobjects.Update
-		pvcJson, _ := json.Marshal(pvc)
-		topicMessage.Object = string(pvcJson)
-		topicMessageJson, _ := json.Marshal(topicMessage)
-		etcd.Put(url_pvc, string(pvcJson))
-		listwatch.Publish(global.PvcRelevantTopic(), string(topicMessageJson))
-		c.String(http.StatusOK, "pvc has configed")
+		// topicMessage.ActionType = apiobjects.Update
+		// pvcJson, _ := json.Marshal(pvc)
+		// topicMessage.Object = string(pvcJson)
+		// topicMessageJson, _ := json.Marshal(topicMessage)
+		// etcd.Delete_prefix(pvc.GetObjectPath())
+		// etcd.Put(url_pvc, string(pvcJson))
+		// listwatch.Publish(global.PvcRelevantTopic(), string(topicMessageJson))
+		c.String(http.StatusOK, "the pvc has already exist,please delete it first")
 		return
 	}
-	var PVCPodBinding apiobjects.PVCPodBinding
-	PVCPodBinding.PVCName = pvc.ObjectMeta.Name
-	PVCPodBinding.PVCNamespace = pvc.ObjectMeta.Namespace
-	url_pvc_binding := PVCPodBinding.GetBindingPath()
-	PVCPodBindingJson, _ := json.Marshal(PVCPodBinding)
-	etcd.Put(url_pvc_binding, string(PVCPodBindingJson))
 	topicMessage.ActionType = apiobjects.Create
 	pvcJson, _ := json.Marshal(pvc)
 	topicMessage.Object = string(pvcJson)
