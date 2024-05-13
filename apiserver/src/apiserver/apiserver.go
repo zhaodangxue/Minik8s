@@ -53,3 +53,5 @@ func (a *apiServer) RUN() {
 	fmt.Println("apiServer is running")
 	log.Fatal(a.router.Run(":8080"))
 }
+
+// TODO: Node health check

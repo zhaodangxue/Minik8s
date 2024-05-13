@@ -33,4 +33,6 @@ const (
 	PVCPathNamespace     = "/api/persistentvolumeclaim/:namespace"
 	PVCPathSpecified     = "/api/persistentvolumeclaim/:namespace/:name"
 	PVCPathDetail        = "/api/persistentvolumeclaim/:namespace/:name/:storageclass"
+	NodeHealthPath        = "/api/nodehealth"
+	NodePodBindingAllPath = "/api/binding"
 )

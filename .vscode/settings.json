@@ -1,8 +1,9 @@
 {
+    "go.buildTags": "dev",
     "gopls": {
         // Editor 中 Go analyse 时使用的build tag
         "build.buildFlags": [
-            "-tags", "release"
+            "-tags", "dev"
         ]
     }
 }

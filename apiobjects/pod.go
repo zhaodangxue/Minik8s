@@ -13,7 +13,8 @@ type PodSpec struct {
 }
 
 type PodState struct {
-	PodPhase PodPhase
+	SandboxId string
+	PodPhase  PodPhase
 	// TODO: conditions
 	HostIP string
 	PodIP  string

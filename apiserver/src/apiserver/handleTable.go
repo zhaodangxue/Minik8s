@@ -34,11 +34,13 @@ var GetTable = map[string]HandlerFunc{
 	route.GetAllPodsPath:   handler.GetAllPodsHandler,
 	route.PVPathNamespace:  handler.PVGetWithNamespaceHandler,
 	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
+
+	route.NodePodBindingAllPath: handler.NodePodBindingAllHandler,
 	route.PVCPath:          persistentvolume_handler.PVCSGetHandler,
 }
 var PutTable = map[string]HandlerFunc{
-	route.TestPutPath:  handler.TestPutHandler,
-	route.PodStatePath: handler.PodStatePutHandler,
+	route.TestPutPath:    handler.TestPutHandler,
+	route.NodeHealthPath: handler.NodeHealthHandler,
 }
 var DeleteTable = map[string]HandlerFunc{
 	route.TestDeletePath:       handler.TestDeleteHandler,
