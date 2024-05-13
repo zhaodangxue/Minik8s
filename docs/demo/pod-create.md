@@ -71,7 +71,7 @@ kubelet将pod的运行信息定期上报给apiserver
 
 ![1715505118105](image/pod-create/1715505118105.png)
 
-etcd中的pod信息
+etcd中的node信息
 
 ![1715505162933](image/pod-create/1715505162933.png)
 
