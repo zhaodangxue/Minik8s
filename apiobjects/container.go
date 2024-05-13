@@ -6,7 +6,7 @@ type Container struct {
 	Ports        []ContainerPort   `yaml:"ports"`
 	VolumeMounts []VolumeMount     `yaml:"volumeMounts"`
 	Labels       map[string]string `yaml:"labels"`
-	Status       *ContainerStatus   `yaml:"-"`
+	Status       *ContainerStatus  `yaml:"-"`
 }
 
 type ContainerState int32
@@ -19,6 +19,7 @@ const (
 )
 
 type ContainerStatus struct {
+	Id         string
 	State      ContainerState
 	CreatedAt  int64
 	StartedAt  int64
@@ -28,9 +29,18 @@ type ContainerStatus struct {
 	Message    string
 }
 
+type ContainerPortProtocol string
+
+const (
+	Protocol_TCP ContainerPortProtocol = "TCP"
+	Protocol_UDP ContainerPortProtocol = "UDP"
+)
+
 type ContainerPort struct {
-	ContainerPort int32 `yaml:"containerPort"`
-	HostPort      int32 `yaml:"hostPort"`
+	Name          string                `yaml:"name"`
+	ContainerPort int32                 `yaml:"containerPort"`
+	HostPort      int32                 `yaml:"hostPort"`
+	Protocol      ContainerPortProtocol `yaml:"protocol"`
 }
 
 type VolumeMount struct {

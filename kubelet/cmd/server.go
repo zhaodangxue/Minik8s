@@ -5,6 +5,7 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/global"
 	"minik8s/kubelet/internal"
+	cri "minik8s/kubelet/internal/cri_proxy"
 	"minik8s/listwatch"
 	"minik8s/utils"
 	"time"
@@ -24,7 +25,7 @@ type kubeletServer struct {
 	Node apiobjects.Node
 	// Pods 用于存放当前Pod的状态
 	// key: Pod的Path
-	Pods map[string]*internal.PodWrapper
+	Pods map[string]*apiobjects.Pod
 	// PodCreateChan 用于通知kubelet主循环创建Pod
 	PodCreateChan chan apiobjects.Pod
 
@@ -83,7 +84,7 @@ func serverInit() {
 			State: apiobjects.NodeStateHealthy,
 		},
 	}
-	server.Pods = make(map[string]*internal.PodWrapper)
+	server.Pods = make(map[string]*apiobjects.Pod)
 	server.PodCreateChan = make(chan apiobjects.Pod, 100)
 	server.PodStatusCheckerChan = make(chan Empty, 1)
 	server.NodeHealthyReportChan = make(chan Empty, 1)
@@ -133,15 +134,15 @@ func podCreateHandler(pod apiobjects.Pod) {
 
 	pod.Status.HostIP = server.Node.Info.Ip
 
-	PodSandboxId, err := internal.CreatePod(pod)
+	err := cri.CreatePod(&pod)
 
 	if err != nil {
 		utils.Error("kubelet:podCreateHandler CreatePod error:", err)
 	}
 
-	podWrapper := internal.PodWrapper{Pod: pod, PodSandboxId: PodSandboxId}
-
-	server.Pods[pod.GetObjectPath()] = &podWrapper
+	newPod := new(apiobjects.Pod)
+	*newPod = pod
+	server.Pods[pod.GetObjectPath()] = newPod
 
 	// 等待pod状态检查线程自动检查
 }
@@ -157,38 +158,36 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 // 定时被调用，检查pod状态
 func podStatusChecker() {
 	utils.Info("kubelet:podStatusChecker")
-	podsNotInCluster, err := internal.GetAllPods()
+
+	// Remove pods not in kubelet internal list
+	podStatuses, err := cri.GetAllPods()
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker GetAllPods error:", err)
 		return
 	}
-
-	// Check all pods
-	for _, pod := range podsNotInCluster {
-		podWrapper, ok := server.Pods[pod.Pod.GetObjectPath()]
+	for _, podStatus := range podStatuses {
+		ref := cri.GetObjectRef(podStatus)
+		_, ok := server.Pods[ref.GetObjectPath()]
 		if !ok {
-			utils.Warn("kubelet:podStatusChecker running pod not in kubelet internal list: ", pod)
-			
-			utils.Info("kubelet:podStatusChecker adding pod: ", pod.Pod.GetObjectPath())
-			new_pod := new(internal.PodWrapper)
-			new_pod.PodSandboxId = pod.PodSandboxId
-			server.Pods[pod.Pod.GetObjectPath()] = new_pod
-			podWrapper = new_pod
+			utils.Warn("kubelet:podStatusChecker running pod not in kubelet internal list: ", ref.GetObjectPath())
+
+			utils.Info("kubelet:podStatusChecker deleting pod: ", ref.GetObjectPath())
+			cri.DeletePod(podStatus.Status.Id)
+			continue
 		}
-		pod.Pod.Status.HostIP = server.Node.Info.Ip
-		podWrapper.Pod = pod.Pod
 	}
 
-	// Send all pods to apiserver
-	podsNotInCluster, err = internal.SendPodStatus(server.Pods)
+	// Update pod status
+
+	podsNotInCluster, err := internal.SendPodStatus(server.Pods)
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
 	} else {
 		// Delete pods not in cluster
 		for _, pod := range podsNotInCluster {
-			utils.Info("kubelet:podStatusChecker deleting pod not in cluster: ", pod.Pod.GetObjectPath())
-			delete(server.Pods, pod.Pod.GetObjectPath())
-			internal.DeletePod(pod);
+			utils.Info("kubelet:podStatusChecker deleting pod not in cluster: ", pod.GetObjectPath())
+			delete(server.Pods, pod.GetObjectPath())
+			cri.DeletePod(pod.Status.SandboxId)
 		}
 	}
 

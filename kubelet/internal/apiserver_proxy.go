@@ -8,14 +8,14 @@ import (
 	"minik8s/utils"
 )
 
-func SendPodStatus(pods map[string]*PodWrapper) (podsToDelete []*PodWrapper, err error) {
+func SendPodStatus(pods map[string]*apiobjects.Pod) (podsToDelete []*apiobjects.Pod, err error) {
 	// Send changed pods to apiserver
 	// TODO: kubelet 使用运行时传入的参数，而不是直接使用全局变量指定apiserver地址
 
-	podsToDelete = make([]*PodWrapper, 0)
+	podsToDelete = make([]*apiobjects.Pod, 0)
 
 	for _, pod := range pods {
-		responseStr, err := utils.PutWithJson(route.Prefix + route.PodStatePath, pod.Pod)
+		responseStr, err := utils.PutWithJson(route.Prefix + route.PodStatePath, pod)
 		if err != nil {
 			utils.Error("SendPodStatus: PutWithJson failed: ", err)
 			continue

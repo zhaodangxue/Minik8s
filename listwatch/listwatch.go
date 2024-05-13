@@ -1,7 +1,6 @@
 package listwatch
 
 import (
-	"fmt"
 	"minik8s/utils"
 
 	"github.com/go-redis/redis/v8"

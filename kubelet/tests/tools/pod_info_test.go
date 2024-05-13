@@ -1,18 +1,18 @@
 package tests
 
 import (
-	"minik8s/kubelet/internal"
+	cri "minik8s/kubelet/internal/cri_proxy"
 	"testing"
 )
 
 func TestGetPodInfo(t *testing.T) {
-	sandboxs, err := internal.ListPods()
+	sandboxs, err := cri.ListPods()
 	if err != nil {
 		t.Error("ListPods error:", err)
 	}
 
 	for _, sandbox := range sandboxs {
-		pod, err := internal.GetPodInfo(sandbox.Id)
+		pod, err := cri.GetPodStatus(sandbox.Id)
 		if err != nil {
 			t.Error("GetPodInfo error:", err)
 		}
