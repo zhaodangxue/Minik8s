@@ -15,6 +15,7 @@ const (
 	PodPathNamespace      = "/api/pod/:namespace"
 	PodPathDetail         = "/api/pod/:namespace/:name"
 	NodePath              = "/api/node"
+	NodeHealthPath        = "/api/nodehealth"
 	NodePathDetail        = "/api/node/:namespace/:name"
 	NodePodBindingAllPath = "/api/binding"
 	NodePodBindingPath    = "/api/binding/:podnamespace/:podname/:nodename"

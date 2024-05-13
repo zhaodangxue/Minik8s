@@ -81,3 +81,7 @@ type test_spec struct {
 	Replicas int32  `yaml:"replicas"`
 	Name     string `yaml:"name"`
 }
+
+func (objA *Object) Equals(objB *Object) bool {
+	return objA.GetObjectPath() == objB.GetObjectPath()
+}

@@ -13,52 +13,62 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func PodStatePutHandler(c *gin.Context) {
-
-	pod := apiobjects.Pod{}
-	err := utils.ReadUnmarshal(c.Request.Body, &pod)
-	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	if pod.ObjectMeta.Namespace == "" {
-		pod.ObjectMeta.Namespace = global.DefaultNamespace
-	}
-	url_pod := pod.GetObjectPath()
-	val, _ := etcd.Get(url_pod)
-	httpError := api.HttpError{}
-	if val == "" {
-		httpError.Code = api.ApiserverErrorCode_UPDATE_POD_NOT_FOUND
-		httpError.Message = "Pod not found"
-		c.JSON(http.StatusBadRequest, httpError)
-		return
-	}
-	podJson, _ := json.Marshal(pod)
-	etcd.Put(url_pod, string(podJson))
-	utils.Info("PodPutHandler: receive pod: ", pod)
-
-	// FIXME: publish correctly
-	topicMessage := apiobjects.TopicMessage{ActionType: apiobjects.Update, Object: string(podJson)}
-	topicMessageJson, _ := json.Marshal(topicMessage)
-	listwatch.Publish(global.PodStateTopic(), string(topicMessageJson))
-
-	c.JSON(http.StatusOK, httpError)
-}
-
 func NodeHealthHandler(c *gin.Context) {
-	node := apiobjects.Node{}
-	err := utils.ReadUnmarshal(c.Request.Body, &node)
+
+	healthReport := api.NodeHealthReportRequest{}
+	err := utils.ReadUnmarshal(c.Request.Body, &healthReport)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	url_node := node.GetObjectPath()
-	nodeJson, err := json.Marshal(node)
+
+	// Update node
+	nodeJson, err := json.Marshal(healthReport.Node)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	etcd.Put(url_node, string(nodeJson))
-	utils.Info("NodeHealthHandler: receive node: ", node)
-	// CHECK: No publish for node health. Should we publish it?
+	etcd.Put(healthReport.Node.GetObjectPath(), string(nodeJson))
+
+	response := api.NodeHealthReportResponse{}
+	response.UnmatchedPodPaths = make([]string, 0)
+
+	// Update pods
+	for _, pod := range healthReport.Pods {
+		// Check binding
+		binding, err := etcd.Get(apiobjects.GetBindingPath(pod))
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		var nodePodBinding apiobjects.NodePodBinding
+		err = json.Unmarshal([]byte(binding), &nodePodBinding)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		if healthReport.Node.Equals(&nodePodBinding.Node.Object) == false {
+			utils.Warn("NodeHealthHandler: node not match, pod=", pod.ObjectMeta.Name, " node=", nodePodBinding.Node.ObjectMeta.Name)
+			response.UnmatchedPodPaths = append(response.UnmatchedPodPaths, pod.GetObjectPath())
+			continue
+		}
+
+		podJson, err := json.Marshal(pod)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		etcd.Put(pod.GetObjectPath(), string(podJson))
+		// Publish pod update event
+		message := apiobjects.TopicMessage{}
+		message.ActionType = apiobjects.Update
+		message.Object = string(podJson)
+		message_payload, err := json.Marshal(message)
+		if err != nil {
+			utils.Error("NodeHealthHandler: json.Marshal failed: ", err)
+		}
+		listwatch.Publish(global.PodStateTopic(), string(message_payload))
+	}
+
+	c.JSON(http.StatusOK, response)
 }
