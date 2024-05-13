@@ -94,6 +94,9 @@ func onBingdingUpdate(message *redis.Message) {
 	}
 
 	switch topicMessage.ActionType {
+	case apiobjects.Update:
+		utils.Info("kubelet:onBingdingUpdate update binding=", topicMessage.Object)
+		fallthrough
 	case apiobjects.Create:
 		binding := apiobjects.NodePodBinding{}
 		err := json.Unmarshal([]byte(topicMessage.Object), &binding)
@@ -127,8 +130,6 @@ func onBingdingUpdate(message *redis.Message) {
 		cri.DeletePod(pod.Status.SandboxId)
 		delete(server.Pods, binding.Pod.GetObjectPath())
 		utils.Info("kubelet:onBingdingUpdate delete pod with binding=", binding)
-	case apiobjects.Update:
-		utils.Warn("kubelet:onBingdingUpdate Update not implemented")
 	default:
 		utils.Warn("kubelet:onBingdingUpdate unknown actionType=", topicMessage.ActionType)
 	}
@@ -163,21 +164,21 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 
 // 定时被调用，上报Node和Pod的状态
 func healthReport() {
-	utils.Info("kubelet:podStatusChecker")
+	utils.Info("kubelet:healthReport")
 
 	// Remove pods not in kubelet internal list
 	podStatuses, err := cri.GetAllPods()
 	if err != nil {
-		utils.Error("kubelet:podStatusChecker GetAllPods error:", err)
+		utils.Error("kubelet:healthReport GetAllPods error:", err)
 		return
 	}
 	for _, podStatus := range podStatuses {
 		ref := cri.GetObjectRef(podStatus)
 		_, ok := server.Pods[ref.GetObjectPath()]
 		if !ok {
-			utils.Warn("kubelet:podStatusChecker running pod not in kubelet internal list: ", ref.GetObjectPath())
+			utils.Warn("kubelet:healthReport running pod not in kubelet internal list: ", ref.GetObjectPath())
 
-			utils.Info("kubelet:podStatusChecker deleting pod: ", ref.GetObjectPath())
+			utils.Info("kubelet:healthReport deleting pod: ", ref.GetObjectPath())
 			cri.DeletePod(podStatus.Status.Id)
 			continue
 		}
@@ -189,11 +190,11 @@ func healthReport() {
 	}
 	podsNotInCluster, err := internal.SendHealthReport(&server.Node, server.Pods)
 	if err != nil {
-		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
+		utils.Error("kubelet:healthReport SendPodStatus error:", err)
 	} else {
 		// Delete pods not in cluster
 		for _, pod := range podsNotInCluster {
-			utils.Info("kubelet:podStatusChecker deleting pod not in cluster: ", pod.GetObjectPath())
+			utils.Info("kubelet:healthReport deleting pod not in cluster: ", pod.GetObjectPath())
 			delete(server.Pods, pod.GetObjectPath())
 			cri.DeletePod(pod.Status.SandboxId)
 		}

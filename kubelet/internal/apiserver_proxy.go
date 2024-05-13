@@ -20,14 +20,18 @@ func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (p
 		request.Pods = append(request.Pods, pod)
 	}
 
-	responseHttp, err := utils.PostWithJson(route.Prefix+route.NodeHealthPath, request)
+	responseStr, err := utils.PutWithJson(route.Prefix+route.NodeHealthPath, request)
 	if err != nil {
-		utils.Error("SendHealthReport PostWithJson error:", err)
+		utils.Error("SendHealthReport PutWithJson error:", err)
+		return
 	}
 	response := api.NodeHealthReportResponse{}
-	if err := json.NewDecoder(responseHttp.Body).Decode(&response); err != nil {
-		utils.Error("SendHealthReport Decode error:", err)
+	err = json.Unmarshal([]byte(responseStr), &response)
+	if err != nil {
+		utils.Error("SendHealthReport json.Unmarshal error:", err)
+		return
 	}
+	
 	for _, podPath := range response.UnmatchedPodPaths {
 		podsToDelete = append(podsToDelete, pods[podPath])
 	}
