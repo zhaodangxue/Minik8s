@@ -8,37 +8,30 @@ import (
 	"minik8s/utils"
 )
 
-func SendPodStatus(pods map[string]*apiobjects.Pod) (podsToDelete []*apiobjects.Pod, err error) {
+func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (podsToDelete []*apiobjects.Pod, err error) {
 	// Send changed pods to apiserver
 	// TODO: kubelet 使用运行时传入的参数，而不是直接使用全局变量指定apiserver地址
 
-	podsToDelete = make([]*apiobjects.Pod, 0)
-
+	request := api.NodeHealthReportRequest{
+		Node: *node,
+		Pods: make([]*apiobjects.Pod, 0),
+	}
 	for _, pod := range pods {
-		responseStr, err := utils.PutWithJson(route.Prefix+route.PodStatePath, pod)
-		if err != nil {
-			utils.Error("SendPodStatus: PutWithJson failed: ", err)
-			continue
-		}
-		httpError := api.HttpError{}
-		err = json.Unmarshal([]byte(responseStr), &httpError)
-		if err != nil {
-			utils.Error("SendPodStatus: json.Unmarshal failed: ", err)
-			continue
-		}
-		if httpError.Code == api.ApiserverErrorCode_UPDATE_POD_NOT_FOUND {
-			podsToDelete = append(podsToDelete, pod)
-		} else if httpError.Code != api.ApiserverErrorCode_NO_ERROR {
-			utils.Error("SendPodStatus: httpError: ", httpError)
-		}
+		request.Pods = append(request.Pods, pod)
 	}
 
-	return
-}
+	responseHttp, err := utils.PostWithJson(route.Prefix+route.NodeHealthPath, request)
+	if err != nil {
+		utils.Error("SendHealthReport PostWithJson error:", err)
+	}
+	response := api.NodeHealthReportResponse{}
+	if err := json.NewDecoder(responseHttp.Body).Decode(&response); err != nil {
+		utils.Error("SendHealthReport Decode error:", err)
+	}
+	for _, podPath := range response.UnmatchedPodPaths {
+		podsToDelete = append(podsToDelete, pods[podPath])
+	}
 
-func SendNodeStatus(node *apiobjects.Node) (err error) {
-	// Send node status to apiserver
-	_, err = utils.PutWithJson(route.Prefix+route.NodePath, node)
 	return
 }
 

@@ -29,17 +29,13 @@ type kubeletServer struct {
 	// PodCreateChan 用于通知kubelet主循环创建Pod
 	PodCreateChan chan apiobjects.Pod
 
-	// PodStatusCheckerChan 用于触发Pod状态检查
-	PodStatusCheckerChan chan Empty
-	// NodeHealthyReportChan 用于触发上报Node的健康状态
-	NodeHealthyReportChan chan Empty
+	// HealthReportChan 用于定时上报Node和Pod的状态
+	HealthReportChan chan Empty
 }
 
 const (
-	// Pod状态检查定时
-	PodStatusCheckInterval = 10 * time.Second
-	// Node健康状态上报定时
-	NodeHealthyReportInterval = 10 * time.Second
+	// HealthReportInterval 用于定时上报Node和Pod的状态
+	HealthReportInterval = 10 * time.Second
 )
 
 // Empty 用于传递空消息
@@ -86,8 +82,7 @@ func serverInit() {
 	}
 	server.Pods = make(map[string]*apiobjects.Pod)
 	server.PodCreateChan = make(chan apiobjects.Pod, 100)
-	server.PodStatusCheckerChan = make(chan Empty, 1)
-	server.NodeHealthyReportChan = make(chan Empty, 1)
+	server.HealthReportChan = make(chan Empty, 1)
 }
 
 func onBingdingUpdate(message *redis.Message) {
@@ -166,8 +161,8 @@ func timedInformer(ch chan Empty, interval time.Duration) {
 	}
 }
 
-// 定时被调用，检查pod状态
-func podStatusChecker() {
+// 定时被调用，上报Node和Pod的状态
+func healthReport() {
 	utils.Info("kubelet:podStatusChecker")
 
 	// Remove pods not in kubelet internal list
@@ -192,7 +187,7 @@ func podStatusChecker() {
 	for _, pod := range server.Pods {
 		cri.UpdatePodStatus(pod)
 	}
-	podsNotInCluster, err := internal.SendPodStatus(server.Pods)
+	podsNotInCluster, err := internal.SendHealthReport(&server.Node, server.Pods)
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
 	} else {
@@ -206,34 +201,19 @@ func podStatusChecker() {
 
 }
 
-// 定时被调用，上报node的健康状态
-func nodeHealthyReport() {
-	// TODO: 定时被调用，上报node的健康状态
-	utils.Info("kubelet:nodeHealthyReport")
-	node := &server.Node
-	node.Status.State = apiobjects.NodeStateHealthy
-	err := internal.SendNodeStatus(node)
-	if err != nil {
-		utils.Error("kubelet:nodeHealthyReport SendNodeStatus error:", err)
-	}
-}
-
 func main() {
 
 	serverInit()
 
 	go listwatch.Watch(global.BindingTopic(), onBingdingUpdate)
-	go timedInformer(server.PodStatusCheckerChan, PodStatusCheckInterval)
-	go timedInformer(server.NodeHealthyReportChan, NodeHealthyReportInterval)
+	go timedInformer(server.HealthReportChan, HealthReportInterval)
 
 	for {
 		select {
 		case pod := <-server.PodCreateChan:
 			podCreateHandler(pod)
-		case <-server.PodStatusCheckerChan:
-			podStatusChecker()
-		case <-server.NodeHealthyReportChan:
-			nodeHealthyReport()
+		case <-server.HealthReportChan:
+			healthReport()
 		}
 	}
 }
