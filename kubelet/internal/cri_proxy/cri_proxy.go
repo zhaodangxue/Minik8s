@@ -127,6 +127,9 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 			utils.Error("CreateContainer error:", err)
 			return
 		}
+		if pod.Spec.Containers[i].Status == nil {
+			pod.Spec.Containers[i].Status = &apiobjects.ContainerStatus{}
+		}
 		pod.Spec.Containers[i].Status.Id = createContainerResponse.ContainerId
 		utils.Info("Container created with ID:", createContainerResponse)
 

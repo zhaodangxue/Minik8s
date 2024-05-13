@@ -66,7 +66,7 @@ type ObjectRef struct {
 }
 
 func (ref *ObjectRef) GetObjectPath() string {
-	return ref.ApiVersion + "/" + ref.Kind + "/" + ref.Namespace + "/" + ref.Name
+	return "/api" + "/" + strings.ToLower(ref.Kind) + "/" + ref.Namespace + "/" + ref.Name
 }
 
 type Base_test struct {

@@ -2,6 +2,7 @@ package cri_proxy
 
 import (
 	"minik8s/apiobjects"
+	"minik8s/global"
 	"minik8s/kubelet/internal"
 	"minik8s/utils"
 
@@ -37,7 +38,7 @@ func GetPodStatus(sandboxId string) (response *PodStatus, err error) {
 type ContainerStatus cri.ContainerStatusResponse
 
 func GetContainerStatuses(containerId string) (container *ContainerStatus, err error) {
-	
+
 	// Parameters
 	ctx := getContext()
 
@@ -105,6 +106,10 @@ func GetAllPods() (pods []*PodStatus, err error) {
 
 func GetObjectRef(pod *PodStatus) (objectRef *apiobjects.ObjectRef) {
 	objectRef = &apiobjects.ObjectRef{
+		TypeMeta: apiobjects.TypeMeta{
+			ApiVersion: global.ApiVersion,
+			Kind:       "Pod",
+		},
 		Name:      pod.Status.Metadata.Name,
 		Namespace: pod.Status.Metadata.Namespace,
 		UID:       pod.Status.Metadata.Uid,

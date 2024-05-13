@@ -178,7 +178,9 @@ func podStatusChecker() {
 	}
 
 	// Update pod status
-
+	for _, pod := range server.Pods {
+		cri.UpdatePodStatus(pod)
+	}
 	podsNotInCluster, err := internal.SendPodStatus(server.Pods)
 	if err != nil {
 		utils.Error("kubelet:podStatusChecker SendPodStatus error:", err)
