@@ -14,7 +14,7 @@ build_dev:
 
 _build: prepare build_targets 
 
-build_targets: kubelet kubectl apiserver scheduler
+build_targets: kubelet kubectl apiserver scheduler controller
 
 prepare: deps
 	mkdir -p build
@@ -34,5 +34,8 @@ apiserver:
 scheduler:
 	$(GOBUILD) -o build/scheduler -v -tags $(TAGS) scheduler/run/main.go
 
+controller:
+	$(GOBUILD) -o build/ctlmgr -v -tags $(TAGS) controller/cmd/main.go
+
 .PHONY: all build _build prepare deps 
-.PHONY: kubelet kubectl apiserver scheduler
+.PHONY: kubelet kubectl apiserver scheduler controller

@@ -8,7 +8,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"minik8s/apiobjects"
 	"minik8s/controller/api"
 	"minik8s/controller/src/registry"
@@ -79,4 +78,7 @@ func main() {
 			listFuncGenerator(controller, listFuncEnvelop.Func, listFuncEnvelop.Interval)
 		}
 	}
+
+	// 阻塞主goroutine
+	select {}
 }
