@@ -7,8 +7,8 @@ import (
 
 func TestProxy(t *testing.T) {
 	ipvs.Init()
-	var e proxyEndpointHandler
-	var s proxyServiceHandler
+	var e ProxyEndpointHandler
+	var s ProxyServiceHandler
 	/* test add service and add endpoint */
 	svcJson := "{\n    \"apiVersion\": \"v1\",\n    \"kind\": \"Service\",\n    \"metadata\": {\n        \"name\": \"service-practice\"\n    },\n    \"spec\": {\n        \"selector\": {\n            \"app\": \"deploy-1\"\n        },\n        \"type\": \"ClusterIP\",\n        \"ports\": [\n            {\n                \"name\": \"service-port1\",\n                \"protocol\": \"TCP\",\n                \"port\": 8080,\n                \"targetPort\": \"p1\"\n            }\n        ]\n    },\n    \"status\":{\n        \"ClusterIP\":\"10.10.0.2\"\n    }\n}"
 	s.HandleUpdate([]byte(svcJson))

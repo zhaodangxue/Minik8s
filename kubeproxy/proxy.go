@@ -11,30 +11,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
-	"minik8s/global"
+	//"minik8s/global"
 	"minik8s/kubeproxy/ipvs"
-	"minik8s/listwatch"
+	//"minik8s/listwatch"
 	"strconv"
 
 	"github.com/go-redis/redis/v8"
 )
 
-func Run() {
-	ipvs.Init()
-	//ipvs.TestConfig()
-	var p proxyServiceHandler
-	var e proxyEndpointHandler
-	listwatch.Watch(global.ServiceTopic(), p.HandleService)
-	go listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
-
-}
+// func main() {
+// 	ipvs.Init()
+// 	//ipvs.TestConfig()
+// 	var p proxyServiceHandler
+// 	var e proxyEndpointHandler
+// 	listwatch.Watch(global.ServiceTopic(), p.HandleService)
+// 	go listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
+// }
 
 /* ========== Service Handler ========== */
 
-type proxyServiceHandler struct {
+type ProxyServiceHandler struct {
 }
 
-func (p proxyServiceHandler) HandleService(msg *redis.Message) {
+func (p ProxyServiceHandler) HandleService(msg *redis.Message) {
 	topicMessage := &apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
 	if err != nil {
@@ -63,7 +62,7 @@ func (p proxyServiceHandler) HandleService(msg *redis.Message) {
 		fmt.Println("error")
 	}
 }
-func (e proxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
+func (e ProxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
 	topicMessage := &apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
 	if err != nil {
@@ -88,10 +87,10 @@ func (e proxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
 	}
 }
 
-func (p proxyServiceHandler) HandleCreate(message []byte) {
+func (p ProxyServiceHandler) HandleCreate(message []byte) {
 }
 
-func (p proxyServiceHandler) HandleDelete(message []byte) {
+func (p ProxyServiceHandler) HandleDelete(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 
@@ -102,7 +101,7 @@ func (p proxyServiceHandler) HandleDelete(message []byte) {
 
 }
 
-func (p proxyServiceHandler) HandleUpdate(message []byte) {
+func (p ProxyServiceHandler) HandleUpdate(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 
@@ -111,16 +110,16 @@ func (p proxyServiceHandler) HandleUpdate(message []byte) {
 	}
 }
 
-func (p proxyServiceHandler) GetType() string {
+func (p ProxyServiceHandler) GetType() string {
 	return "proxyserviceHandler"
 }
 
 /* ========== Endpoint Handler ========== */
 
-type proxyEndpointHandler struct {
+type ProxyEndpointHandler struct {
 }
 
-func (e proxyEndpointHandler) HandleCreate(message []byte) {
+func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
 
@@ -128,7 +127,7 @@ func (e proxyEndpointHandler) HandleCreate(message []byte) {
 	ipvs.AddEndpoint(key, edpt.Spec.DestIP, uint16(edpt.Spec.DestPort))
 }
 
-func (e proxyEndpointHandler) HandleDelete(message []byte) {
+func (e ProxyEndpointHandler) HandleDelete(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
 
@@ -137,10 +136,10 @@ func (e proxyEndpointHandler) HandleDelete(message []byte) {
 	ipvs.DeleteEndpoint(svcKey, dstKey)
 }
 
-func (e proxyEndpointHandler) HandleUpdate(message []byte) {
+func (e ProxyEndpointHandler) HandleUpdate(message []byte) {
 
 }
 
-func (e proxyEndpointHandler) GetType() string {
+func (e ProxyEndpointHandler) GetType() string {
 	return "proxyendpointHandler"
 }

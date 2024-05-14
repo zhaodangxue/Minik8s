@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+	"minik8s/global"
+	"minik8s/listwatch"
 	"minik8s/utils"
 	"strconv"
 	"strings"
 
+	"github.com/go-redis/redis/v8"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,15 +29,15 @@ var IPStart = "10.10.0."
 var svcToEndpoints = map[string]*[]*apiobjects.Endpoint{}
 var svcList = map[string]*apiobjects.Service{}
 
-type svcServiceHandler struct {
+type SvcServiceHandler struct {
 }
 
-type svcEndpointHandler struct {
+type SvcEndpointHandler struct {
 }
 
 /* ========== Service Handler ========== */
 
-func (s svcServiceHandler) HandleCreate(message []byte) {
+func (s SvcServiceHandler) HandleCreate(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 
@@ -59,7 +62,7 @@ func (s svcServiceHandler) HandleCreate(message []byte) {
 	log.Info("[svc controller] Create service. Cluster IP:", svc.Status.ClusterIP)
 }
 
-func (s svcServiceHandler) HandleDelete(message []byte) {
+func (s SvcServiceHandler) HandleDelete(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 	delete(svcList, svc.Status.ClusterIP)
@@ -86,7 +89,7 @@ func (s svcServiceHandler) HandleDelete(message []byte) {
 	log.Info("[svc controller] Delete service. Cluster IP:", svc.Status.ClusterIP)
 }
 
-func (s svcServiceHandler) HandleUpdate(message []byte) {
+func (s SvcServiceHandler) HandleUpdate(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 
@@ -120,16 +123,16 @@ func (s svcServiceHandler) HandleUpdate(message []byte) {
 	log.Info("[svc controller] Update service. Cluster IP:", svc.Status.ClusterIP)
 }
 
-func (s svcServiceHandler) GetType() string {
+func (s SvcServiceHandler) GetType() string {
 	return "ServiceHandler"
 }
 
 /* ========== Endpoint Handler ========== */
-func (s svcEndpointHandler) HandleCreate(message []byte) {
+func (s SvcEndpointHandler) HandleCreate(message []byte) {
 	//应该不会调用到这个函数
 }
 
-func (s svcEndpointHandler) HandleDelete(message []byte) {
+func (s SvcEndpointHandler) HandleDelete(message []byte) {
 	pod := &apiobjects.Pod{}
     err := json.Unmarshal(message, pod)
 	if err != nil {
@@ -141,7 +144,7 @@ func (s svcEndpointHandler) HandleDelete(message []byte) {
 	}
 }
 
-func (s svcEndpointHandler) HandleUpdate(message []byte) {
+func (s SvcEndpointHandler) HandleUpdate(message []byte) {
 	pod := &apiobjects.Pod{}
 	//todo 获取更新后的Pod
 	err := json.Unmarshal(message, pod)
@@ -161,7 +164,7 @@ func (s svcEndpointHandler) HandleUpdate(message []byte) {
 	}
 }
 
-func (s svcEndpointHandler) GetType() string {
+func (s SvcEndpointHandler) GetType() string {
 	return "PodHandler"
 }
 
@@ -179,8 +182,8 @@ func allocateClusterIP() string {
 
 func createEndpointsFromPodList(svc *apiobjects.Service) {
 	//从apiserver获取pod列表
-	podlist := []apiobjects.Pod{}
-	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",podlist)
+	podlist := []*apiobjects.Pod{}
+	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
 	if err != nil {
 		fmt.Println("error")
 	}
@@ -188,8 +191,8 @@ func createEndpointsFromPodList(svc *apiobjects.Service) {
 	var edptList []*apiobjects.Endpoint
 	for _, pod := range podlist {
 	    //筛选符合selector条件的pod
-		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
-			createEndpoints(&edptList, svc, &pod)
+		if IsLabelEqual(svc.Spec.Selector, pod.Labels) {
+			createEndpoints(&edptList, svc, pod)
 		}
 	}
 	//更新service对应的endpoints
@@ -219,6 +222,10 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 
 	for _, port := range svc.Spec.Ports {
 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
+		if dstPort == 8080 {
+			log.Fatal("[svc controller] No Match for Target Port!")
+			return
+		}
 		spec := apiobjects.EndpointSpec{
 			SvcIP:    svc.Status.ClusterIP,
 			SvcPort:  port.Port,
@@ -261,7 +268,7 @@ func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
 		}
 	}
 	log.Fatal("[svc controller] No Match for Target Port!")
-	return 0
+	return 8080
 }
 
 func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
@@ -287,4 +294,74 @@ func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 	svcToEndpoints[svc.Status.ClusterIP] = &newEdptList
 
 	log.Info(logInfo)
+}
+
+
+func (ss *SvcServiceHandler)HandleService(msg *redis.Message){
+	topicMessage := &apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("HandleServiceApply")
+	switch topicMessage.ActionType {
+	case apiobjects.Create:
+		//调用ServiceController分配cluster ip，更新serviceList
+		svc := &apiobjects.Service{}
+		err2 := json.Unmarshal([]byte(topicMessage.Object), svc)
+		if err2 != nil {
+			fmt.Println(err2)
+		}
+		fmt.Println("HandleServiceApply ",svc.Data.Name)
+		svcJson, _ := json.Marshal(svc)
+		ss.HandleCreate([]byte(svcJson))
+	case apiobjects.Delete:
+		//调用ServiceController删除service
+		svc := &apiobjects.Service{}
+        err2 := json.Unmarshal([]byte(topicMessage.Object),svc)
+		if err2 != nil {
+			fmt.Println(err2)	
+		}
+		fmt.Println("HandleServiceDelete ",svc.Data.Name)
+		svcJson, _ := json.Marshal(svc)
+		ss.HandleDelete([]byte(svcJson))
+	case apiobjects.Update:
+		//调用ServiceController更新service
+		
+	default:
+		fmt.Println("error")
+	}
+}
+func (ss *SvcEndpointHandler)HandleEndpoints(msg *redis.Message) {
+	topicMessage := &apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	switch topicMessage.ActionType {
+	case apiobjects.Create:
+		//调用ServiceController增加endpoint
+		//ss.HandleCreate([]byte(topicMessage.Object))
+	case apiobjects.Delete:
+		//调用ServiceController删除endpoint
+		//ss.HandleDelete([]byte(topicMessage.Object))
+	case apiobjects.Update:
+		//调用ServiceController更新endpoint
+		//ss.HandleUpdate([]byte(topicMessage.Object))
+	}
+}
+
+func Run() {
+	/* service controller */
+	var se SvcEndpointHandler = SvcEndpointHandler{}
+	var ss SvcServiceHandler  = SvcServiceHandler{}
+
+	listwatch.Watch(global.ServiceCmdTopic(), ss.HandleService)
+	 go listwatch.Watch(global.PodStateTopic(), se.HandleEndpoints)
+
+}
+
+func main() {
+	/* service controller */
+	Run()
 }

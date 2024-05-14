@@ -6,6 +6,7 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/apiserver/src/route"
+	"minik8s/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -67,6 +68,7 @@ func GetAllPodsHandler(c *gin.Context) {
 		fmt.Println(err)
 	}
 	for _, value := range values {
+		utils.Info("pod value: ", value)
 		var pod apiobjects.Pod
 		err := json.Unmarshal([]byte(value), &pod)
 		if err != nil {

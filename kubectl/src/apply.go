@@ -78,7 +78,7 @@ func RunApply(cmd *cobra.Command, args []string) error {
 		url := route.Prefix + route.ServiceApplyPath
 		fmt.Println("appyly service: ", service)
 		//TODO service格式是否符合要求
-		utils.ApplyApiObject(url, service.Data.Name)
+		utils.ApplyApiObject(url, service)
 	}
 	return nil
 }
