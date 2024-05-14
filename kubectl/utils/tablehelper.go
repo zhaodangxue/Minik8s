@@ -4,6 +4,7 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
+	"strconv"
 
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
@@ -44,6 +45,13 @@ func PVTbl() table.Table {
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 
+}
+func ServiceTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("NAME", "NameSpace","TYPE", "CLUSTER-IP", "EXTERNAL-IP", "PORT(S)")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
 }
 func GetTestFromApiserver() (testyaml *apiobjects.TestYaml, err error) {
 	url := route.Prefix + route.TestCtlPath
@@ -128,6 +136,33 @@ func PrintPVCTable(namespace string) error {
 			accessMode = "RWX"
 		}
 		tbl.AddRow(pvc.ObjectMeta.Name, pvc.Status, pvc.PVBinding.PVname, pvc.PVBinding.PVcapacity, accessMode, pvc.CreationTimestamp.Format("2006-01-02 15:04:05"))
+	}
+	tbl.Print()
+	return nil
+}
+
+func PrintServiceTable() error {
+	svcs := []*apiobjects.Service{}
+	url := route.Prefix + route.GetAllServicesPath
+	err := utils.GetUnmarshal(url, &svcs)
+	if err != nil {
+		return err
+	}
+	tbl := ServiceTbl()
+	for _, svc := range svcs {
+		var clusterIP string
+		var externalIP string
+		var ports string
+		for _, p := range svc.Spec.Ports {
+			ports += p.Name + ":" + strconv.FormatInt(int64(p.Port),10) + "/" + string(p.Protocol) + ", "
+		}
+		if svc.Status.ClusterIP == "" {
+			clusterIP = "<none>"
+		} else {
+			clusterIP = svc.Status.ClusterIP
+		}
+		externalIP = "<none>"
+		tbl.AddRow(svc.Data.Name, svc.Data.Namespace, svc.Spec.Type, clusterIP, externalIP, ports)
 	}
 	tbl.Print()
 	return nil

@@ -20,6 +20,7 @@ const (
 	ServiceApplyPath     = "/api/service/apply"
 	ServiceCmdDeletePath = "/api/service/cmd/delete/:namespace/:name"
 	ServiceCreatePath    = "/api/service"
+	NodePortPath         = "/api/nodeport"
 	ServiceUpdatePath    = "/api/service/update/:namespace/:name"
 	ServiceDeletePath    = "/api/service/delete/:namespace/:name"
 	EndpointCreaetPath   = "/api/endpoint"

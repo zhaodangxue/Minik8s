@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
-	//"net/url"
 
-	//"minik8s/global"
-	//"minik8s/listwatch"
 	"minik8s/utils"
 	"strconv"
 	"strings"
@@ -30,7 +27,7 @@ var IPStart = "10.10.0."
 
 var svcToEndpoints = map[string]*[]*apiobjects.Endpoint{}
 var svcList = map[string]*apiobjects.Service{}
-
+//var nodePortList = map[string] bool{}
 type SvcServiceHandler struct {
 }
 
@@ -229,7 +226,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 
 	for _, port := range svc.Spec.Ports {
 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
-		if dstPort == 8080 {
+		if dstPort == 1314 {
 			log.Fatal("[svc controller] No Match for Target Port!")
 			return
 		}
@@ -253,7 +250,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 			fmt.Println("error")
 		}
 		response, err := utils.PostWithString("http://localhost:8080/api/endpoint", string(edptByte))
-		log.Info("[svc controller] Create endpoint. srcIP:", svc.Status.ClusterIP, ":", port.Port, " dstIP:", pod.Status.PodIP, ":", dstPort)
+		//log.Info("[svc controller] Create endpoint. srcIP:", svc.Status.ClusterIP, ":", port.Port, " dstIP:", pod.Status.PodIP, ":", dstPort)
 		if err != nil {
 			print("create service error")
 		}
@@ -264,7 +261,6 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 	}
 
 	log.Info(logInfo)
-
 }
 
 func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
@@ -276,7 +272,7 @@ func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
 		}
 	}
 	log.Fatal("[svc controller] No Match for Target Port!")
-	return 8080
+	return 1314
 }
 
 func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
@@ -390,9 +386,6 @@ func (ss *SvcEndpointHandler)HandleBindingEndpoints(msg *redis.Message) {
 }
 
 func TimetoCall() {
-	// var ss SvcServiceHandler
-	// var se SvcEndpointHandler
-
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
 	if err != nil {

@@ -39,7 +39,10 @@ func RunGet(cmd *cobra.Command, args []string) {
 		err = ctlutils.PrintPVCTable(namespace)
 	case "node":
 		fmt.Printf("Name:%s", apiObjName)
+	case "service":
+		err = ctlutils.PrintServiceTable()
 	}
+
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -3,9 +3,12 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	//"strconv"
+
 	//"log"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
+	"minik8s/apiserver/src/route"
 	"minik8s/global"
 	"minik8s/listwatch"
 	"minik8s/utils"
@@ -208,7 +211,89 @@ func ServiceCreateHandler(c *gin.Context) {
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
 	c.String(http.StatusOK, "ok")
+
+	if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+		etcd.Put("/api/nodeport/"+svc.Data.Namespace+"/"+svc.Data.Name, string(svcJson))
+
+		var pods []*apiobjects.Pod
+	    values, err := etcd.Get_prefix(route.PodPath)
+	    if err != nil {
+		    fmt.Println(err)
+	    }
+	    for _, value := range values {
+		    utils.Info("pod value: ", value)
+		    var pod apiobjects.Pod
+		    err := json.Unmarshal([]byte(value), &pod)
+		    if err != nil {
+			     fmt.Println(err)
+		    }
+		    pods = append(pods, &pod)
+	    }
+		for _, pod := range pods{
+			//筛选符合selector条件的pod
+			if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
+				createEndpoints(&svc, pod)
+			}
+		}
+	}
 }
+func createEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
+	for _, port := range svc.Spec.Ports {
+		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
+		if dstPort == 1314 {
+			log.Fatal("[svc controller] No Match for Target Port!")
+			return
+		}
+		spec := apiobjects.EndpointSpec{
+			SvcIP:    "HostIP",
+			SvcPort:  port.Port,
+			DestIP:   pod.Status.PodIP,
+			DestPort: dstPort,
+		}
+		edpt := &apiobjects.Endpoint{
+			ServiceName: svc.Data.Name,
+			Spec: spec,
+			Data: apiobjects.MetaData{
+				Name:      svc.Data.Name + "-" + pod.Name + "-port:" + port.TargetPort,
+				Namespace: svc.Data.Namespace,
+			},
+		}
+		//TODO 发送http给apiserver,更新edpt
+		edptByte, err := edpt.MarshalJSON()
+		if err != nil {
+			fmt.Println("error")
+		}
+		etcd.Put("/api/nodeport/"+edpt.Data.Namespace+"/"+edpt.Data.Name, string(edptByte))
+		topicMessage := apiobjects.TopicMessage{
+			ActionType: apiobjects.Create,
+			Object:     string(edptByte),
+		}
+		topicMessageJson, _ := json.Marshal(topicMessage)
+		listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
+	}
+}
+
+func IsLabelEqual(a map[string]string, b map[string]string) bool {
+	for k, v := range a {
+		if b[k] != v {
+			return false
+		}
+	}
+	return true
+}
+
+func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
+	for _, c := range containers {
+		for _, p := range c.Ports {
+			if p.Name == targetPort {
+				return p.ContainerPort
+			}
+		}
+	}
+	log.Fatal("[svc controller] No Match for Target Port!")
+	return 1314
+}
+
 
 func ServiceUpdateHandler(c *gin.Context) {
 	svc := apiobjects.Service{}
@@ -237,6 +322,7 @@ func ServiceUpdateHandler(c *gin.Context) {
 	c.String(http.StatusOK, "ok")
 }
 
+
 func EndpointCreateHandler(c *gin.Context) {
 	endpoint := apiobjects.Endpoint{}
 	action := apiobjects.Create
@@ -256,10 +342,8 @@ func EndpointCreateHandler(c *gin.Context) {
 	val, _ := etcd.Get(url)
 	if val != "" {
 		c.String(http.StatusOK, "endpoint/"+endpoint.Data.Namespace+"/"+endpoint.Data.Name+"/already exists")
-		log.Info("[apiserver] endpoint already exists")
 		return
 	}
-	//endpoint.Data.UID = utils.NewUUID()
 	endpointJson, _ := json.Marshal(endpoint)
 	etcd.Put(url, string(endpointJson))
 	fmt.Printf("endpoint create: %s\n", string(endpointJson))
@@ -302,6 +386,5 @@ func ServiceApplyHandler(c *gin.Context) {
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.ServiceCmdTopic(), string(topicMessageJson))
-
 	c.String(http.StatusOK, "ok")
 }

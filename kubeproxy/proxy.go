@@ -11,14 +11,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+	"minik8s/utils"
+
+	//"minik8s/utils"
 
 	//"minik8s/global"
 	"minik8s/kubeproxy/ipvs"
 	//"minik8s/listwatch"
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/go-redis/redis/v8"
+	log "github.com/sirupsen/logrus"
 )
 
 // func main() {
@@ -115,6 +118,10 @@ func (p ProxyServiceHandler) HandleUpdate(message []byte) {
 
 	for _, p := range svc.Spec.Ports {
 		ipvs.AddService(svc.Status.ClusterIP, uint16(p.Port))
+
+		if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+			ipvs.AddService(utils.GetLocalIP(), uint16(p.Port))
+		}
 	}
 }
 
@@ -130,6 +137,14 @@ type ProxyEndpointHandler struct {
 func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
+	if edpt.Spec.SvcIP == "HostIP" {
+		log.Info("[proxy] Add HostIP Endpoint: svcIP:",edpt.Spec.SvcIP, "SvcPort:",edpt.Spec.SvcPort, "DestIP:",edpt.Spec.DestIP, "DestPort:",edpt.Spec.DestPort)
+		edpt.Spec.SvcIP = utils.GetLocalIP()
+		ipvs.AddService(edpt.Spec.SvcIP, uint16(edpt.Spec.SvcPort))
+		key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
+		ipvs.AddEndpoint(key, edpt.Spec.DestIP, uint16(edpt.Spec.DestPort))
+		return
+	}
 
 	key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
 	log.Info("[proxy] Add Endpoint: svcIP:",edpt.Spec.SvcIP, "SvcPort:",edpt.Spec.SvcPort)
