@@ -1,7 +1,4 @@
 package controller
-
-
-
 //import "minik8s/controller"
 
 // import (
