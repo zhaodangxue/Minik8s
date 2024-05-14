@@ -24,6 +24,7 @@ var PostTable = map[string]HandlerFunc{
 	route.PVCPath: handler.PVCApplyHandler,
 	route.PVCPathDetail:      persistentvolume_handler.PVCApplyDetailHandler,
 	route.PVPathDetail:       persistentvolume_handler.PVApplyDetailHandler,
+	route.PVDynamicAllocate:  persistentvolume_handler.PVDynamicAllocateHandler,
 }
 var GetTable = map[string]HandlerFunc{
 	route.TestGetPath:      handler.TestGetHandler,
@@ -38,11 +39,15 @@ var GetTable = map[string]HandlerFunc{
 	route.GetAllEndpointsPath: handler.GetAllEndpointsHandler,
 	route.PVPathNamespace:  handler.PVGetWithNamespaceHandler,
 	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
+
+	route.NodePodBindingAllPath: handler.NodePodBindingAllHandler,
+	route.PVPathSpecified:  persistentvolume_handler.PVGetSpecifiedHandler,
+	route.PVCPathSpecified: persistentvolume_handler.PVCGetSpecifiedHandler,
 	route.PVCPath:          persistentvolume_handler.PVCSGetHandler,
 }
 var PutTable = map[string]HandlerFunc{
-	route.TestPutPath:  handler.TestPutHandler,
-	route.PodStatePath: handler.PodStatePutHandler,
+	route.TestPutPath:    handler.TestPutHandler,
+	route.NodeHealthPath: handler.NodeHealthHandler,
 }
 var DeleteTable = map[string]HandlerFunc{
 	route.TestDeletePath:       handler.TestDeleteHandler,

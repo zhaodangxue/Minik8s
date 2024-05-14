@@ -2,7 +2,7 @@ package tests
 
 import (
 	"minik8s/apiobjects"
-	"minik8s/kubelet/internal"
+	cri "minik8s/kubelet/internal/cri_proxy"
 	"testing"
 
 	"github.com/google/uuid"
@@ -35,6 +35,6 @@ func TestPodCreate(t *testing.T) {
 		Status: apiobjects.PodState{},
 	}
 
-	internal.CreatePod(pod)
+	cri.CreatePod(&pod)
 
 }

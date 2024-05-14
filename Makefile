@@ -14,7 +14,7 @@ build_dev:
 
 _build: prepare build_targets 
 
-build_targets: kubelet kubectl apiserver scheduler controllermanager proxy
+build_targets: kubelet kubectl apiserver scheduler controllermanager proxy controller
 
 prepare: deps
 	mkdir -p build
@@ -40,5 +40,8 @@ controllermanager:
 proxy:
 	$(GOBUILD) -o build/proxy -v -tags $(TAGS) kubeproxy/run/main.go
 
+controller:
+	$(GOBUILD) -o build/ctlmgr -v -tags $(TAGS) controller/cmd/main.go
+
 .PHONY: all build _build prepare deps 
-.PHONY: kubelet kubectl apiserver scheduler controllermanager proxy
+.PHONY: kubelet kubectl apiserver scheduler controllermanager proxy controller

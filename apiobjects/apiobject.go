@@ -66,7 +66,7 @@ type ObjectRef struct {
 }
 
 func (ref *ObjectRef) GetObjectPath() string {
-	return ref.ApiVersion + "/" + ref.Kind + "/" + ref.Namespace + "/" + ref.Name
+	return "/api" + "/" + strings.ToLower(ref.Kind) + "/" + ref.Namespace + "/" + ref.Name
 }
 
 type Base_test struct {
@@ -80,4 +80,8 @@ type TestYaml struct {
 type test_spec struct {
 	Replicas int32  `yaml:"replicas"`
 	Name     string `yaml:"name"`
+}
+
+func (objA *Object) Equals(objB *Object) bool {
+	return objA.GetObjectPath() == objB.GetObjectPath()
 }

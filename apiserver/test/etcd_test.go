@@ -11,6 +11,7 @@ import (
 func TestEtcd(t *testing.T) {
 	fmt.Println("TestEtcd")
 	var err error
+	etcd.Clear()
 	err = etcd.Put("test1", "test-1")
 	assert.Nil(t, err)
 	err = etcd.Put("test2", "test-2")

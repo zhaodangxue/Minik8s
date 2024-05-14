@@ -8,6 +8,7 @@ import (
 	"minik8s/global"
 	"minik8s/listwatch"
 	"minik8s/utils"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -47,15 +48,19 @@ func (c *pvcontroller) GetPVSWithSpecifiedStorageClassAndSpecifiedCapacity(pvs [
 	}
 	return
 }
-func (c *pvcontroller) SelectOnePVToBound(pvs []*apiobjects.PersistentVolume, accessmode string, PVCName string, PVCNamespace string) bool {
+func (c *pvcontroller) SelectOnePVToBound(pvs []*apiobjects.PersistentVolume, accessmode string, pvc *apiobjects.PersistentVolumeClaim) bool {
 	var res bool
 	res = false
 	for _, pv := range pvs {
 		for _, mode := range pv.Spec.AccessModes {
 			if mode == accessmode {
 				pv.Status = apiobjects.PVBound
-				pv.Spec.PVCBinding.PVCname = PVCName
-				pv.Spec.PVCBinding.PVCnamespace = PVCNamespace
+				pv.Spec.PVCBinding.PVCname = pvc.ObjectMeta.Name
+				pv.Spec.PVCBinding.PVCnamespace = pvc.ObjectMeta.Namespace
+				pvc.PVBinding.PVname = pv.ObjectMeta.Name
+				pvc.PVBinding.PVnamespace = pv.ObjectMeta.Namespace
+				pvc.PVBinding.PVcapacity = pv.Spec.Capacity.Storage
+				pvc.PVBinding.PVpath = pv.Spec.NFS.Path
 				url := pv.GetObjectPath() + "/" + pv.Spec.StorageClassName
 				utils.PostWithJson(route.Prefix+url, pv)
 				res = true
@@ -64,6 +69,34 @@ func (c *pvcontroller) SelectOnePVToBound(pvs []*apiobjects.PersistentVolume, ac
 		}
 	}
 	return res
+}
+func (c *pvcontroller) DynamicAllocatePV(pvc *apiobjects.PersistentVolumeClaim) error {
+	pv := apiobjects.PersistentVolume{}
+	pv.ObjectMeta.Namespace = pvc.ObjectMeta.Namespace
+	pv.ObjectMeta.UID = utils.NewUUID()
+	pv.ObjectMeta.Name = "pv-" + pv.ObjectMeta.UID
+	pv.CreationTimestamp = time.Now()
+	pv.Spec.StorageClassName = pvc.Spec.StorageClassName
+	pv.Spec.Capacity.Storage = pvc.Spec.Resources.Requests.Storage
+	pv.Spec.AccessModes = pvc.Spec.AccessModes
+	pv.Status = apiobjects.PVBound
+	pv.Spec.VolumeMode = "Filesystem"
+	pv.Spec.PersistentVolumeReclaimPolicy = "Retain"
+	pv.TypeMeta.ApiVersion = "v1"
+	pv.TypeMeta.Kind = "PersistentVolume"
+	pv.Spec.PVCBinding.PVCname = pvc.ObjectMeta.Name
+	pv.Spec.PVCBinding.PVCnamespace = pvc.ObjectMeta.Namespace
+	pv.Dynamic = 1 // 1表示动态分配
+	url_pv := route.PVDynamicAllocate
+	_, err := utils.PostWithJson(route.Prefix+url_pv, pv)
+	if err != nil {
+		return err
+	}
+	pvc.PVBinding.PVname = pv.ObjectMeta.Name
+	pvc.PVBinding.PVnamespace = pv.ObjectMeta.Namespace
+	pvc.PVBinding.PVcapacity = pv.Spec.Capacity.Storage
+	pvc.PVBinding.PVpath = global.NFSdir + "/" + pv.ObjectMeta.Name
+	return nil
 }
 func (c *pvcontroller) CheckPVBoundPVC() {
 	pvcs := c.GetAllPVCFromApiserver()
@@ -78,20 +111,58 @@ func (c *pvcontroller) CheckPVBoundPVC() {
 		}
 		pvs := c.GetAllPVSWithNamespaceFromApiserver(np)
 		pvs_filtered := c.GetPVSWithSpecifiedStorageClassAndSpecifiedCapacity(pvs, pvc.Spec.StorageClassName, size_pvc)
-		if len(pvs_filtered) == 0 {
-			continue
-		}
-		if c.SelectOnePVToBound(pvs_filtered, pvc.Spec.AccessModes[0], pvc.ObjectMeta.Name, pvc.ObjectMeta.Namespace) {
+		if c.SelectOnePVToBound(pvs_filtered, pvc.Spec.AccessModes[0], pvc) {
+			pvc.Status = apiobjects.PVCBound
+		} else {
+			err = c.DynamicAllocatePV(pvc)
+			if err != nil {
+				fmt.Println(err)
+			}
 			pvc.Status = apiobjects.PVCBound
 		}
 		url := pvc.GetObjectPath() + "/" + pvc.Spec.StorageClassName
 		utils.PostWithJson(route.Prefix+url, pvc)
 	}
 }
+func (c *pvcontroller) CancelPVBoundPVC(pvc *apiobjects.PersistentVolumeClaim) error {
+	pv := apiobjects.PersistentVolume{}
+	url := route.Prefix + route.PVPath + "/" + pvc.PVBinding.PVnamespace + "/" + pvc.PVBinding.PVname
+	err := utils.GetUnmarshal(url, &pv)
+	if err != nil {
+		return err
+	}
+	if pv.Name == "" {
+		return fmt.Errorf("pv not found")
+	}
+	pv.Status = apiobjects.PVAvailable
+	pv.Spec.PVCBinding.PVCname = ""
+	pv.Spec.PVCBinding.PVCnamespace = ""
+	url = pv.GetObjectPath() + "/" + pv.Spec.StorageClassName
+	_, err = utils.PostWithJson(route.Prefix+url, pv)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (c *pvcontroller) PVUpdateHandler(data string) error {
+	pv := apiobjects.PersistentVolume{}
+	err := json.Unmarshal([]byte(data), &pv)
+	if err != nil {
+		return err
+	}
+	pv.Status = apiobjects.PVAvailable
+	url_pv := pv.GetObjectPath() + "/" + pv.Spec.StorageClassName
+	utils.PostWithJson(route.Prefix+url_pv, pv)
+	c.CheckPVBoundPVC()
 	return nil
 }
 func (c *pvcontroller) PVDeleteHandler(data string) error {
+	pv := apiobjects.PersistentVolume{}
+	err := json.Unmarshal([]byte(data), &pv)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("delete pv name: %s namespace: %s uuid: %s", pv.ObjectMeta.Name, pv.ObjectMeta.Namespace, pv.ObjectMeta.UID)
 	return nil
 }
 func (c *pvcontroller) PVCreateHandler(data string) error {
@@ -124,10 +195,232 @@ func (c *pvcontroller) handlePVupdate(msg *redis.Message) {
 		fmt.Println(err)
 	}
 }
+func (c *pvcontroller) PVCCreateHandler(data string) error {
+	pvc := apiobjects.PersistentVolumeClaim{}
+	err := json.Unmarshal([]byte(data), &pvc)
+	if err != nil {
+		return err
+	}
+	pvc.Status = apiobjects.PVCAvailable
+	url_pvc := pvc.GetObjectPath() + "/" + pvc.Spec.StorageClassName
+	utils.PostWithJson(route.Prefix+url_pvc, pvc)
+	c.CheckPVBoundPVC()
+	return nil
+}
+func (c *pvcontroller) PVCDeleteHandler(data string) error {
+	pvc := apiobjects.PersistentVolumeClaim{}
+	err := json.Unmarshal([]byte(data), &pvc)
+	if err != nil {
+		return err
+	}
+	if pvc.Status == apiobjects.PVCBound {
+		err = c.CancelPVBoundPVC(&pvc)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (c *pvcontroller) PVCUpdateHandler(data string) error {
+	pvc := apiobjects.PersistentVolumeClaim{}
+	err := json.Unmarshal([]byte(data), &pvc)
+	if err != nil {
+		return err
+	}
+	pvc.Status = apiobjects.PVCAvailable
+	url_pvc := pvc.GetObjectPath() + "/" + pvc.Spec.StorageClassName
+	utils.PostWithJson(route.Prefix+url_pvc, pvc)
+	c.CheckPVBoundPVC()
+	return nil
+}
 func (c *pvcontroller) handlePVCupdate(msg *redis.Message) {
+	topicMessage := apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	switch topicMessage.ActionType {
+	case apiobjects.Create:
+		err = c.PVCCreateHandler(topicMessage.Object)
+	case apiobjects.Update:
+		err = c.PVCUpdateHandler(topicMessage.Object)
+	case apiobjects.Delete:
+		err = c.PVCDeleteHandler(topicMessage.Object)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+func (c *pvcontroller) PodCreateHandler(data string) error {
+	pod := apiobjects.Pod{}
+	err := json.Unmarshal([]byte(data), &pod)
+	if err != nil {
+		return err
+	}
+	for _, volume := range pod.Spec.Volumes {
+		if volume.PersistentVolumeClaim == nil {
+			continue
+		}
+		PVCname := volume.PersistentVolumeClaim.ClaimName
+		PVCnamespace := volume.PersistentVolumeClaim.ClaimNamespace
+		url := route.Prefix + route.PVCPath + "/" + PVCnamespace + "/" + PVCname
+		pvc := &apiobjects.PersistentVolumeClaim{}
+		err = utils.GetUnmarshal(url, pvc)
+		if err != nil {
+			return err
+		}
+		if pvc.ObjectMeta.Name == "" {
+			return fmt.Errorf("pvc not found")
+		}
+		if pvc.Status != apiobjects.PVCBound {
+			return fmt.Errorf("pvc not bound")
+		}
+		var PodAbstract apiobjects.PodAbstract
+		PodAbstract.Podname = pod.ObjectMeta.Name
+		PodAbstract.Namespace = pod.ObjectMeta.Namespace
+		var PodBinding []apiobjects.PodAbstract
+		PodBinding = pvc.PodBinding
+		PodBinding = append(PodBinding, PodAbstract)
+		pvc.PodBinding = PodBinding
+		url = pvc.GetObjectPath() + "/" + pvc.Spec.StorageClassName
+		_, err = utils.PostWithJson(route.Prefix+url, pvc)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (c *pvcontroller) PodUpdateHandler(data string) error {
+	pod := apiobjects.Pod{}
+	err := json.Unmarshal([]byte(data), &pod)
+	if err != nil {
+		return err
+	}
+	pvcs := c.GetAllPVCFromApiserver()
+	for _, pvc := range pvcs {
+		var flag bool
+		var PodAbstracts []apiobjects.PodAbstract
+		flag = false
+		if pvc.Status == apiobjects.PVCAvailable {
+			continue
+		}
+		if len(pvc.PodBinding) == 0 {
+			continue
+		}
+		for _, podBinding := range pvc.PodBinding {
+			if podBinding.Podname == pod.ObjectMeta.Name && podBinding.Namespace == pod.ObjectMeta.Namespace {
+				flag = true
+			}
+		}
+		if flag == true {
+			for _, podBinding := range pvc.PodBinding {
+				if podBinding.Podname != pod.ObjectMeta.Name || podBinding.Namespace != pod.ObjectMeta.Namespace {
+					PodAbstracts = append(PodAbstracts, podBinding)
+				}
+			}
+		}
+		pvc.PodBinding = PodAbstracts
+		_, err = utils.PostWithJson(route.Prefix+pvc.GetObjectPath()+"/"+pvc.Spec.StorageClassName, pvc)
+		if err != nil {
+			return err
+		}
+	}
+	for _, volume := range pod.Spec.Volumes {
+		if volume.PersistentVolumeClaim == nil {
+			continue
+		}
+		PVCname := volume.PersistentVolumeClaim.ClaimName
+		PVCnamespace := volume.PersistentVolumeClaim.ClaimNamespace
+		url := route.Prefix + route.PVCPath + "/" + PVCnamespace + "/" + PVCname
+		pvc := &apiobjects.PersistentVolumeClaim{}
+		err = utils.GetUnmarshal(url, pvc)
+		if err != nil {
+			return err
+		}
+		if pvc.Name == "" {
+			return fmt.Errorf("pvc not found")
+		}
+		if pvc.Status != apiobjects.PVCBound {
+			return fmt.Errorf("pvc not bound")
+		}
+		var PodAbstract apiobjects.PodAbstract
+		PodAbstract.Podname = pod.ObjectMeta.Name
+		PodAbstract.Namespace = pod.ObjectMeta.Namespace
+		var PodBinding []apiobjects.PodAbstract
+		PodBinding = pvc.PodBinding
+		PodBinding = append(PodBinding, PodAbstract)
+		pvc.PodBinding = PodBinding
+		url = pvc.GetObjectPath() + "/" + pvc.Spec.StorageClassName
+		_, err = utils.PostWithJson(url, pvc)
+		if err != nil {
+			return err
+		}
 
+	}
+	return nil
+}
+func (c *pvcontroller) PodDeleteHandler(data string) error {
+	pod := apiobjects.Pod{}
+	err := json.Unmarshal([]byte(data), &pod)
+	if err != nil {
+		return err
+	}
+	for _, volume := range pod.Spec.Volumes {
+		if volume.PersistentVolumeClaim == nil {
+			continue
+		}
+		PVCname := volume.PersistentVolumeClaim.ClaimName
+		PVCnamespace := volume.PersistentVolumeClaim.ClaimNamespace
+		url := route.Prefix + route.PVCPath + "/" + PVCnamespace + "/" + PVCname
+		pvc := &apiobjects.PersistentVolumeClaim{}
+		err = utils.GetUnmarshal(url, pvc)
+		if err != nil {
+			return err
+		}
+		if pvc.Name == "" {
+			return fmt.Errorf("pvc not found")
+		}
+		if pvc.Status != apiobjects.PVCBound {
+			return fmt.Errorf("pvc not bound")
+		}
+		var PodAbstracts []apiobjects.PodAbstract
+		for _, podBinding := range pvc.PodBinding {
+			if podBinding.Podname != pod.ObjectMeta.Name || podBinding.Namespace != pod.ObjectMeta.Namespace {
+				PodAbstracts = append(PodAbstracts, podBinding)
+			}
+		}
+		pvc.PodBinding = PodAbstracts
+		url = pvc.GetObjectPath() + "/" + pvc.Spec.StorageClassName
+		_, err = utils.PostWithJson(route.Prefix+url, pvc)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (c *pvcontroller) handlePodUpdate(msg *redis.Message) {
+	topicMessage := apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	switch topicMessage.ActionType {
+	case apiobjects.Create:
+		err = c.PodCreateHandler(topicMessage.Object)
+	case apiobjects.Update:
+		err = c.PodUpdateHandler(topicMessage.Object)
+	case apiobjects.Delete:
+		err = c.PodDeleteHandler(topicMessage.Object)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 func (c *pvcontroller) Run() {
 	go listwatch.Watch(global.PvRelevantTopic(), c.handlePVupdate)
-	listwatch.Watch(global.PvcRelevantTopic(), c.handlePVCupdate)
+	go listwatch.Watch(global.PvcRelevantTopic(), c.handlePVCupdate)
+	listwatch.Watch(global.PodRelevantTopic(), c.handlePodUpdate)
+}
+func New() Controller {
+	return &pvcontroller{}
 }
