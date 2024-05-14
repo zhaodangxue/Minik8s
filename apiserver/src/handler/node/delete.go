@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
-	"minik8s/apiserver/src/route"
 	"minik8s/global"
 	"minik8s/listwatch"
 	"net/http"

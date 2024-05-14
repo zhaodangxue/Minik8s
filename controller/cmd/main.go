@@ -47,7 +47,7 @@ func listFuncGenerator(controller api.Controller, listFunc api.ListFunc, interva
 		for {
 			err := listFunc(controller)
 			if err != nil {
-				utils.Error("Err occur when calling list func:", err)
+				utils.Error("Err occur when calling list func ", controller, "err:", err)
 			}
 			utils.Debug("ListFunc done")
 			time.Sleep(interval)
