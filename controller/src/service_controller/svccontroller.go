@@ -1,15 +1,18 @@
-package controller
+package service
 
 import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+	"minik8s/global"
+	"time"
 
+	"minik8s/controller/api"
 	"minik8s/utils"
 	"strconv"
 	"strings"
 
-	"github.com/go-redis/redis/v8"
+	//"github.com/go-redis/redis/v8"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -28,6 +31,47 @@ var IPStart = "10.10.0."
 var svcToEndpoints = map[string]*[]*apiobjects.Endpoint{}
 var svcList = map[string]*apiobjects.Service{}
 //var nodePortList = map[string] bool{}
+
+const ServiceController_REPORT_INTERVAL = 10 * time.Second
+type ServiceController struct {
+	initInfo          api.InitStruct
+	ListFuncEnvelops  []api.ListFuncEnvelop
+	WatchFuncEnvelops []api.WatchFuncEnvelop
+	ss SvcServiceHandler
+	se SvcEndpointHandler 
+}
+
+func (c *ServiceController) Init(init api.InitStruct) {
+	c.initInfo = init
+	c.ListFuncEnvelops = make([]api.ListFuncEnvelop, 0)
+	c.ListFuncEnvelops = append(c.ListFuncEnvelops, api.ListFuncEnvelop{
+		Func:     CheckAllService,
+		Interval: ServiceController_REPORT_INTERVAL,
+	})
+
+	c.WatchFuncEnvelops = make([]api.WatchFuncEnvelop, 0)
+	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
+		Func:  c.se.HandleEndpoints,
+		Topic: global.PodStateTopic(),
+	})
+	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
+		Func:  c.se.HandleBindingEndpoints,
+		Topic: global.BindingTopic(),
+	})
+	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
+		Func:  c.ss.HandleService,
+		Topic: global.ServiceCmdTopic(),
+	})
+}
+
+
+func (c *ServiceController) GetListFuncEnvelops() []api.ListFuncEnvelop {
+	return c.ListFuncEnvelops
+}
+func (c *ServiceController) GetWatchFuncEnvelops() []api.WatchFuncEnvelop {
+	return c.WatchFuncEnvelops
+}
+
 type SvcServiceHandler struct {
 }
 
@@ -301,20 +345,16 @@ func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 }
 
 
-func (ss *SvcServiceHandler)HandleService(msg *redis.Message){
-	topicMessage := &apiobjects.TopicMessage{}
-	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
-	if err != nil {
-		fmt.Println(err)
-	}
+func (ss *SvcServiceHandler)HandleService(controller api.Controller, message apiobjects.TopicMessage)(error){
 	fmt.Println("HandleServiceApply")
-	switch topicMessage.ActionType {
+	switch message.ActionType {
 	case apiobjects.Create:
 		//调用ServiceController分配cluster ip，更新serviceList
 		svc := &apiobjects.Service{}
-		err2 := json.Unmarshal([]byte(topicMessage.Object), svc)
+		err2 := json.Unmarshal([]byte(message.Object), svc)
 		if err2 != nil {
 			fmt.Println(err2)
+			return err2
 		}
 		//fmt.Println("HandleServiceApply ",svc.Data.Name)
 		svcJson, _ := json.Marshal(svc)
@@ -322,9 +362,10 @@ func (ss *SvcServiceHandler)HandleService(msg *redis.Message){
 	case apiobjects.Delete:
 		//调用ServiceController删除service
 		svc := &apiobjects.Service{}
-        err2 := json.Unmarshal([]byte(topicMessage.Object),svc)
+        err2 := json.Unmarshal([]byte(message.Object),svc)
 		if err2 != nil {
-			fmt.Println(err2)	
+			fmt.Println(err2)
+			return err2	
 		}
 		//fmt.Println("HandleServiceDelete ",svc.Data.Name)
 		svcJson, _ := json.Marshal(svc)
@@ -335,20 +376,17 @@ func (ss *SvcServiceHandler)HandleService(msg *redis.Message){
 	default:
 		fmt.Println("error")
 	}
+	return nil
 }
-func (ss *SvcEndpointHandler)HandleEndpoints(msg *redis.Message) {
-	topicMessage := &apiobjects.TopicMessage{}
-	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
-	if err != nil {
-		fmt.Println(err)
-	}
+func (ss *SvcEndpointHandler)HandleEndpoints(controller api.Controller, message apiobjects.TopicMessage) (error){
 	pod := &apiobjects.Pod{}
-	err = json.Unmarshal([]byte(topicMessage.Object), pod)
+	err := json.Unmarshal([]byte(message.Object), pod)
 	if err != nil {
 		fmt.Println(err)
+		return err
 	}
 	podJson, _ := json.Marshal(pod)
-	switch topicMessage.ActionType {
+	switch message.ActionType {
 	case apiobjects.Create:
 		//调用ServiceController增加endpoint
 		//ss.HandleUpdate([]byte(podJson))
@@ -359,20 +397,17 @@ func (ss *SvcEndpointHandler)HandleEndpoints(msg *redis.Message) {
 		//调用ServiceController更新endpoint
 		ss.HandleUpdate([]byte(podJson))
 	}
+	return nil
 }
-func (ss *SvcEndpointHandler)HandleBindingEndpoints(msg *redis.Message) {
-	topicMessage := &apiobjects.TopicMessage{}
-	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
-	if err != nil {
-		fmt.Println(err)
-	}
+func (ss *SvcEndpointHandler)HandleBindingEndpoints(controller api.Controller, message apiobjects.TopicMessage) (error){
 	nodepod := &apiobjects.NodePodBinding{}
-	err = json.Unmarshal([]byte(topicMessage.Object), nodepod)
+	err := json.Unmarshal([]byte(message.Object), nodepod)
 	if err != nil {
 		fmt.Println(err)
+		return err
 	}
 	podJson, _ := json.Marshal(nodepod.Pod)
-	switch topicMessage.ActionType {
+	switch message.ActionType {
 	case apiobjects.Create:
 		//调用ServiceController增加endpoint
 		ss.HandleUpdate([]byte(podJson))
@@ -383,9 +418,10 @@ func (ss *SvcEndpointHandler)HandleBindingEndpoints(msg *redis.Message) {
 		//调用ServiceController更新endpoint
 		ss.HandleUpdate([]byte(podJson))
 	}
+	return nil
 }
 
-func TimetoCall() {
+func CheckAllService(controller api.Controller)(error) {
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
 	if err != nil {
@@ -398,7 +434,7 @@ func TimetoCall() {
 		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneService/"+svcUrl,&tmpsvc)
 		if err != nil {
 			fmt.Println("error")
-			return
+			return err
 		}
 
 		if tmpsvc.Data.Name == "" {
@@ -411,6 +447,7 @@ func TimetoCall() {
 			response, err := utils.PostWithString("http://localhost:8080/api/service", string(svcByte))
 			if err != nil {
 				print("create service error")
+				return err
 			}
 			fmt.Println(response)
 		}
@@ -430,4 +467,5 @@ func TimetoCall() {
 			}
 		}
 	}
+	return nil
 }

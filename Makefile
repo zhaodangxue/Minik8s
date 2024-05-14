@@ -34,9 +34,6 @@ apiserver:
 scheduler:
 	$(GOBUILD) -o build/scheduler -v -tags $(TAGS) scheduler/run/main.go
 
-controllermanager:
-	$(GOBUILD) -o build/controllermanager -v -tags $(TAGS) controller/run/main.go
-
 proxy:
 	$(GOBUILD) -o build/proxy -v -tags $(TAGS) kubeproxy/run/main.go
 
@@ -44,4 +41,4 @@ controller:
 	$(GOBUILD) -o build/ctlmgr -v -tags $(TAGS) controller/cmd/main.go
 
 .PHONY: all build _build prepare deps 
-.PHONY: kubelet kubectl apiserver scheduler controllermanager proxy controller
+.PHONY: kubelet kubectl apiserver scheduler proxy controller
