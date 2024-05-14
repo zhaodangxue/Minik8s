@@ -28,3 +28,37 @@ func PVCSGetHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, pvcs)
 }
+func PVGetSpecifiedHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	pvName := c.Param("name")
+	url := route.PVPath + "/" + namespace + "/" + pvName
+	val, _ := etcd.Get_prefix(url)
+	var pv apiobjects.PersistentVolume
+	if len(val) == 0 {
+		c.JSON(http.StatusOK, pv)
+		return
+	}
+	err := json.Unmarshal([]byte(val[0]), &pv)
+	if err != nil {
+		c.String(200, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, pv)
+}
+func PVCGetSpecifiedHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	pvcName := c.Param("name")
+	url := route.PVCPath + "/" + namespace + "/" + pvcName
+	val, _ := etcd.Get_prefix(url)
+	var pvc apiobjects.PersistentVolumeClaim
+	if len(val) == 0 {
+		c.JSON(http.StatusOK, pvc)
+		return
+	}
+	err := json.Unmarshal([]byte(val[0]), &pvc)
+	if err != nil {
+		c.String(200, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, pvc)
+}

@@ -1,9 +1,10 @@
 package apiobjects
 
 type PersistentVolume struct {
-	Object `yaml:",inline"`
-	Spec   PersistentVolumeSpec `yaml:"spec"`
-	Status PVPhase              `yaml:"-"`
+	Object  `yaml:",inline"`
+	Spec    PersistentVolumeSpec `yaml:"spec"`
+	Status  PVPhase              `yaml:"-"`
+	Dynamic int                  `yaml:"-"`
 }
 type PersistentVolumeSpec struct {
 	Capacity                      capacity                      `yaml:"capacity"`
@@ -14,7 +15,6 @@ type PersistentVolumeSpec struct {
 	MountOptions                  []string                      `yaml:"mountOptions"`
 	NFS                           NFS                           `yaml:"nfs"`
 	PVCBinding                    PersistentVolumeClaimAbstract `yaml:"-"` // 用于绑定PVC
-	PVPath                        string                        `yaml:"-"` // 用于绑定PV
 }
 type capacity struct {
 	Storage string `yaml:"storage"`

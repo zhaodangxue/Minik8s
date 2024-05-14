@@ -12,6 +12,8 @@ import (
 var apiServer apiserver.ApiServer
 
 func TestRedis(t *testing.T) {
+	//添加参数-tags release
+
 	fmt.Println("TestRedis")
 	apiServer = apiserver.New()
 	go apiServer.RUN()

@@ -24,6 +24,7 @@ var PostTable = map[string]HandlerFunc{
 	route.PVCPath: handler.PVCApplyHandler,
 	route.PVCPathDetail:      persistentvolume_handler.PVCApplyDetailHandler,
 	route.PVPathDetail:       persistentvolume_handler.PVApplyDetailHandler,
+	route.PVDynamicAllocate:  persistentvolume_handler.PVDynamicAllocateHandler,
 }
 var GetTable = map[string]HandlerFunc{
 	route.TestGetPath:      handler.TestGetHandler,
@@ -36,6 +37,8 @@ var GetTable = map[string]HandlerFunc{
 	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
 
 	route.NodePodBindingAllPath: handler.NodePodBindingAllHandler,
+	route.PVPathSpecified:  persistentvolume_handler.PVGetSpecifiedHandler,
+	route.PVCPathSpecified: persistentvolume_handler.PVCGetSpecifiedHandler,
 	route.PVCPath:          persistentvolume_handler.PVCSGetHandler,
 }
 var PutTable = map[string]HandlerFunc{
