@@ -130,6 +130,9 @@ func UpdatePodStatus(pod *apiobjects.Pod) {
 	// 更新Container状态
 	for i := range pod.Spec.Containers {
 		container := &pod.Spec.Containers[i]
+		if container.Status == nil {
+			continue
+		}
 		containerStatus, err := GetContainerStatuses(container.Status.Id)
 		if err != nil {
 			utils.Error("GetContainerStatus error:", err)
