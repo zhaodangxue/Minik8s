@@ -10,8 +10,10 @@ func Run() {
 	var ss controller.SvcServiceHandler
 	var se controller.SvcEndpointHandler 
 
+	go listwatch.Watch(global.PodStateTopic(), se.HandleEndpoints)
+	go listwatch.Watch(global.BindingTopic(), se.HandleBindingEndpoints)
 	listwatch.Watch(global.ServiceCmdTopic(), ss.HandleService)
-	 go listwatch.Watch(global.PodStateTopic(), se.HandleEndpoints)
+
 
 }
 

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	//"log"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/global"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func NodePodBindingHandler(c *gin.Context) {
@@ -254,6 +256,7 @@ func EndpointCreateHandler(c *gin.Context) {
 	val, _ := etcd.Get(url)
 	if val != "" {
 		c.String(http.StatusOK, "endpoint/"+endpoint.Data.Namespace+"/"+endpoint.Data.Name+"/already exists")
+		log.Info("[apiserver] endpoint already exists")
 		return
 	}
 	//endpoint.Data.UID = utils.NewUUID()

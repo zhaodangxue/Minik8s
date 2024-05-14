@@ -11,11 +11,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+
 	//"minik8s/global"
 	"minik8s/kubeproxy/ipvs"
 	//"minik8s/listwatch"
 	"strconv"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -80,7 +82,13 @@ func (e ProxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
 		e.HandleCreate([]byte(edptJson))
 	case apiobjects.Delete:
 		//调用ServiceController删除endpoint
-		//ss.HandleDelete([]byte(topicMessage.Object))
+		edpt := &apiobjects.Endpoint{}
+		err := json.Unmarshal([]byte(topicMessage.Object), edpt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		edptJson, _ := json.Marshal(edpt)
+		e.HandleDelete([]byte(edptJson))
 	case apiobjects.Update:
 		//调用ServiceController更新endpoint
 		//ss.HandleUpdate([]byte(topicMessage.Object))
@@ -124,6 +132,7 @@ func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 	edpt.UnMarshalJSON(message)
 
 	key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
+	log.Info("[proxy] Add Endpoint: svcIP:",edpt.Spec.SvcIP, "SvcPort:",edpt.Spec.SvcPort)
 	ipvs.AddEndpoint(key, edpt.Spec.DestIP, uint16(edpt.Spec.DestPort))
 }
 

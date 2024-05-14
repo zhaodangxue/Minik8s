@@ -10,6 +10,7 @@ func main() {
 	//ipvs.TestConfig()
 	var p kubeproxy.ProxyServiceHandler
 	var e kubeproxy.ProxyEndpointHandler
-	listwatch.Watch(global.ServiceTopic(), p.HandleService)
 	go listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
+	listwatch.Watch(global.ServiceTopic(), p.HandleService)
+	//go listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
 }

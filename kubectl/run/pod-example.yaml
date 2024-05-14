@@ -22,7 +22,7 @@ spec:
         - name: nginx
           containerPort: 6800
           hostPort: 6800
-        - name: nginx
+        - name: nginx2
           containerPort: 6880
           hostPort: 6880
       volumeMounts:

@@ -47,7 +47,7 @@ func ServiceCmdDeleteHandler(c *gin.Context) {
 	//etcd.Delete("/api/service/" + namespace + "/" + name)
 	topicMessage := apiobjects.TopicMessage{
 		ActionType: action,
-		Object:     string(val),
+		Object:     val,
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	c.String(http.StatusOK, "delete service namespace:%s name:%s cmd:%s success", namespace, name)
@@ -69,7 +69,7 @@ func EndpointDeleteHandler(c *gin.Context) {
 	etcd.Delete("/api/endpoint/" + serviceName + "/" + namespace + "/" + name)
 	topicMessage := apiobjects.TopicMessage{
 		ActionType: action,
-		Object:     string(serviceName + "/" + namespace + "/" + name),
+		Object:     string(val),
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	c.String(http.StatusOK, "delete endpoint namespace:%s name:%s success", namespace, name)

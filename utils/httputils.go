@@ -59,6 +59,26 @@ func GetUnmarshal(url string, v interface{}) error {
 	}
 	return json.Unmarshal(value, v)
 }
+
+// func Exist(url string) bool {
+// 	res, err := http.Get(url)
+// 	if err != nil {
+// 		return false
+// 	}
+// 	if res.StatusCode == 404 {
+// 		return false
+// 	}
+// 	value, err := io.ReadAll(res.Body)
+// 	defer res.Body.Close()
+// 	if err != nil {
+// 		return false
+// 	}
+// 	if value == nil || string(value) == ""{
+// 		return false
+// 	}
+// 	return true
+// }
+
 func PutWithJson(url string, v interface{}) (string, error) {
 	client := http.Client{}
 	value, _ := json.Marshal(v)
