@@ -78,7 +78,7 @@ func NodeHealthHandler(c *gin.Context) {
 	if err != nil {
 		utils.Error("NodeHealthHandler: json.Marshal failed: ", err)
 	}
-	listwatch.Publish(global.PodStateTopic(), string(message_payload))
+	listwatch.Publish(global.NodeStateTopic(), string(message_payload))
 
 	c.JSON(http.StatusOK, response)
 }
