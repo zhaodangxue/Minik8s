@@ -6,6 +6,7 @@ import (
 	"minik8s/global"
 	"minik8s/kubelet/internal"
 	cri "minik8s/kubelet/internal/cri_proxy"
+	"minik8s/kubelet/internal/config"
 	"minik8s/listwatch"
 	"minik8s/utils"
 	"time"
@@ -32,11 +33,6 @@ type kubeletServer struct {
 	// HealthReportChan 用于定时上报Node和Pod的状态
 	HealthReportChan chan Empty
 }
-
-const (
-	// HealthReportInterval 用于定时上报Node和Pod的状态
-	HealthReportInterval = 10 * time.Second
-)
 
 // Empty 用于传递空消息
 type Empty struct{}
@@ -207,7 +203,7 @@ func main() {
 	serverInit()
 
 	go listwatch.Watch(global.BindingTopic(), onBingdingUpdate)
-	go timedInformer(server.HealthReportChan, HealthReportInterval)
+	go timedInformer(server.HealthReportChan, config.HealthReportInterval)
 
 	for {
 		select {
