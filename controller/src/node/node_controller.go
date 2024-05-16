@@ -9,7 +9,6 @@ import (
 	"minik8s/global"
 	"minik8s/utils"
 	"sync"
-	"time"
 )
 
 /*
@@ -37,15 +36,6 @@ type NodeController struct {
 	ListFuncEnvelops  []api.ListFuncEnvelop
 	WatchFuncEnvelops []api.WatchFuncEnvelop
 }
-
-const (
-	// 添加超时间隔的时间(ListCheckNode的调用间隔)
-	NODE_TIMEOUT = 10 * time.Second
-	// 超时次数上限
-	NODE_TIMEOUT_COUNT_LIMIT = 3
-	// 更新节点信息的时间间隔
-	NODE_LIST_INTERVAL = 60 * time.Second
-)
 
 type nodeWrapper struct {
 	Node         *apiobjects.Node
