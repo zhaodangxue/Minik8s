@@ -82,5 +82,5 @@ func TestReplicasetUpdate(t *testing.T) {
 	replicaset.Spec.Ready = 0
 	_, err = utils.PostWithJson(url_update, replicaset)
 	assert.Nil(t, err)
-	time.Sleep(85 * time.Second)
+	time.Sleep(110 * time.Second)
 }
