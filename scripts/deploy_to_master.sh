@@ -54,6 +54,6 @@ execute_command "scp -i $master_identity_file -r $build_dir/* $master_user@$mast
 ssh_execute_command "chmod +x $master_deploy_dir/*" "set execution permissions"
 
 # Restart service
-ssh_execute_command "cd $master_deploy_dir && ./master_run.sh &" "start master"
+ssh_execute_command "cd $master_deploy_dir && ./master_run.sh" "start master"
 
 exit 0
