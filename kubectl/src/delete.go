@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
 
@@ -24,81 +25,47 @@ func deleteTest() (string, error) {
 	val, err := utils.Delete(url)
 	return val, err
 }
+
 func deleteSpecifiedPod(np, apiObjName string) (string, error) {
 	url := route.Prefix + route.PodPath + "/" + np + "/" + apiObjName
 	val, err := utils.Delete(url)
 	return val, err
 }
+
 func deleteSpecifiedPV(np, apiObjName string) (string, error) {
 	url := route.Prefix + route.PVPath + "/" + np + "/" + apiObjName
 	val, err := utils.Delete(url)
 	return val, err
 }
+
 func deleteSpecifiedPVC(np, apiObjName string) (string, error) {
 	url := route.Prefix + route.PVCPath + "/" + np + "/" + apiObjName
 	val, err := utils.Delete(url)
 	return val, err
 }
+
 func deleteSpecifiedService(np, apiObjName string) (string, error) {
 	url := route.Prefix + "/api/service/cmd/delete/" + np + "/" + apiObjName
 	val, err := utils.Delete(url)
 	return val, err
 }
+
 func deleteSpecifiedReplicaset(np, apiObjName string) (string, error) {
 	url := route.Prefix + "/api/replicaset/" + np + "/" + apiObjName
 	val, err := utils.Delete(url)
 	return val, err
 }
+
 func RunDelete(cmd *cobra.Command, args []string) {
 	apiObjType := args[0]
 	apiObjName := args[1]
-	np := namespace
-	var err error
-	switch apiObjType {
-	case "test":
-		var val string
-		val, err = deleteTest()
-		if err == nil {
-			fmt.Println(val)
-		}
-	case "pod":
-		var val string
-		val, err = deleteSpecifiedPod(np, apiObjName)
-		if err == nil {
-			fmt.Println(val)
-		}
-	case "pv":
-		var val string
-		val, err = deleteSpecifiedPV(np, apiObjName)
-		if err == nil {
-			fmt.Println(val)
-		}
-	case "pvc":
-		var val string
-		val, err = deleteSpecifiedPVC(np, apiObjName)
-		if err == nil {
-			fmt.Println(val)
-		}
-	case "replicaset":
-		var val string
-		val, err = deleteSpecifiedReplicaset(np, apiObjName)
-		if err == nil {
-			fmt.Println(val)
-		}
-	case "service":
-		var val string
-		val, err = deleteSpecifiedService(np, apiObjName)
-		if err == nil {
-			fmt.Println(val)
-		}
-	default:
-		fmt.Println("delete: not support this type")
-	}
+	err := RunDelete_Cmd(apiObjType, apiObjName)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
-func RunDelete_test(apiObjType, apiObjName string) error {
+
+func RunDelete_Cmd(apiObjType, apiObjName string) error {
 	np := namespace
 	var err error
 	var val string
@@ -114,6 +81,18 @@ func RunDelete_test(apiObjType, apiObjName string) error {
 	case "pvc":
 		val, err = deleteSpecifiedPVC(np, apiObjName)
 		fmt.Println(val)
+	case "replicaset":
+		var val string
+		val, err = deleteSpecifiedReplicaset(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
+	case "service":
+		var val string
+		val, err = deleteSpecifiedService(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
 	default:
 		fmt.Println("delete: not support this type")
 	}

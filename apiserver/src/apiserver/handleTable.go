@@ -37,7 +37,6 @@ var GetTable = map[string]HandlerFunc{
 	route.PodPath:          handler.PodGetHandler,
 	route.PodPathNamespace: handler.PodGetWithNamespaceHandler,
 	route.PodPathDetail:    handler.PodGetDetailHandler,
-	route.GetAllPodsPath:   handler.GetAllPodsHandler,
 	route.PVPathNamespace:  handler.PVGetWithNamespaceHandler,
 	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
 

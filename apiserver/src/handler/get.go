@@ -3,10 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/apiserver/src/route"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,6 +28,7 @@ func NodeGetHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, nodes)
 }
+
 func PodGetWithNamespaceHandler(c *gin.Context) {
 	namespace := c.Param("namespace")
 	var pods []*apiobjects.Pod
@@ -44,6 +46,7 @@ func PodGetWithNamespaceHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, pods)
 }
+
 func PodGetDetailHandler(c *gin.Context) {
 	namespace := c.Param("namespace")
 	podName := c.Param("name")
@@ -58,23 +61,6 @@ func PodGetDetailHandler(c *gin.Context) {
 		fmt.Println(err)
 	}
 	c.JSON(http.StatusOK, binding)
-}
-
-func GetAllPodsHandler(c *gin.Context) {
-	var pods []*apiobjects.Pod
-	values, err := etcd.Get_prefix(route.PodPath)
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, value := range values {
-		var pod apiobjects.Pod
-		err := json.Unmarshal([]byte(value), &pod)
-		if err != nil {
-			fmt.Println(err)
-		}
-		pods = append(pods, &pod)
-	}
-	c.JSON(http.StatusOK, pods)
 }
 
 func PVGetWithNamespaceHandler(c *gin.Context) {
@@ -112,6 +98,7 @@ func PVCGetWithNamespaceHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, pvcs)
 }
+
 func PodGetHandler(c *gin.Context) {
 	var pods []*apiobjects.Pod
 	values, err := etcd.Get_prefix(route.PodPath)

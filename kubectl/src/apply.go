@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	ctlutils "minik8s/kubectl/utils"
@@ -23,75 +24,11 @@ var applyCmd = &cobra.Command{
 }
 
 func RunApply(cmd *cobra.Command, args []string) error {
-	content, err := ctlutils.LoadFile(filepath)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	t := ctlutils.ParseApiObjectType(content)
-	switch t {
-	case ctlutils.Test:
-		test := apiobjects.TestYaml{}
-		err = yaml.Unmarshal(content, &test)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		url := route.Prefix + route.TestCtlPath
-		utils.ApplyApiObject(url, test)
-	case ctlutils.Pod:
-		pod := apiobjects.Pod{}
-		err = yaml.Unmarshal(content, &pod)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		url := route.Prefix + route.PodPath
-		utils.ApplyApiObject(url, pod)
-	case ctlutils.Pv:
-		pv := apiobjects.PersistentVolume{}
-		err = yaml.Unmarshal(content, &pv)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		url := route.Prefix + route.PVPath
-		utils.ApplyApiObject(url, pv)
-	case ctlutils.Pvc:
-		pvc := apiobjects.PersistentVolumeClaim{}
-		err = yaml.Unmarshal(content, &pvc)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		url := route.Prefix + route.PVCPath
-		utils.ApplyApiObject(url, pvc)
-		// case ctlutils.Node:
-		// default:
-	case ctlutils.Replicaset:
-		replicaset := apiobjects.Replicaset{}
-		err = yaml.Unmarshal(content, &replicaset)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		url := route.Prefix + route.ReplicasetPath
-		utils.ApplyApiObject(url, replicaset)
-	case ctlutils.Service:
-		service := apiobjects.Service{}
-		err = yaml.Unmarshal(content, &service)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		url := route.Prefix + route.ServiceApplyPath
-		fmt.Println("appyly service: ", service)
-		//TODO service格式是否符合要求
-		utils.ApplyApiObject(url, service.Data.Name)
-	}
-	return nil
+	err := RunApply_Cmd(filepath)
+	return err
 }
-func RunApply_test(file_path string) error {
+
+func RunApply_Cmd(file_path string) error {
 	content, err := ctlutils.LoadFile(file_path)
 	if err != nil {
 		fmt.Println(err)
@@ -148,6 +85,17 @@ func RunApply_test(file_path string) error {
 		}
 		url := route.Prefix + route.ReplicasetPath
 		utils.ApplyApiObject(url, replicaset)
+	case ctlutils.Service:
+		service := apiobjects.Service{}
+		err = yaml.Unmarshal(content, &service)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.ServiceApplyPath
+		fmt.Println("appyly service: ", service)
+		// TODO service格式是否符合要求
+		utils.ApplyApiObject(url, service.Data.Name)
 	}
 	return nil
 }

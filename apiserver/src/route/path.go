@@ -24,7 +24,6 @@ const (
 	ServiceDeletePath       = "/api/service/delete/:namespace/:name"
 	EndpointCreaetPath      = "/api/endpoint"
 	EndpointDeletePath      = "/api/endpoint/delete/:serviceName/:namespace/:name"
-	GetAllPodsPath          = "/api/get/allpods"
 	PVPath                  = "/api/persistentvolume"
 	PVPathNamespace         = "/api/persistentvolume/:namespace"
 	PVPathSpecified         = "/api/persistentvolume/:namespace/:name"

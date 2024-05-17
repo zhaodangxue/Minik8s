@@ -46,3 +46,17 @@ const (
 	// Kubelet获取Pod的状态失败时，会将Pod的状态设置为Unknown。
 	PodPhase_POD_UNKNOWN PodPhase = "Unknown"
 )
+
+type PodTemplate struct {
+	Metadata ObjectMeta `yaml:"metadata"`
+	Spec     PodSpec    `yaml:"spec"`
+}
+
+func ToPod(podTemplate *PodTemplate) *Pod {
+	var pod Pod
+	pod.TypeMeta.ApiVersion = "v1"
+	pod.TypeMeta.Kind = "Pod"
+	pod.ObjectMeta = podTemplate.Metadata
+	pod.Spec = podTemplate.Spec
+	return &pod
+}
