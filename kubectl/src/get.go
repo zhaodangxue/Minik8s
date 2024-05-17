@@ -37,6 +37,8 @@ func RunGet(cmd *cobra.Command, args []string) {
 		err = ctlutils.PrintPVTable(namespace)
 	case "pvc":
 		err = ctlutils.PrintPVCTable(namespace)
+	case "replicaset":
+		err = ctlutils.PrintReplicasetTable(namespace)
 	case "node":
 		fmt.Printf("Name:%s", apiObjName)
 	}
@@ -57,6 +59,8 @@ func RunGet_test(apiObjType string, apiObjName string) error {
 		err = ctlutils.PrintPVTable(namespace)
 	case "pvc":
 		err = ctlutils.PrintPVCTable(namespace)
+	case "replicaset":
+		err = ctlutils.PrintReplicasetTable(namespace)
 	case "node":
 		fmt.Printf("get node Name:%s", apiObjName)
 	}

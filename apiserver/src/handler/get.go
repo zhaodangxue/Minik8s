@@ -112,3 +112,19 @@ func PVCGetWithNamespaceHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, pvcs)
 }
+func PodGetHandler(c *gin.Context) {
+	var pods []*apiobjects.Pod
+	values, err := etcd.Get_prefix(route.PodPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, value := range values {
+		var pod apiobjects.Pod
+		err := json.Unmarshal([]byte(value), &pod)
+		if err != nil {
+			fmt.Println(err)
+		}
+		pods = append(pods, &pod)
+	}
+	c.JSON(http.StatusOK, pods)
+}

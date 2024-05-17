@@ -68,6 +68,15 @@ func RunApply(cmd *cobra.Command, args []string) error {
 		utils.ApplyApiObject(url, pvc)
 		// case ctlutils.Node:
 		// default:
+	case ctlutils.Replicaset:
+		replicaset := apiobjects.Replicaset{}
+		err = yaml.Unmarshal(content, &replicaset)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.ReplicasetPath
+		utils.ApplyApiObject(url, replicaset)
 	case ctlutils.Service:
 		service := apiobjects.Service{}
 		err = yaml.Unmarshal(content, &service)
@@ -128,6 +137,17 @@ func RunApply_test(file_path string) error {
 		utils.ApplyApiObject(url, pvc)
 		// case ctlutils.Node:
 		// default:
+	case ctlutils.Replicaset:
+		replicaset := apiobjects.Replicaset{}
+		err = yaml.Unmarshal(content, &replicaset)
+		pod := apiobjects.ToPod(&replicaset.Spec.Template)
+		fmt.Println("pod: ", pod)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.ReplicasetPath
+		utils.ApplyApiObject(url, replicaset)
 	}
 	return nil
 }

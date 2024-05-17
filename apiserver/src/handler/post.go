@@ -60,7 +60,9 @@ func PodApplyHandler(c *gin.Context) {
 	}
 	url_pod := pod.GetObjectPath()
 	val, _ := etcd.Get(url_pod)
-	pod.ObjectMeta.UID = utils.NewUUID()
+	if pod.ObjectMeta.UID == "" {
+		pod.ObjectMeta.UID = utils.NewUUID()
+	}
 	pod.CreationTimestamp = time.Now()
 	for _, volume := range pod.Spec.Volumes {
 		if volume.NFS != nil {

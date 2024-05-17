@@ -43,7 +43,13 @@ func PVTbl() table.Table {
 	tbl := table.New("NAME", "CAPACITY", "ACCESSMODE", "RECLAIM POLICY", "STATUS", "CREATION")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
-
+}
+func ReplicasetTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("NAME", "DESIRED", "READY", "AGE")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
 }
 func GetTestFromApiserver() (testyaml *apiobjects.TestYaml, err error) {
 	url := route.Prefix + route.TestCtlPath
@@ -63,6 +69,11 @@ func GetPVFromApiserver(namespace string) (pvs []*apiobjects.PersistentVolume, e
 func GetPVCFromApiserver(namespace string) (pvcs []*apiobjects.PersistentVolumeClaim, err error) {
 	url := route.Prefix + route.PVCPath + "/" + namespace
 	err = utils.GetUnmarshal(url, &pvcs)
+	return
+}
+func GetReplicasetFromApiserver(namespace string) (replicasets []*apiobjects.Replicaset, err error) {
+	url := route.Prefix + route.ReplicasetPath + "/" + namespace
+	err = utils.GetUnmarshal(url, &replicasets)
 	return
 }
 
@@ -128,6 +139,18 @@ func PrintPVCTable(namespace string) error {
 			accessMode = "RWX"
 		}
 		tbl.AddRow(pvc.ObjectMeta.Name, pvc.Status, pvc.PVBinding.PVname, pvc.PVBinding.PVcapacity, accessMode, pvc.CreationTimestamp.Format("2006-01-02 15:04:05"))
+	}
+	tbl.Print()
+	return nil
+}
+func PrintReplicasetTable(namespace string) error {
+	replicasets, err := GetReplicasetFromApiserver(namespace)
+	if err != nil {
+		return err
+	}
+	tbl := ReplicasetTbl()
+	for _, replicaset := range replicasets {
+		tbl.AddRow(replicaset.Name, replicaset.Spec.Replicas, replicaset.Spec.Ready, replicaset.CreationTimestamp.Format("2006-01-02 15:04:05"))
 	}
 	tbl.Print()
 	return nil

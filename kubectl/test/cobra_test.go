@@ -120,3 +120,12 @@ func TestRunGetPVC(t *testing.T) {
 	err := command.RunGet_test("pvc", "pvc-sc-example")
 	assert.Nil(t, err)
 }
+func TestApplyReplicaset(t *testing.T) {
+	fmt.Println("TestApplyReplicaset")
+	etcd.Clear()
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunApply_test("./replicaset-example.yaml")
+	assert.Nil(t, err)
+}

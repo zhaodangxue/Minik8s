@@ -12,6 +12,13 @@ type PodSpec struct {
 	NodeSelector map[string]string `yaml:"nodeSelector"`
 }
 
+func (c *Pod) AddLabel(key, value string) {
+	if c.ObjectMeta.Labels == nil {
+		c.ObjectMeta.Labels = make(map[string]string)
+	}
+	c.ObjectMeta.Labels[key] = value
+}
+
 type PodState struct {
 	SandboxId string
 	PodPhase  PodPhase
