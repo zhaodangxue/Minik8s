@@ -13,6 +13,7 @@ build_dev:
 	make _build TAGS=$(DEV_TAGS)
 
 _build: prepare build_targets 
+	cp scripts/master_run.sh build/
 
 build_targets: kubelet kubectl apiserver scheduler controller
 

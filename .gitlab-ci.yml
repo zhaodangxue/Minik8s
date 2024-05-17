@@ -45,4 +45,5 @@ deploy-job:      # This job runs in the deploy stage.
   environment: production
   script:
     - echo "Deploying application..."
+    - ./scripts/deploy_to_master.sh
     - echo "Application successfully deployed."
