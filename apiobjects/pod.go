@@ -12,6 +12,13 @@ type PodSpec struct {
 	NodeSelector map[string]string `yaml:"nodeSelector"`
 }
 
+func (c *Pod) AddLabel(key, value string) {
+	if c.ObjectMeta.Labels == nil {
+		c.ObjectMeta.Labels = make(map[string]string)
+	}
+	c.ObjectMeta.Labels[key] = value
+}
+
 type PodState struct {
 	SandboxId string
 	PodPhase  PodPhase
@@ -39,3 +46,17 @@ const (
 	// Kubelet获取Pod的状态失败时，会将Pod的状态设置为Unknown。
 	PodPhase_POD_UNKNOWN PodPhase = "Unknown"
 )
+
+type PodTemplate struct {
+	Metadata ObjectMeta `yaml:"metadata"`
+	Spec     PodSpec    `yaml:"spec"`
+}
+
+func ToPod(podTemplate *PodTemplate) *Pod {
+	var pod Pod
+	pod.TypeMeta.ApiVersion = "v1"
+	pod.TypeMeta.Kind = "Pod"
+	pod.ObjectMeta = podTemplate.Metadata
+	pod.Spec = podTemplate.Spec
+	return &pod
+}

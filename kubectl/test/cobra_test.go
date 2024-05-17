@@ -3,12 +3,13 @@ package kubectl__test
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+	"time"
+
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/apiserver"
 	"minik8s/apiserver/src/etcd"
 	command "minik8s/kubectl/src"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -21,42 +22,47 @@ func TestRunApply(t *testing.T) {
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunApply_test("./test.yaml")
+	err := command.RunApply_Cmd("./test.yaml")
 	assert.Nil(t, err)
 }
+
 func TestRunGet(t *testing.T) {
 	fmt.Println("TestRunGet")
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunGet_test("test", "111")
+	err := command.RunGet_Cmd("test", "111")
 	assert.Nil(t, err)
 }
+
 func TestRunApplyPod(t *testing.T) {
 	fmt.Println("TestRunApplyPod")
 	etcd.Clear()
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunApply_test("./pod-example.yaml")
+	err := command.RunApply_Cmd("./pod-example.yaml")
 	assert.Nil(t, err)
 }
+
 func TestRunGetPod(t *testing.T) {
 	fmt.Println("TestRunGetPod")
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunGet_test("pod", "pod")
+	err := command.RunGet_Cmd("pod", "pod")
 	assert.Nil(t, err)
 }
+
 func TestRunDelete(t *testing.T) {
 	fmt.Println("TestRunDelete")
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunDelete_test("pod", "pod")
+	err := command.RunDelete_Cmd("pod", "pod")
 	assert.Nil(t, err)
 }
+
 func TestRunDescribe(t *testing.T) {
 	fmt.Println("TestRunDescribe")
 	apiServer = apiserver.New()
@@ -83,40 +89,54 @@ func TestRunDescribe(t *testing.T) {
 	bindingJson, err := json.Marshal(binding)
 	assert.Nil(t, err)
 	etcd.Put(url, string(bindingJson))
-	err = command.RunDescribe_test("pod", "pod")
+	err = command.RunDescribe_Cmd("pod", "pod")
 	assert.Nil(t, err)
 }
+
 func TestRunApplyPV(t *testing.T) {
 	fmt.Println("TestRunApplyPV")
 	etcd.Clear()
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunApply_test("./persistent_volumn.yaml")
+	err := command.RunApply_Cmd("./persistent_volumn.yaml")
 	assert.Nil(t, err)
 }
+
 func TestRunApplyPVC(t *testing.T) {
 	fmt.Println("TestRunApplyPVC")
 	etcd.Clear()
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunApply_test("./persistent_volumn_claim.yaml")
+	err := command.RunApply_Cmd("./persistent_volumn_claim.yaml")
 	assert.Nil(t, err)
 }
+
 func TestRunGetPV(t *testing.T) {
 	fmt.Println("TestRunGetPV")
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunGet_test("pv", "nfsserver")
+	err := command.RunGet_Cmd("pv", "nfsserver")
 	assert.Nil(t, err)
 }
+
 func TestRunGetPVC(t *testing.T) {
 	fmt.Println("TestRunGetPVC")
 	apiServer = apiserver.New()
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
-	err := command.RunGet_test("pvc", "pvc-sc-example")
+	err := command.RunGet_Cmd("pvc", "pvc-sc-example")
+	assert.Nil(t, err)
+}
+
+func TestApplyReplicaset(t *testing.T) {
+	fmt.Println("TestApplyReplicaset")
+	etcd.Clear()
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunApply_Cmd("./replicaset-example.yaml")
 	assert.Nil(t, err)
 }

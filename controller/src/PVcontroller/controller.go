@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
+	"minik8s/controller/api"
 	"minik8s/global"
 	"minik8s/listwatch"
 	"minik8s/utils"
@@ -16,25 +17,52 @@ import (
 type Controller interface {
 	Run()
 }
-type pvcontroller struct {
+type PVcontroller struct {
+	initInfo          api.InitStruct
+	ListFuncEnvelops  []api.ListFuncEnvelop
+	WatchFuncEnvelops []api.WatchFuncEnvelop
+}
+
+func (c *PVcontroller) Init(init api.InitStruct) {
+	c.initInfo = init
+	c.ListFuncEnvelops = make([]api.ListFuncEnvelop, 0)
+	c.WatchFuncEnvelops = make([]api.WatchFuncEnvelop, 0)
+	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
+		Func:  c.handlePVupdate_API,
+		Topic: global.PvRelevantTopic(),
+	})
+	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
+		Func:  c.handlePVCupdate_API,
+		Topic: global.PvcRelevantTopic(),
+	})
+	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
+		Func:  c.handlePodUpdate_API,
+		Topic: global.PodRelevantTopic(),
+	})
+}
+func (c *PVcontroller) GetListFuncEnvelops() []api.ListFuncEnvelop {
+	return c.ListFuncEnvelops
+}
+func (c *PVcontroller) GetWatchFuncEnvelops() []api.WatchFuncEnvelop {
+	return c.WatchFuncEnvelops
 }
 
 // 在每一次对PV和PVC进行操作时，都需要检查PV和PVC能否绑定
-func (c *pvcontroller) GetAllPVCFromApiserver() (pvcs []*apiobjects.PersistentVolumeClaim) {
+func (c *PVcontroller) GetAllPVCFromApiserver() (pvcs []*apiobjects.PersistentVolumeClaim) {
 	err := utils.GetUnmarshal(route.Prefix+route.PVCPath, &pvcs)
 	if err != nil {
 		fmt.Println(err)
 	}
 	return
 }
-func (c *pvcontroller) GetAllPVSWithNamespaceFromApiserver(namespace string) (pvs []*apiobjects.PersistentVolume) {
+func (c *PVcontroller) GetAllPVSWithNamespaceFromApiserver(namespace string) (pvs []*apiobjects.PersistentVolume) {
 	err := utils.GetUnmarshal(route.Prefix+route.PVPath+"/"+namespace, &pvs)
 	if err != nil {
 		fmt.Println(err)
 	}
 	return
 }
-func (c *pvcontroller) GetPVSWithSpecifiedStorageClassAndSpecifiedCapacity(pvs []*apiobjects.PersistentVolume, storageclassname string, capacity int) (res []*apiobjects.PersistentVolume) {
+func (c *PVcontroller) GetPVSWithSpecifiedStorageClassAndSpecifiedCapacity(pvs []*apiobjects.PersistentVolume, storageclassname string, capacity int) (res []*apiobjects.PersistentVolume) {
 	for _, pv := range pvs {
 		if (pv.Spec.StorageClassName == storageclassname) && (pv.Status == apiobjects.PVAvailable) {
 			size_pv, err := utils.GetStorageCapacity(pv.Spec.Capacity.Storage)
@@ -48,7 +76,7 @@ func (c *pvcontroller) GetPVSWithSpecifiedStorageClassAndSpecifiedCapacity(pvs [
 	}
 	return
 }
-func (c *pvcontroller) SelectOnePVToBound(pvs []*apiobjects.PersistentVolume, accessmode string, pvc *apiobjects.PersistentVolumeClaim) bool {
+func (c *PVcontroller) SelectOnePVToBound(pvs []*apiobjects.PersistentVolume, accessmode string, pvc *apiobjects.PersistentVolumeClaim) bool {
 	var res bool
 	res = false
 	for _, pv := range pvs {
@@ -70,7 +98,7 @@ func (c *pvcontroller) SelectOnePVToBound(pvs []*apiobjects.PersistentVolume, ac
 	}
 	return res
 }
-func (c *pvcontroller) DynamicAllocatePV(pvc *apiobjects.PersistentVolumeClaim) error {
+func (c *PVcontroller) DynamicAllocatePV(pvc *apiobjects.PersistentVolumeClaim) error {
 	pv := apiobjects.PersistentVolume{}
 	pv.ObjectMeta.Namespace = pvc.ObjectMeta.Namespace
 	pv.ObjectMeta.UID = utils.NewUUID()
@@ -98,7 +126,7 @@ func (c *pvcontroller) DynamicAllocatePV(pvc *apiobjects.PersistentVolumeClaim) 
 	pvc.PVBinding.PVpath = global.NFSdir + "/" + pv.ObjectMeta.Name
 	return nil
 }
-func (c *pvcontroller) CheckPVBoundPVC() {
+func (c *PVcontroller) CheckPVBoundPVC() {
 	pvcs := c.GetAllPVCFromApiserver()
 	for _, pvc := range pvcs {
 		if pvc.Status == apiobjects.PVCBound {
@@ -124,7 +152,7 @@ func (c *pvcontroller) CheckPVBoundPVC() {
 		utils.PostWithJson(route.Prefix+url, pvc)
 	}
 }
-func (c *pvcontroller) CancelPVBoundPVC(pvc *apiobjects.PersistentVolumeClaim) error {
+func (c *PVcontroller) CancelPVBoundPVC(pvc *apiobjects.PersistentVolumeClaim) error {
 	pv := apiobjects.PersistentVolume{}
 	url := route.Prefix + route.PVPath + "/" + pvc.PVBinding.PVnamespace + "/" + pvc.PVBinding.PVname
 	err := utils.GetUnmarshal(url, &pv)
@@ -144,7 +172,7 @@ func (c *pvcontroller) CancelPVBoundPVC(pvc *apiobjects.PersistentVolumeClaim) e
 	}
 	return nil
 }
-func (c *pvcontroller) PVUpdateHandler(data string) error {
+func (c *PVcontroller) PVUpdateHandler(data string) error {
 	pv := apiobjects.PersistentVolume{}
 	err := json.Unmarshal([]byte(data), &pv)
 	if err != nil {
@@ -156,7 +184,7 @@ func (c *pvcontroller) PVUpdateHandler(data string) error {
 	c.CheckPVBoundPVC()
 	return nil
 }
-func (c *pvcontroller) PVDeleteHandler(data string) error {
+func (c *PVcontroller) PVDeleteHandler(data string) error {
 	pv := apiobjects.PersistentVolume{}
 	err := json.Unmarshal([]byte(data), &pv)
 	if err != nil {
@@ -165,7 +193,7 @@ func (c *pvcontroller) PVDeleteHandler(data string) error {
 	fmt.Printf("delete pv name: %s namespace: %s uuid: %s", pv.ObjectMeta.Name, pv.ObjectMeta.Namespace, pv.ObjectMeta.UID)
 	return nil
 }
-func (c *pvcontroller) PVCreateHandler(data string) error {
+func (c *PVcontroller) PVCreateHandler(data string) error {
 	pv := apiobjects.PersistentVolume{}
 	err := json.Unmarshal([]byte(data), &pv)
 	if err != nil {
@@ -177,7 +205,7 @@ func (c *pvcontroller) PVCreateHandler(data string) error {
 	c.CheckPVBoundPVC()
 	return nil
 }
-func (c *pvcontroller) handlePVupdate(msg *redis.Message) {
+func (c *PVcontroller) handlePVupdate(msg *redis.Message) {
 	topicMessage := apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
 	if err != nil {
@@ -195,7 +223,21 @@ func (c *pvcontroller) handlePVupdate(msg *redis.Message) {
 		fmt.Println(err)
 	}
 }
-func (c *pvcontroller) PVCCreateHandler(data string) error {
+func (c *PVcontroller) handlePVupdate_API(controller api.Controller, message apiobjects.TopicMessage) (err error) {
+	switch message.ActionType {
+	case apiobjects.Create:
+		err = c.PVCreateHandler(message.Object)
+	case apiobjects.Update:
+		err = c.PVUpdateHandler(message.Object)
+	case apiobjects.Delete:
+		err = c.PVDeleteHandler(message.Object)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
+func (c *PVcontroller) PVCCreateHandler(data string) error {
 	pvc := apiobjects.PersistentVolumeClaim{}
 	err := json.Unmarshal([]byte(data), &pvc)
 	if err != nil {
@@ -207,7 +249,7 @@ func (c *pvcontroller) PVCCreateHandler(data string) error {
 	c.CheckPVBoundPVC()
 	return nil
 }
-func (c *pvcontroller) PVCDeleteHandler(data string) error {
+func (c *PVcontroller) PVCDeleteHandler(data string) error {
 	pvc := apiobjects.PersistentVolumeClaim{}
 	err := json.Unmarshal([]byte(data), &pvc)
 	if err != nil {
@@ -221,7 +263,7 @@ func (c *pvcontroller) PVCDeleteHandler(data string) error {
 	}
 	return nil
 }
-func (c *pvcontroller) PVCUpdateHandler(data string) error {
+func (c *PVcontroller) PVCUpdateHandler(data string) error {
 	pvc := apiobjects.PersistentVolumeClaim{}
 	err := json.Unmarshal([]byte(data), &pvc)
 	if err != nil {
@@ -233,7 +275,7 @@ func (c *pvcontroller) PVCUpdateHandler(data string) error {
 	c.CheckPVBoundPVC()
 	return nil
 }
-func (c *pvcontroller) handlePVCupdate(msg *redis.Message) {
+func (c *PVcontroller) handlePVCupdate(msg *redis.Message) {
 	topicMessage := apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
 	if err != nil {
@@ -251,7 +293,21 @@ func (c *pvcontroller) handlePVCupdate(msg *redis.Message) {
 		fmt.Println(err)
 	}
 }
-func (c *pvcontroller) PodCreateHandler(data string) error {
+func (c *PVcontroller) handlePVCupdate_API(controller api.Controller, message apiobjects.TopicMessage) (err error) {
+	switch message.ActionType {
+	case apiobjects.Create:
+		err = c.PVCCreateHandler(message.Object)
+	case apiobjects.Update:
+		err = c.PVCUpdateHandler(message.Object)
+	case apiobjects.Delete:
+		err = c.PVCDeleteHandler(message.Object)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
+func (c *PVcontroller) PodCreateHandler(data string) error {
 	pod := apiobjects.Pod{}
 	err := json.Unmarshal([]byte(data), &pod)
 	if err != nil {
@@ -290,7 +346,7 @@ func (c *pvcontroller) PodCreateHandler(data string) error {
 	}
 	return nil
 }
-func (c *pvcontroller) PodUpdateHandler(data string) error {
+func (c *PVcontroller) PodUpdateHandler(data string) error {
 	pod := apiobjects.Pod{}
 	err := json.Unmarshal([]byte(data), &pod)
 	if err != nil {
@@ -359,7 +415,7 @@ func (c *pvcontroller) PodUpdateHandler(data string) error {
 	}
 	return nil
 }
-func (c *pvcontroller) PodDeleteHandler(data string) error {
+func (c *PVcontroller) PodDeleteHandler(data string) error {
 	pod := apiobjects.Pod{}
 	err := json.Unmarshal([]byte(data), &pod)
 	if err != nil {
@@ -398,7 +454,7 @@ func (c *pvcontroller) PodDeleteHandler(data string) error {
 	}
 	return nil
 }
-func (c *pvcontroller) handlePodUpdate(msg *redis.Message) {
+func (c *PVcontroller) handlePodUpdate(msg *redis.Message) {
 	topicMessage := apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
 	if err != nil {
@@ -416,11 +472,25 @@ func (c *pvcontroller) handlePodUpdate(msg *redis.Message) {
 		fmt.Println(err)
 	}
 }
-func (c *pvcontroller) Run() {
+func (c *PVcontroller) handlePodUpdate_API(controller api.Controller, message apiobjects.TopicMessage) (err error) {
+	switch message.ActionType {
+	case apiobjects.Create:
+		err = c.PodCreateHandler(message.Object)
+	case apiobjects.Update:
+		err = c.PodUpdateHandler(message.Object)
+	case apiobjects.Delete:
+		err = c.PodDeleteHandler(message.Object)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
+func (c *PVcontroller) Run() {
 	go listwatch.Watch(global.PvRelevantTopic(), c.handlePVupdate)
 	go listwatch.Watch(global.PvcRelevantTopic(), c.handlePVCupdate)
 	listwatch.Watch(global.PodRelevantTopic(), c.handlePodUpdate)
 }
 func New() Controller {
-	return &pvcontroller{}
+	return &PVcontroller{}
 }

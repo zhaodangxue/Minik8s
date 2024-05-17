@@ -2,8 +2,9 @@ package command
 
 import (
 	"fmt"
-	ctlutils "minik8s/kubectl/utils"
 	"strings"
+
+	ctlutils "minik8s/kubectl/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -25,26 +26,13 @@ func RunGet(cmd *cobra.Command, args []string) {
 	if len(args) > 1 {
 		apiObjName = args[1]
 	}
-	np := namespace
-	var err error
-	apiObjType = strings.ToLower(apiObjType)
-	switch apiObjType {
-	case "test":
-		err = ctlutils.PrintTestStatusTable()
-	case "pod":
-		err = ctlutils.PrintPodStatusTable(np)
-	case "pv":
-		err = ctlutils.PrintPVTable(namespace)
-	case "pvc":
-		err = ctlutils.PrintPVCTable(namespace)
-	case "node":
-		fmt.Printf("Name:%s", apiObjName)
-	}
+	err := RunGet_Cmd(apiObjType, apiObjName)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
-func RunGet_test(apiObjType string, apiObjName string) error {
+
+func RunGet_Cmd(apiObjType string, apiObjName string) error {
 	np := namespace
 	var err error
 	apiObjType = strings.ToLower(apiObjType)
@@ -57,6 +45,8 @@ func RunGet_test(apiObjType string, apiObjName string) error {
 		err = ctlutils.PrintPVTable(namespace)
 	case "pvc":
 		err = ctlutils.PrintPVCTable(namespace)
+	case "replicaset":
+		err = ctlutils.PrintReplicasetTable(namespace)
 	case "node":
 		fmt.Printf("get node Name:%s", apiObjName)
 	}
