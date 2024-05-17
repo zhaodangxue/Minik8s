@@ -1,9 +1,10 @@
 {
-    "go.buildTags": "dev",
+    "go.buildTags": "release",
+    "go.testTimeout":"4m",
     "gopls": {
         // Editor 中 Go analyse 时使用的build tag
         "build.buildFlags": [
-            "-tags", "dev"
-        ]
+            "-tags", "release"
+        ],
     }
 }
