@@ -125,6 +125,7 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 		err = err1
 		if err != nil {
 			utils.Error("CreateContainer error:", err)
+			// TODO: fault tolerance
 			return
 		}
 		if pod.Spec.Containers[i].Status == nil {
@@ -136,6 +137,7 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 		_, err = runtimeServiceClient.StartContainer(ctx, &cri.StartContainerRequest{ContainerId: createContainerResponse.ContainerId})
 		if err != nil {
 			utils.Error("StartContainer error:", err)
+			// TODO: fault tolerance
 			return
 		}
 		utils.Info("Container started with ID:", createContainerResponse.ContainerId)

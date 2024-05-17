@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"minik8s/apiserver/src/handler"
+	node "minik8s/apiserver/src/handler/node"
 	persistentvolume_handler "minik8s/apiserver/src/handler/persistentvolume"
 	replicaset_handler "minik8s/apiserver/src/handler/replicaset"
 	"minik8s/apiserver/src/route"
@@ -63,5 +64,6 @@ var DeleteTable = map[string]HandlerFunc{
 	route.PodPathDetail:           handler.PodDeleteHandler,
 	route.PVCPathSpecified:        handler.PVCDeleteHandler,
 	route.PVPathSpecified:         handler.PVDeleteHandler,
+	route.NodePathDetail:          node.NodeDeleteHandler,
 	route.ReplicasetPathSpecified: replicaset_handler.ReplicasetDeleteHandler,
 }
