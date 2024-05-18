@@ -6,7 +6,9 @@ import (
 	"minik8s/apiserver/src/route"
 	ctlutils "minik8s/kubectl/utils"
 	"minik8s/utils"
+	//"net/url"
 
+	//"google.golang.org/grpc/internal/resolver/dns"
 	"gopkg.in/yaml.v3"
 
 	"github.com/spf13/cobra"
@@ -79,6 +81,17 @@ func RunApply(cmd *cobra.Command, args []string) error {
 		fmt.Println("appyly service: ", service)
 		//TODO service格式是否符合要求
 		utils.ApplyApiObject(url, service)
+	case ctlutils.Dns:
+		dns := apiobjects.DNSRecord{}
+		err = yaml.Unmarshal(content, &dns)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + 
+		fmt.Println("appyly service: ", dns)
+		//TODO service格式是否符合要求
+		utils.ApplyApiObject(url, dns)
 	}
 	return nil
 }

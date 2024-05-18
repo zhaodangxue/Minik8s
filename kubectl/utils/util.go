@@ -16,6 +16,7 @@ const (
 	Pv
 	Pvc
 	Service
+	Dns
 )
 
 func (a ApiObjectType) String() string {
@@ -32,6 +33,8 @@ func (a ApiObjectType) String() string {
 		return "pvc"
 	case Service:
 		return "service"
+	case Dns:
+		return "dns"
 	default:
 		return "unknown"
 	}
