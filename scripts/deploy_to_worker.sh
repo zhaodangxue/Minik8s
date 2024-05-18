@@ -16,6 +16,13 @@ ssh_execute_command() {
     fi
 }
 
+# Check if build directory exists
+if [ ! -d $build_dir ]; then
+    echo "Build directory does not exist. Please build the project first."
+    exit 1
+fi
+
+# Deploy to worker
 echo "Deploying to worker..."
 for i in ${!worker_ip[@]}; do
     echo "Deploying to worker $i: ${worker_ip[$i]}"
@@ -26,5 +33,4 @@ for i in ${!worker_ip[@]}; do
     ssh_execute_command "mkdir -p $deploy_dir" "create worker deploy directory"
     ssh_execute_command "rm -rf $deploy_dir/*" "clean worker deploy directory"
     execute_command "scp -i $deploy_identity_file -r $build_dir/* $deploy_user@$deploy_url:$deploy_dir" "copy product to deploy directory"
-    ssh_execute_command "chmod +x $deploy_dir/*" "set execution permissions"
 done

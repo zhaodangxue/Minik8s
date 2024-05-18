@@ -52,6 +52,7 @@ deploy-job:      # This job runs in the deploy stage.
   script:
     - echo "Deploying application..."
     - ./scripts/deploy_to_master.sh
+    - ./scripts/deploy_to_worker.sh
     - echo "Application successfully deployed."
   dependencies:
     - "build-job"
