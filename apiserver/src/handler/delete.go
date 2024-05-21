@@ -221,7 +221,7 @@ func PVDeleteHandler(c *gin.Context) {
 	c.String(200, ret)
 }
 
-func DnsDeleteHandler(c *gin.Context) {
+func DnsDeleteHandler(c *gin.Context) { 
 	namespace := c.Param("namespace")
 	name := c.Param("name")
 
@@ -242,6 +242,30 @@ func DnsDeleteHandler(c *gin.Context) {
 
 	//delete the DNSRecord and the path in the etcd
 	err = etcd.Delete(url)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	dnsRecord := apiobjects.DNSRecord{}
+	err = json.Unmarshal([]byte(val), &dnsRecord)
+	if err != nil {
+		log.Error("[Dns Delete Handler] error unmarshalling dns object: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	result := generateHost(dnsRecord.Host)
+	val2, err := etcd.Get(result)
+	if val2 == "" || err != nil{
+		log.Error("[Dns Delete Handler] dns record not found2")
+		c.String(http.StatusBadRequest, "dns/"+namespace+"/"+name+"/not found2")
+		return
+	}
+	err = etcd.Delete(result)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),

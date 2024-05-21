@@ -38,6 +38,16 @@ func getServiceAddr(serviceName string, namespace string) (string, error) {
 	return "", errors.New("[getServiceAddr] service not found")
 }
 
+func generateHost(path string) string{
+	parts := strings.Split(path, ".")
+	result := "/dns"
+	for i := len(parts) - 1; i >= 0; i-- {
+		result = result + "/" + parts[i]
+	}
+	log.Info("[generatePath] the new dns path is ", result)
+	return result
+}
+
 func generatePath(rawPath string, host string, method string) error {
 	parts := strings.Split(rawPath, ".")
 	result := "/dns"
@@ -50,7 +60,6 @@ func generatePath(rawPath string, host string, method string) error {
 	}
 
 	if method == "create" {
-		//err := dnsStorageTool.Create(context.Background(), result, &hoststr)
         jsonValue, err := json.Marshal(hoststr)
 		if err != nil {
 			return err
@@ -66,9 +75,9 @@ func generatePath(rawPath string, host string, method string) error {
 func updateNginx() error {
 	allRecord := getAllDNSRecords()
 	nginx.GenerateConfig(allRecord)
-	return nil
-	//err := nginx.ReloadNginx()
-	//return err
+	// return nil
+	err := nginx.ReloadNginx()
+	return err
 }
 
 func getAllDNSRecords() []apiobjects.DNSRecord {
