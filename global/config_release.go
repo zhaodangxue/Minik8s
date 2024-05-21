@@ -2,7 +2,7 @@
 
 package global
 
-const Host = "10.119.13.140"
+const Host = "10.119.13.186"
 
 const ApiVersion = "v1"
 const NFSdir = "/home/nfs"

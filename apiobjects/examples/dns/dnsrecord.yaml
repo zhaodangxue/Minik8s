@@ -9,6 +9,6 @@ paths:
     port: 22222
   - service: dns-service2
     pathName: path2
-    port: 23456
+    port: 34567
 
 

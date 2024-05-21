@@ -6,9 +6,9 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: dns-test2
+    app: nginx
   ports:
     - name: service-port2
-      port: 23456
-      targetPort: p2
+      port: 34567
+      targetPort: nginx
       protocol: TCP
