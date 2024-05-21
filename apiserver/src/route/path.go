@@ -1,8 +1,10 @@
 package route
 
+import "minik8s/global"
+
 const (
 	HttpScheme           = "http://"
-	Hostname             = "10.119.13.186"
+	Hostname             = global.Host
 	Port                 = ":8080"
 	Prefix               = HttpScheme + Hostname + Port
 	TestPostPath         = "/api/test/post"
