@@ -28,8 +28,8 @@ type Config struct {
 // GenerateConfig generate the nginx config file
 func GenerateConfig(configs []apiobjects.DNSRecord) {
 
-	//file, err := os.OpenFile("/home/MINIK8S/kubedns/conf/nginx.conf", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	file, err := os.OpenFile("/home/swung/桌面/minik8s/kubedns/conf/nginx.conf", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	file, err := os.OpenFile("/home/MINIK8S/kubedns/conf/nginx.conf", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	//file, err := os.OpenFile("/home/swung/桌面/minik8s/kubedns/conf/nginx.conf", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Error("[GenerateConfig] error opening file: ", err)
 	}
@@ -49,8 +49,8 @@ events {
 	}
 	log.Debug("[GenerateConfig] wrote ", bytes, " bytes to file")
 
-	//tmpl := template.Must(template.ParseFiles("/home/MINIK8S/kubedns/nginx/nginx.tmpl"))
-	tmpl := template.Must(template.ParseFiles("/home/swung/桌面/minik8s/kubedns/nginx/nginx.tmpl"))
+	tmpl := template.Must(template.ParseFiles("/home/MINIK8S/kubedns/nginx/nginx.tmpl"))
+	//tmpl := template.Must(template.ParseFiles("/home/swung/桌面/minik8s/kubedns/nginx/nginx.tmpl"))
 
 	// generate the servers
 	ServerList := make([]Server, 0)
