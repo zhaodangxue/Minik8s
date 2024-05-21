@@ -50,7 +50,7 @@ scheduler:
 	$(GOBUILD) -o $(BINDIR)/scheduler -v -tags $(TAGS) scheduler/run/main.go
 
 proxy:
-	$(GOBUILD) -o build/proxy -v -tags $(TAGS) kubeproxy/run/main.go
+	$(GOBUILD) -o $(BINDIR)/proxy -v -tags $(TAGS) kubeproxy/run/main.go
 
 controller:
 	$(GOBUILD) -o $(BINDIR)/ctlmgr -v -tags $(TAGS) controller/cmd/main.go
