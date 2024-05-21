@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
@@ -49,27 +50,20 @@ func GetDetailedHelp(name string, np string) (string, error) {
 	}
 	return s1 + s2, nil
 }
+
 func RunDescribe(cmd *cobra.Command, args []string) {
 	apiObjType := args[0]
 	apiObjName := args[1]
-	np := namespace
-	var err error
-	var val string
-	switch apiObjType {
-	case "pod":
-		val, err = GetDetailedHelp(apiObjName, np)
-		fmt.Println(val)
-	default:
-		fmt.Println("describe: not support this type")
-	}
+	err := RunDescribe_Cmd(apiObjType, apiObjName)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
-func RunDescribe_test(apiObjType string, apiObjName string) error {
+
+func RunDescribe_Cmd(apiObjType string, apiObjName string) error {
 	var val string
 	var err error
-	np := "default"
+	np := namespace
 	switch apiObjType {
 	case "pod":
 		val, err = GetDetailedHelp(apiObjName, np)

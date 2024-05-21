@@ -288,7 +288,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 				Namespace: svc.Data.Namespace,
 			},
 		}
-		//TODO 发送http给apiserver,更新edpt
+		//发送http给apiserver,更新edpt
 		edptByte, err := edpt.MarshalJSON()
 		if err != nil {
 			fmt.Println("error")
@@ -299,9 +299,35 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 			print("create service error")
 		}
 		fmt.Println(response)
-
 		*edptList = append(*edptList, edpt)
-		logInfo += fmt.Sprintf("srcIP:%s:%d, dstIP:%s:%d ; ", svc.Status.ClusterIP, port.Port, pod.Status.PodIP, dstPort)
+
+        if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+			spec2 := apiobjects.EndpointSpec{
+				SvcIP:    "HostIP",
+				SvcPort:  port.Port,
+				DestIP:   pod.Status.PodIP,
+				DestPort: dstPort,
+			}
+			edpt2 := &apiobjects.Endpoint{
+				ServiceName: svc.Data.Name,
+				Spec: spec2,
+				Data: apiobjects.MetaData{
+					Name:      "nodeport-" + svc.Data.Name + "-" + pod.Name + "-port:" + port.TargetPort,
+					Namespace: svc.Data.Namespace,
+				},
+			}
+
+			edptByte, err := edpt2.MarshalJSON()
+			if err != nil {
+				fmt.Println("error")
+			}
+			response, err := utils.PostWithString("http://localhost:8080/api/endpoint", string(edptByte))
+			if err != nil {
+				print("create service error")
+			}
+			fmt.Println(response)
+			//*edptList = append(*edptList, edpt2)
+		}
 	}
 
 	log.Info(logInfo)
@@ -333,8 +359,6 @@ func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 				print("delete endpoints error")
 			}
 			fmt.Println(response)
-
-			logInfo += fmt.Sprintf("srcIP:%s:%d, dstIP:%s:%d ; ", edpt.Spec.SvcIP, edpt.Spec.SvcPort, edpt.Spec.DestIP, edpt.Spec.DestPort)
 		} else {
 			newEdptList = append(newEdptList, edpt)
 		}
@@ -356,7 +380,6 @@ func (ss *SvcServiceHandler)HandleService(controller api.Controller, message api
 			fmt.Println(err2)
 			return err2
 		}
-		//fmt.Println("HandleServiceApply ",svc.Data.Name)
 		svcJson, _ := json.Marshal(svc)
 		ss.HandleCreate([]byte(svcJson))
 	case apiobjects.Delete:
@@ -390,6 +413,7 @@ func (ss *SvcEndpointHandler)HandleEndpoints(controller api.Controller, message 
 	case apiobjects.Create:
 		//调用ServiceController增加endpoint
 		//ss.HandleUpdate([]byte(podJson))
+		log.Info("Error:HandleEndpointsApply")
 	case apiobjects.Delete:
 		//调用ServiceController删除endpoint
 		ss.HandleDelete([]byte(podJson))

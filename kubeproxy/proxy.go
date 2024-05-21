@@ -108,8 +108,12 @@ func (p ProxyServiceHandler) HandleDelete(message []byte) {
 	for _, p := range svc.Spec.Ports {
 		key := svc.Status.ClusterIP + ":" + strconv.Itoa(int(p.Port))
 		ipvs.DeleteService(key)
-	}
 
+		if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+			key := utils.GetLocalIP() + ":" + strconv.Itoa(int(p.Port))
+			ipvs.DeleteService(key)
+		}
+	}
 }
 
 func (p ProxyServiceHandler) HandleUpdate(message []byte) {
@@ -154,6 +158,12 @@ func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 func (e ProxyEndpointHandler) HandleDelete(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
+	if edpt.Spec.SvcIP == "HostIP"{
+		edpt.Spec.SvcIP = utils.GetLocalIP()
+		svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
+		dstKey := edpt.Spec.DestIP + ":" + strconv.Itoa(int(edpt.Spec.DestPort))
+		ipvs.DeleteEndpoint(svcKey, dstKey)
+	}
 
 	svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
 	dstKey := edpt.Spec.DestIP + ":" + strconv.Itoa(int(edpt.Spec.DestPort))

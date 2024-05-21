@@ -41,4 +41,12 @@ const (
 	NodeHealthPath        = "/api/nodehealth"
 	NodePodBindingAllPath = "/api/binding"
 	PVDynamicAllocate     = "/api/dynamic/allocatePV"
+	ReplicasetPath          = "/api/replicaset"
+	ReplicasetPathNamespace = "/api/replicaset/:namespace"
+	ReplicasetPathSpecified = "/api/replicaset/:namespace/:name"
+	SelectPodsByUIDPath     = "/api/select/:uid"
+
+	DnsApplyPath = "/api/dns/apply"
+	DnsGetAllPath   = "/api/dns/get/all"
+	DnsDeletePath = "/api/dns/delete/:namespace/:name"
 )

@@ -24,6 +24,10 @@ type DNSEntry struct {
 	Host string `json:"host" yaml:"host"`
 }
 
+func (r *DNSRecord) GetObjectPath() string {
+	return "/api/dns/"+ r.NameSpace + "/" + r.Name
+}
+
 func (r *DNSRecord) MarshalJSON() ([]byte, error) {
 	type Alias DNSRecord
 	return json.Marshal(&struct {

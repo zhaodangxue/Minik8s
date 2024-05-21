@@ -13,6 +13,7 @@ const (
 	podRelevantTopic    = "pod-relevant"    // Pod相关的信息
 	pvRelevantTopic     = "pv-relevant"     // PV相关的信息
 	pvcRelevantTopic    = "pvc-relevant"    // PVC相关的信息
+	replicasetTopic     = "replicaset"      // Replicaset相关的信息
 )
 
 //	func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -52,4 +53,7 @@ func PvRelevantTopic() string {
 }
 func PvcRelevantTopic() string {
 	return pvcRelevantTopic
+}
+func ReplicasetTopic() string {
+	return replicasetTopic
 }

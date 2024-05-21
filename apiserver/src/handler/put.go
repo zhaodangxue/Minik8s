@@ -70,5 +70,15 @@ func NodeHealthHandler(c *gin.Context) {
 		listwatch.Publish(global.PodStateTopic(), string(message_payload))
 	}
 
+	// Publish node update event
+	message := apiobjects.TopicMessage{}
+	message.ActionType = apiobjects.Update
+	message.Object = string(nodeJson)
+	message_payload, err := json.Marshal(message)
+	if err != nil {
+		utils.Error("NodeHealthHandler: json.Marshal failed: ", err)
+	}
+	listwatch.Publish(global.NodeStateTopic(), string(message_payload))
+
 	c.JSON(http.StatusOK, response)
 }
