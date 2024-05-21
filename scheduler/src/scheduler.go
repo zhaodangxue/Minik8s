@@ -108,7 +108,28 @@ func (s *scheduler) doSchedule(msg *redis.Message) {
 		fmt.Println(err)
 	}
 }
+func (s *scheduler) reSchedule(msg *redis.Message) {
+	topicMessage := apiobjects.TopicMessage{}
+	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if topicMessage.ActionType == apiobjects.Delete {
+		nodepodbinding := &apiobjects.NodePodBinding{}
+		err = json.Unmarshal([]byte(topicMessage.Object), nodepodbinding)
+		if err != nil {
+			fmt.Println(err)
+		}
+		pod := &nodepodbinding.Pod
+		err = s.Schedule(pod)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	return
+}
 func (s *scheduler) Start() {
 	go listwatch.Watch(global.StrategyUpdateTopic(), s.handleStrategyChange)
-	listwatch.Watch(global.PodRelevantTopic(), s.doSchedule)
+	go listwatch.Watch(global.PodRelevantTopic(), s.doSchedule)
+	listwatch.Watch(global.BindingTopic(), s.reSchedule)
 }
