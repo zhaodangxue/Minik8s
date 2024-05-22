@@ -3,7 +3,7 @@ package listwatch
 import (
 	"minik8s/utils"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type HandlerOnWatch func(message *redis.Message)

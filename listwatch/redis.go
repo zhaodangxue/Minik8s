@@ -4,7 +4,7 @@ import (
 	"context"
 	"minik8s/global"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 //	var client = redis.NewClient(&redis.Options{

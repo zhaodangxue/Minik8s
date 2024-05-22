@@ -5,14 +5,14 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/global"
 	"minik8s/kubelet/internal"
-	cri "minik8s/kubelet/internal/cri_proxy"
 	"minik8s/kubelet/internal/config"
+	cri "minik8s/kubelet/internal/cri_proxy"
 	"minik8s/listwatch"
 	"minik8s/utils"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 // kubeletServer 用于存放kubelet的状态

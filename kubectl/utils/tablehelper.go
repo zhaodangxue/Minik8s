@@ -4,6 +4,7 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
+	"strconv"
 
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
@@ -48,6 +49,21 @@ func ReplicasetTbl() table.Table {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
 	tbl := table.New("NAME", "DESIRED", "READY", "AGE")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
+}
+func ServiceTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("NAME", "NameSpace","TYPE", "CLUSTER-IP", "EXTERNAL-IP", "PORT(S)")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
+}
+
+func DNSRecordTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Name", "Namespace", "Host", "Paths")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
@@ -143,6 +159,36 @@ func PrintPVCTable(namespace string) error {
 	tbl.Print()
 	return nil
 }
+
+
+
+func PrintServiceTable() error {
+	svcs := []*apiobjects.Service{}
+	url := route.Prefix + route.GetAllServicesPath
+	err := utils.GetUnmarshal(url, &svcs)
+	if err != nil {
+		return err
+	}
+	tbl := ServiceTbl()
+	for _, svc := range svcs {
+		var clusterIP string
+		var externalIP string
+		var ports string
+		for _, p := range svc.Spec.Ports {
+			ports += p.Name + ":" + strconv.FormatInt(int64(p.Port),10) + "/" + string(p.Protocol) + ", "
+		}
+		if svc.Status.ClusterIP == "" {
+			clusterIP = "<none>"
+		} else {
+			clusterIP = svc.Status.ClusterIP
+		}
+		externalIP = "<none>"
+		tbl.AddRow(svc.Data.Name, svc.Data.Namespace, svc.Spec.Type, clusterIP, externalIP, ports)
+	}
+	tbl.Print()
+	return nil
+}
+
 func PrintReplicasetTable(namespace string) error {
 	replicasets, err := GetReplicasetFromApiserver(namespace)
 	if err != nil {
@@ -153,5 +199,25 @@ func PrintReplicasetTable(namespace string) error {
 		tbl.AddRow(replicaset.Name, replicaset.Spec.Replicas, replicaset.Spec.Ready, replicaset.CreationTimestamp.Format("2006-01-02 15:04:05"))
 	}
 	tbl.Print()
+	return nil
+}
+
+func PrintDNSTable() error {
+	//TODO
+	dnsRecords := []*apiobjects.DNSRecord{}
+	url := route.Prefix + route.DnsGetAllPath
+	err := utils.GetUnmarshal(url, &dnsRecords)
+	if err != nil {
+		return err
+	}
+	tbl := DNSRecordTbl()
+	for _, dnsRecord := range dnsRecords {
+		var paths string
+		for _, path := range dnsRecord.Paths {
+			paths += path.PathName + ":" + path.Service + " " + path.Address + ":"+ strconv.Itoa(path.Port) + ", "
+		}
+		tbl.AddRow(dnsRecord.Name, dnsRecord.NameSpace, dnsRecord.Host, paths)
+	}
+    tbl.Print()
 	return nil
 }

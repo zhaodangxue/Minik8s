@@ -33,9 +33,9 @@ clean:
 
 ##### Binaries #####
 
-bin_targets: kubelet kubectl apiserver scheduler controller
+bin_targets: kubelet kubectl apiserver scheduler controller proxy
 
-.PHONY: kubelet kubectl apiserver scheduler controller
+.PHONY: kubelet kubectl apiserver scheduler controller proxy
 
 kubelet:
 	$(GOBUILD) -o $(BINDIR)/kubelet -v -tags $(TAGS) kubelet/cmd/server.go
@@ -48,6 +48,9 @@ apiserver:
 
 scheduler:
 	$(GOBUILD) -o $(BINDIR)/scheduler -v -tags $(TAGS) scheduler/run/main.go
+
+proxy:
+	$(GOBUILD) -o $(BINDIR)/proxy -v -tags $(TAGS) kubeproxy/run/main.go
 
 controller:
 	$(GOBUILD) -o $(BINDIR)/ctlmgr -v -tags $(TAGS) controller/cmd/main.go

@@ -17,6 +17,7 @@ const (
 	Pvc
 	Service
 	Replicaset
+	Dns
 )
 
 func (a ApiObjectType) String() string {
@@ -35,6 +36,8 @@ func (a ApiObjectType) String() string {
 		return "service"
 	case Replicaset:
 		return "replicaset"
+	case Dns:
+	    return "dns"
 	default:
 		return "unknown"
 	}
@@ -70,6 +73,8 @@ func ParseApiObjectType(s []byte) ApiObjectType {
 		return Service
 	case "replicaset":
 		return Replicaset
+	case "dns":
+		return Dns
 	default:
 		return Unknown
 	}

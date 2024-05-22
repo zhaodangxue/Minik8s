@@ -95,6 +95,7 @@ func AddEndpoint(key string, ip string, port uint16) {
 	svc, exist := Services[key]
 	for !exist {
 		time.Sleep(1)
+		//to do 可能会死循环
 		log.Info("[proxy] Add Endpoint: service doesn't exist!")
 		svc, exist = Services[key]
 	}

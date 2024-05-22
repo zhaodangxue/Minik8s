@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: dns-service2
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx
+  ports:
+    - name: service-port2
+      port: 34567
+      targetPort: nginx
+      protocol: TCP

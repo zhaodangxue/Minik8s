@@ -11,30 +11,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
-	"minik8s/global"
+	"minik8s/utils"
+
+	//"minik8s/utils"
+
+	//"minik8s/global"
 	"minik8s/kubeproxy/ipvs"
-	"minik8s/listwatch"
+	//"minik8s/listwatch"
 	"strconv"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
+	log "github.com/sirupsen/logrus"
 )
 
-func Run() {
-	ipvs.Init()
-	//ipvs.TestConfig()
-	var p proxyServiceHandler
-	var e proxyEndpointHandler
-	listwatch.Watch(global.ServiceTopic(), p.HandleService)
-	go listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
-
-}
+// func main() {
+// 	ipvs.Init()
+// 	//ipvs.TestConfig()
+// 	var p proxyServiceHandler
+// 	var e proxyEndpointHandler
+// 	listwatch.Watch(global.ServiceTopic(), p.HandleService)
+// 	go listwatch.Watch(global.EndpointTopic(), e.HandleEndpoints)
+// }
 
 /* ========== Service Handler ========== */
 
-type proxyServiceHandler struct {
+type ProxyServiceHandler struct {
 }
 
-func (p proxyServiceHandler) HandleService(msg *redis.Message) {
+func (p ProxyServiceHandler) HandleService(msg *redis.Message) {
+	utils.Info("Proxy Handle Service")
 	topicMessage := &apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
 	if err != nil {
@@ -63,7 +68,8 @@ func (p proxyServiceHandler) HandleService(msg *redis.Message) {
 		fmt.Println("error")
 	}
 }
-func (e proxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
+func (e ProxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
+	utils.Info("Proxy Handle Endpoints")
 	topicMessage := &apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
 	if err != nil {
@@ -81,66 +87,95 @@ func (e proxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
 		e.HandleCreate([]byte(edptJson))
 	case apiobjects.Delete:
 		//调用ServiceController删除endpoint
-		//ss.HandleDelete([]byte(topicMessage.Object))
+		edpt := &apiobjects.Endpoint{}
+		err := json.Unmarshal([]byte(topicMessage.Object), edpt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		edptJson, _ := json.Marshal(edpt)
+		e.HandleDelete([]byte(edptJson))
 	case apiobjects.Update:
 		//调用ServiceController更新endpoint
 		//ss.HandleUpdate([]byte(topicMessage.Object))
 	}
 }
 
-func (p proxyServiceHandler) HandleCreate(message []byte) {
+func (p ProxyServiceHandler) HandleCreate(message []byte) {
 }
 
-func (p proxyServiceHandler) HandleDelete(message []byte) {
+func (p ProxyServiceHandler) HandleDelete(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 
 	for _, p := range svc.Spec.Ports {
 		key := svc.Status.ClusterIP + ":" + strconv.Itoa(int(p.Port))
 		ipvs.DeleteService(key)
-	}
 
+		if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+			key := utils.GetLocalIP() + ":" + strconv.Itoa(int(p.Port))
+			ipvs.DeleteService(key)
+		}
+	}
 }
 
-func (p proxyServiceHandler) HandleUpdate(message []byte) {
+func (p ProxyServiceHandler) HandleUpdate(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 
 	for _, p := range svc.Spec.Ports {
 		ipvs.AddService(svc.Status.ClusterIP, uint16(p.Port))
+
+		if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+			ipvs.AddService(utils.GetLocalIP(), uint16(p.Port))
+		}
 	}
 }
 
-func (p proxyServiceHandler) GetType() string {
+func (p ProxyServiceHandler) GetType() string {
 	return "proxyserviceHandler"
 }
 
 /* ========== Endpoint Handler ========== */
 
-type proxyEndpointHandler struct {
+type ProxyEndpointHandler struct {
 }
 
-func (e proxyEndpointHandler) HandleCreate(message []byte) {
+func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
+	if edpt.Spec.SvcIP == "HostIP" {
+		log.Info("[proxy] Add HostIP Endpoint: svcIP:", edpt.Spec.SvcIP, "SvcPort:", edpt.Spec.SvcPort, "DestIP:", edpt.Spec.DestIP, "DestPort:", edpt.Spec.DestPort)
+		edpt.Spec.SvcIP = utils.GetLocalIP()
+		ipvs.AddService(edpt.Spec.SvcIP, uint16(edpt.Spec.SvcPort))
+		key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
+		ipvs.AddEndpoint(key, edpt.Spec.DestIP, uint16(edpt.Spec.DestPort))
+		return
+	}
 
 	key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
+	log.Info("[proxy] Add Endpoint: svcIP:", edpt.Spec.SvcIP, "SvcPort:", edpt.Spec.SvcPort)
 	ipvs.AddEndpoint(key, edpt.Spec.DestIP, uint16(edpt.Spec.DestPort))
 }
 
-func (e proxyEndpointHandler) HandleDelete(message []byte) {
+func (e ProxyEndpointHandler) HandleDelete(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
+	if edpt.Spec.SvcIP == "HostIP" {
+		edpt.Spec.SvcIP = utils.GetLocalIP()
+		svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
+		dstKey := edpt.Spec.DestIP + ":" + strconv.Itoa(int(edpt.Spec.DestPort))
+		ipvs.DeleteEndpoint(svcKey, dstKey)
+	}
 
 	svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
 	dstKey := edpt.Spec.DestIP + ":" + strconv.Itoa(int(edpt.Spec.DestPort))
 	ipvs.DeleteEndpoint(svcKey, dstKey)
 }
 
-func (e proxyEndpointHandler) HandleUpdate(message []byte) {
+func (e ProxyEndpointHandler) HandleUpdate(message []byte) {
 
 }
 
-func (e proxyEndpointHandler) GetType() string {
+func (e ProxyEndpointHandler) GetType() string {
 	return "proxyendpointHandler"
 }
