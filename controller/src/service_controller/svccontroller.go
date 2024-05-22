@@ -235,6 +235,7 @@ func createEndpointsFromPodList(svc *apiobjects.Service) {
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
 	if err != nil {
 		fmt.Println("get podlist error")
+		log.Info("[svc controller] get podlist error")
 	}
 	
 	var edptList []*apiobjects.Endpoint
@@ -268,6 +269,7 @@ func isEndpointExist(edptList *[]*apiobjects.Endpoint, podIP string) bool {
 
 func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, pod *apiobjects.Pod) {
 	logInfo := "[svc controller] Create endpoints."
+	utils.Info("[svc controller] Create endpoints.")
 
 	for _, port := range svc.Spec.Ports {
 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
@@ -445,6 +447,7 @@ func (ss *SvcEndpointHandler)HandleBindingEndpoints(controller api.Controller, m
 }
 
 func CheckAllService(controller api.Controller)(error) {
+	utils.Info("CheckAllService")
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
 	if err != nil {
@@ -476,6 +479,7 @@ func CheckAllService(controller api.Controller)(error) {
 		}
 
 		for _,pod := range podlist{
+			utils.Info("get one pod: ",pod.Name)
 			exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
 			fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
 			if !exist && fit {
