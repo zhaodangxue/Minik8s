@@ -39,6 +39,7 @@ type ProxyServiceHandler struct {
 }
 
 func (p ProxyServiceHandler) HandleService(msg *redis.Message) {
+	utils.Info("Proxy Handle Service")
 	topicMessage := &apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
 	if err != nil {
@@ -68,6 +69,7 @@ func (p ProxyServiceHandler) HandleService(msg *redis.Message) {
 	}
 }
 func (e ProxyEndpointHandler) HandleEndpoints(msg *redis.Message) {
+	utils.Info("Proxy Handle Endpoints")
 	topicMessage := &apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), topicMessage)
 	if err != nil {

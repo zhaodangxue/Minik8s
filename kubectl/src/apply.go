@@ -96,7 +96,6 @@ func RunApply_Cmd(file_path string) error {
 		}
 		url := route.Prefix + route.ServiceApplyPath
 		fmt.Println("appyly service: ", service)
-		// TODO service格式是否符合要求
 		utils.ApplyApiObject(url, service)
 	case ctlutils.Dns:
 		dns := apiobjects.DNSRecord{}
@@ -107,7 +106,6 @@ func RunApply_Cmd(file_path string) error {
 		}
 		url := route.Prefix + "/api/dns/apply"
 		fmt.Println("appyly dns: ", dns)
-		//TODO service格式是否符合要求
 		utils.ApplyApiObject(url, dns)
 	}
 	return nil

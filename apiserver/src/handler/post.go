@@ -207,8 +207,6 @@ func ServiceCreateHandler(c *gin.Context) {
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
-	c.String(http.StatusOK, "ok")
-
 	if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
 		etcd.Put("/api/nodeport/service/"+svc.Data.Namespace+"/"+svc.Data.Name, string(svcJson))
 		// var pods []*apiobjects.Pod
@@ -232,6 +230,7 @@ func ServiceCreateHandler(c *gin.Context) {
 		// 	}
 		// }
 	}
+	c.String(http.StatusOK, "ok")
 }
 // func createEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 // 	for _, port := range svc.Spec.Ports {
@@ -347,6 +346,7 @@ func EndpointCreateHandler(c *gin.Context) {
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
+	utils.Info("Create ")
 	c.String(http.StatusOK, "ok")
 }
 

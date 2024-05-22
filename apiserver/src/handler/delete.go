@@ -32,9 +32,7 @@ func ServiceDeleteHandler(c *gin.Context) {
 		Object:     string(val),
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
-	c.String(http.StatusOK, "delete service namespace:%s name:%s success", namespace, name)
 	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
-
 
     svc := apiobjects.Service{}
 	err := json.Unmarshal([]byte(val), &svc)
@@ -64,6 +62,7 @@ func ServiceDeleteHandler(c *gin.Context) {
 			return
 		}
 	}
+	c.String(http.StatusOK, "delete service namespace:%s name:%s success", namespace, name)
 }
 
 func ServiceCmdDeleteHandler(c *gin.Context) {
@@ -83,8 +82,8 @@ func ServiceCmdDeleteHandler(c *gin.Context) {
 		Object:     val,
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
-	c.String(http.StatusOK, "delete service namespace:%s name:%s cmd:%s success", namespace, name)
 	listwatch.Publish(global.ServiceCmdTopic(), string(topicMessageJson))
+	c.String(http.StatusOK, "delete service namespace:%s name:%s cmd:%s success", namespace, name)
 }
 
 func EndpointDeleteHandler(c *gin.Context) {
@@ -105,7 +104,6 @@ func EndpointDeleteHandler(c *gin.Context) {
 		Object:     string(val),
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
-	c.String(http.StatusOK, "delete endpoint namespace:%s name:%s success", namespace, name)
 	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
 
 	url := "/api/nodeport/endpoint/" + serviceName + "/" + namespace+"/"+name
@@ -120,6 +118,7 @@ func EndpointDeleteHandler(c *gin.Context) {
 	}
 	topicMessageJson2, _ := json.Marshal(topicMessage2)
 	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson2))
+	c.String(http.StatusOK, "delete endpoint namespace:%s name:%s success", namespace, name)
 }
 
 func PodDeleteHandler(c *gin.Context) {

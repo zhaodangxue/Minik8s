@@ -91,7 +91,7 @@ func (s SvcServiceHandler) HandleCreate(message []byte) {
 	//TODO 发送http给apiserver,创建service,带有分配好的cluster ip
 	svcByte, err := svc.MarshalJSON()
 	if err != nil {
-		fmt.Println("error")
+		fmt.Println("marshajson error")
 	}
 
 	response, err := utils.PostWithString("http://localhost:8080/api/service", string(svcByte))
@@ -123,6 +123,7 @@ func (s SvcServiceHandler) HandleDelete(message []byte) {
 
 	//todo 删除对应的endpoints
 	for _, edpt := range *svcToEndpoints[svc.Status.ClusterIP] {
+		utils.Info("deleteEndpoints")
 		response, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
 		if err != nil {
 			print("delete endpoints error")
@@ -234,12 +235,14 @@ func createEndpointsFromPodList(svc *apiobjects.Service) {
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
 	if err != nil {
-		fmt.Println("error")
+		fmt.Println("get podlist error")
+		log.Info("[svc controller] get podlist error")
 	}
 
 	var edptList []*apiobjects.Endpoint
 	for _, pod := range podlist {
-		//筛选符合selector条件的pod
+	    //筛选符合selector条件的pod
+		utils.Info("get one pod", pod.Name)
 		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
 			createEndpoints(&edptList, svc, pod)
 		}
@@ -268,6 +271,7 @@ func isEndpointExist(edptList *[]*apiobjects.Endpoint, podIP string) bool {
 
 func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, pod *apiobjects.Pod) {
 	logInfo := "[svc controller] Create endpoints."
+	utils.Info("[svc controller] Create endpoints.")
 
 	for _, port := range svc.Spec.Ports {
 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
@@ -347,7 +351,7 @@ func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
 }
 
 func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
-	logInfo := "[svc controller] Delete endpoints."
+	utils.Info("[svc controller] Delete endpoints.")
 
 	edptList := svcToEndpoints[svc.Status.ClusterIP]
 	var newEdptList []*apiobjects.Endpoint
@@ -365,8 +369,6 @@ func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 		}
 	}
 	svcToEndpoints[svc.Status.ClusterIP] = &newEdptList
-
-	log.Info(logInfo)
 }
 
 func (ss *SvcServiceHandler) HandleService(controller api.Controller, message apiobjects.TopicMessage) error {
@@ -445,7 +447,8 @@ func (ss *SvcEndpointHandler) HandleBindingEndpoints(controller api.Controller, 
 	return nil
 }
 
-func CheckAllService(controller api.Controller) error {
+func CheckAllService(controller api.Controller)(error) {
+	utils.Info("CheckAllService")
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
 	if err != nil {
@@ -477,6 +480,7 @@ func CheckAllService(controller api.Controller) error {
 		}
 
 		for _, pod := range podlist {
+			utils.Info("get one pod: ",pod.Name)
 			exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
 			fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
 			if !exist && fit {
