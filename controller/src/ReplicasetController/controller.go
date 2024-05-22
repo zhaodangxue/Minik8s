@@ -11,7 +11,7 @@ import (
 	"minik8s/listwatch"
 	"minik8s/utils"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type Controller interface {

@@ -56,6 +56,12 @@ func deleteSpecifiedReplicaset(np, apiObjName string) (string, error) {
 	return val, err
 }
 
+func deleteSpecifiedDNS(np, apiObjName string) (string, error) {
+	url := route.Prefix + "/api/dns/delete/" + np + "/" + apiObjName
+	val, err := utils.Delete(url)
+	return val, err
+}
+
 func RunDelete(cmd *cobra.Command, args []string) {
 	apiObjType := args[0]
 	apiObjName := args[1]
@@ -88,8 +94,12 @@ func RunDelete_Cmd(apiObjType, apiObjName string) error {
 			fmt.Println(val)
 		}
 	case "service":
-		var val string
 		val, err = deleteSpecifiedService(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
+	case "dns":
+		val, err = deleteSpecifiedDNS(np, apiObjName)
 		if err == nil {
 			fmt.Println(val)
 		}

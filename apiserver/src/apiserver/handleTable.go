@@ -28,6 +28,7 @@ var PostTable = map[string]HandlerFunc{
 	route.PVPathDetail:      persistentvolume_handler.PVApplyDetailHandler,
 	route.PVDynamicAllocate: persistentvolume_handler.PVDynamicAllocateHandler,
 	route.ReplicasetPath:    replicaset_handler.ReplicasetApplyHandler,
+	route.DnsApplyPath:      handler.DnsApplyHandler,
 }
 
 var GetTable = map[string]HandlerFunc{
@@ -37,6 +38,11 @@ var GetTable = map[string]HandlerFunc{
 	route.PodPath:          handler.PodGetHandler,
 	route.PodPathNamespace: handler.PodGetWithNamespaceHandler,
 	route.PodPathDetail:    handler.PodGetDetailHandler,
+	route.GetAllPodsPath:   handler.GetAllPodsHandler,
+	route.GetOneServicePath: handler.GetOneServiceHandler,
+	route.GetAllServicesPath: handler.GetAllServicesHandler,
+	route.GetOneEndpointPath: handler.GetOneEndpointHandler,
+	route.GetAllEndpointsPath: handler.GetAllEndpointsHandler,
 	route.PVPathNamespace:  handler.PVGetWithNamespaceHandler,
 	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
 
@@ -46,6 +52,7 @@ var GetTable = map[string]HandlerFunc{
 	route.PVCPath:                 persistentvolume_handler.PVCSGetHandler,
 	route.ReplicasetPath:          replicaset_handler.ReplicasetGetHandler,
 	route.ReplicasetPathNamespace: replicaset_handler.ReplicasetGetWithNamespaceHandler,
+	route.DnsGetAllPath:              handler.DnsGetAllHandler,
 }
 
 var PutTable = map[string]HandlerFunc{
@@ -65,4 +72,5 @@ var DeleteTable = map[string]HandlerFunc{
 	route.PVPathSpecified:         handler.PVDeleteHandler,
 	route.NodePathDetail:          node.NodeDeleteHandler,
 	route.ReplicasetPathSpecified: replicaset_handler.ReplicasetDeleteHandler,
+	route.DnsDeletePath:           handler.DnsDeleteHandler,
 }

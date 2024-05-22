@@ -49,6 +49,10 @@ func RunGet_Cmd(apiObjType string, apiObjName string) error {
 		err = ctlutils.PrintReplicasetTable(namespace)
 	case "node":
 		fmt.Printf("get node Name:%s", apiObjName)
+	case "service":
+		err = ctlutils.PrintServiceTable()
+	case "dns":
+		err = ctlutils.PrintDNSTable()
 	}
 	return err
 }

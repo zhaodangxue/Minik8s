@@ -14,5 +14,6 @@ type EndpointNode struct {
 }
 
 var Services = make(map[string]*ServiceNode)
+//var Nodeports = make(map[string]*ServiceNode)
 
 //var Endpoints map[string]EndpointNode

@@ -3,6 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+
+	//"strconv"
+
+	//"log"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/global"
@@ -12,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func NodePodBindingHandler(c *gin.Context) {
@@ -202,8 +207,67 @@ func ServiceCreateHandler(c *gin.Context) {
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
+	if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+		etcd.Put("/api/nodeport/service/"+svc.Data.Namespace+"/"+svc.Data.Name, string(svcJson))
+		// var pods []*apiobjects.Pod
+	    // values, err := etcd.Get_prefix(route.PodPath)
+	    // if err != nil {
+		//     fmt.Println(err)
+	    // }
+	    // for _, value := range values {
+		//     utils.Info("pod value: ", value)
+		//     var pod apiobjects.Pod
+		//     err := json.Unmarshal([]byte(value), &pod)
+		//     if err != nil {
+		// 	     fmt.Println(err)
+		//     }
+		//     pods = append(pods, &pod)
+	    // }
+		// for _, pod := range pods{
+		// 	//筛选符合selector条件的pod
+		// 	if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
+		// 		createEndpoints(&svc, pod)
+		// 	}
+		// }
+	}
 	c.String(http.StatusOK, "ok")
 }
+// func createEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
+// 	for _, port := range svc.Spec.Ports {
+// 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
+// 		if dstPort == 1314 {
+// 			log.Fatal("[svc controller] No Match for Target Port!")
+// 			return
+// 		}
+// 		spec := apiobjects.EndpointSpec{
+// 			SvcIP:    "HostIP",
+// 			SvcPort:  port.Port,
+// 			DestIP:   pod.Status.PodIP,
+// 			DestPort: dstPort,
+// 		}
+// 		edpt := &apiobjects.Endpoint{
+// 			ServiceName: svc.Data.Name,
+// 			Spec: spec,
+// 			Data: apiobjects.MetaData{
+// 				Name:      "nodeport-" + svc.Data.Name + "-" + pod.Name + "-port:" + port.TargetPort,
+// 				Namespace: svc.Data.Namespace,
+// 			},
+// 		}
+// 		//发送http给apiserver,更新edpt
+// 		edptByte, err := edpt.MarshalJSON()
+// 		if err != nil {
+// 			fmt.Println("error")
+// 		}
+// 		etcd.Put("/api/nodeport/endpoint/" + edpt.ServiceName + "/" + edpt.Data.Namespace+"/"+edpt.Data.Name, string(edptByte))
+// 		topicMessage := apiobjects.TopicMessage{
+// 			ActionType: apiobjects.Create,
+// 			Object:     string(edptByte),
+// 		}
+// 		topicMessageJson, _ := json.Marshal(topicMessage)
+// 		listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
+// 	}
+// }
+
 
 func ServiceUpdateHandler(c *gin.Context) {
 	svc := apiobjects.Service{}
@@ -232,6 +296,7 @@ func ServiceUpdateHandler(c *gin.Context) {
 	c.String(http.StatusOK, "ok")
 }
 
+
 func EndpointCreateHandler(c *gin.Context) {
 	endpoint := apiobjects.Endpoint{}
 	action := apiobjects.Create
@@ -247,13 +312,30 @@ func EndpointCreateHandler(c *gin.Context) {
 	if endpoint.Data.Namespace == "" {
 		endpoint.Data.Namespace = "default"
 	}
+	if endpoint.Spec.SvcIP ==  "HostIP" {
+		log.Info("[EndpointCreateHandler] endpoint.Spec.SvcIP is HostIP")
+		url := "/api/nodeport/endpoint/" + endpoint.ServiceName + "/" + endpoint.Data.Namespace+"/"+endpoint.Data.Name
+		val, _ := etcd.Get(url)
+		if val != "" {
+			c.String(http.StatusOK, "endpoint/"+endpoint.Data.Namespace+"/"+endpoint.Data.Name+"/already exists")
+			return
+		}
+		endpointJson, _ := json.Marshal(endpoint)
+		etcd.Put(url, string(endpointJson))
+		topicMessage := apiobjects.TopicMessage{
+			ActionType: apiobjects.Create,
+			Object:     string(endpointJson),
+		}
+		topicMessageJson, _ := json.Marshal(topicMessage)
+		listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
+        return
+	}
 	url := endpoint.GetObjectPath()
 	val, _ := etcd.Get(url)
 	if val != "" {
 		c.String(http.StatusOK, "endpoint/"+endpoint.Data.Namespace+"/"+endpoint.Data.Name+"/already exists")
 		return
 	}
-	//endpoint.Data.UID = utils.NewUUID()
 	endpointJson, _ := json.Marshal(endpoint)
 	etcd.Put(url, string(endpointJson))
 	fmt.Printf("endpoint create: %s\n", string(endpointJson))
@@ -264,6 +346,7 @@ func EndpointCreateHandler(c *gin.Context) {
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
+	utils.Info("Create ")
 	c.String(http.StatusOK, "ok")
 }
 
@@ -296,6 +379,63 @@ func ServiceApplyHandler(c *gin.Context) {
 	}
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.ServiceCmdTopic(), string(topicMessageJson))
-
 	c.String(http.StatusOK, "ok")
+}
+
+func DnsApplyHandler(c *gin.Context) {
+	dnsRecord := apiobjects.DNSRecord{}
+	err := utils.ReadUnmarshal(c.Request.Body, &dnsRecord)
+	if err != nil {
+		c.String(http.StatusOK, err.Error())
+		return
+	}
+	if dnsRecord.NameSpace == "" {
+		dnsRecord.NameSpace = global.DefaultNamespace
+	}
+
+	// 1. if the address field is empty, fill it with the service address
+	n := len(dnsRecord.Paths)
+	for i := 0; i < n; i++ {
+		if dnsRecord.Paths[i].Address == "" {
+			addr, err := getServiceAddr(dnsRecord.Paths[i].Service, dnsRecord.NameSpace)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+			dnsRecord.Paths[i].Address = addr
+		}
+	}
+
+    // 2. save the DNSRecord and the path in the etcd
+	url_dns := dnsRecord.GetObjectPath()
+	val, _ := etcd.Get(url_dns)
+	if val != "" {
+		c.String(http.StatusOK, "dns already exists")
+		return
+	}
+	dnsJson, _ := json.Marshal(dnsRecord)
+	etcd.Put(url_dns, string(dnsJson))
+	fmt.Printf("receive dns name: %s namespace: %s", dnsRecord.Name, dnsRecord.NameSpace)
+	c.String(http.StatusOK, "ok")
+
+	// 3. save the hostname and the path in the nginx
+	err = generatePath(dnsRecord.Host, "0.0.0.0", "create")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// 4. update the nginx config
+	err = updateNginx()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, dnsRecord)
 }
