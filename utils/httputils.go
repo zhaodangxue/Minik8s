@@ -53,7 +53,7 @@ func GetUnmarshal(url string, v interface{}) error {
 	}
 	value, err := io.ReadAll(res.Body)
 	defer res.Body.Close()
-	Info("GetUnmarshal", string(value))
+	//Info("GetUnmarshal", string(value))
 	if err != nil {
 		return err
 	}

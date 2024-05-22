@@ -122,6 +122,7 @@ func (s SvcServiceHandler) HandleDelete(message []byte) {
 
 	//todo 删除对应的endpoints
 	for _, edpt := range *svcToEndpoints[svc.Status.ClusterIP] {
+		utils.Info("deleteEndpoints")
 		response, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
 		if err != nil {
 			print("delete endpoints error")
@@ -346,7 +347,7 @@ func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
 }
 
 func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
-	logInfo := "[svc controller] Delete endpoints."
+	utils.Info("[svc controller] Delete endpoints.")
 
 	edptList := svcToEndpoints[svc.Status.ClusterIP]
 	var newEdptList []*apiobjects.Endpoint
@@ -364,8 +365,6 @@ func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 		}
 	}
 	svcToEndpoints[svc.Status.ClusterIP] = &newEdptList
-
-	log.Info(logInfo)
 }
 
 
