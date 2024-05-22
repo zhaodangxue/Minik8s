@@ -47,6 +47,7 @@ func (c *ReplicasetController) HandleReplicasetCreate(data string) error {
 	}
 	uid := replicaset.ObjectMeta.UID
 	if _, exist := c.Workers[uid]; !exist {
+		utils.Info("Replicaset", replicaset.ObjectMeta.Name, "created")
 		worker := NewWorker(&replicaset)
 		c.Workers[uid] = worker
 		go worker.Run()
@@ -63,6 +64,7 @@ func (c *ReplicasetController) HandleReplicasetUpdate(data string) error {
 	uid := replicaset.ObjectMeta.UID
 	if worker, exist := c.Workers[uid]; exist {
 		// TO DO update replicaset
+		utils.Info("Replicaset", replicaset.ObjectMeta.Name, "updated")
 		worker.ResetTarget(&replicaset)
 		worker.SyncCh() <- struct{}{}
 	}
@@ -81,6 +83,7 @@ func (c *ReplicasetController) HandleReplicasetDelete(data string) error {
 		close(worker.SyncCh())
 		worker.Done()
 		delete(c.Workers, uid)
+		utils.Info("Replicaset", replicaset.ObjectMeta.Name, "deleted")
 	}
 	return nil
 }
@@ -95,6 +98,7 @@ func (c *ReplicasetController) GetWatchFuncEnvelops() []api.WatchFuncEnvelop {
 
 func (c *ReplicasetController) Sync(controller api.Controller) error {
 	var pods []*apiobjects.Pod
+	utils.Info("ReplicasetController Sync")
 	err := utils.GetUnmarshal(route.Prefix+route.PodPath, &pods)
 	for _, worker := range c.Workers {
 		worker.SetPods(pods)

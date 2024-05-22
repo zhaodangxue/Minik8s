@@ -34,6 +34,7 @@ func (c *worker) AddPodToApiserver() {
 	pod.ObjectMeta.Name = c.target.Name + "-" + pod.ObjectMeta.UID
 	pod.AddLabel(global.ReplicasetLabel, c.target.ObjectMeta.UID)
 	url := route.Prefix + route.PodPath
+	utils.Info("replicaset worker create pod", pod.ObjectMeta.Name)
 	_, err := utils.PostWithJson(url, pod)
 	if err != nil {
 		fmt.Println(err)
@@ -124,6 +125,7 @@ func (c *worker) Done() {
 	c.mtx.Unlock()
 	pods = c.GetPodsByReplicasetUID()
 	for _, pod := range pods {
+		utils.Info("replicaset worker delete pod", pod.Name)
 		c.DeletePodToApiserver(pod.Name, pod.Namespace)
 	}
 }
@@ -138,6 +140,7 @@ func (c *worker) ResetTarget(target *apiobjects.Replicaset) {
 	for _, pod := range pods {
 		c.DeletePodToApiserver(pod.Name, pod.Namespace)
 	}
+	utils.Info("replicaset worker reset target", target.Name)
 }
 
 func (c *worker) SetPods(pods []*apiobjects.Pod) {
