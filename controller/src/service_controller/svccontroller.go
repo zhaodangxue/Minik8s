@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	//"github.com/go-redis/redis/v8"
+	//"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,15 +30,17 @@ var IPStart = "10.10.0."
 
 var svcToEndpoints = map[string]*[]*apiobjects.Endpoint{}
 var svcList = map[string]*apiobjects.Service{}
+
 //var nodePortList = map[string] bool{}
 
 const ServiceController_REPORT_INTERVAL = 10 * time.Second
+
 type ServiceController struct {
 	initInfo          api.InitStruct
 	ListFuncEnvelops  []api.ListFuncEnvelop
 	WatchFuncEnvelops []api.WatchFuncEnvelop
-	ss SvcServiceHandler
-	se SvcEndpointHandler 
+	ss                SvcServiceHandler
+	se                SvcEndpointHandler
 }
 
 func (c *ServiceController) Init(init api.InitStruct) {
@@ -63,7 +65,6 @@ func (c *ServiceController) Init(init api.InitStruct) {
 		Topic: global.ServiceCmdTopic(),
 	})
 }
-
 
 func (c *ServiceController) GetListFuncEnvelops() []api.ListFuncEnvelop {
 	return c.ListFuncEnvelops
@@ -178,7 +179,7 @@ func (s SvcEndpointHandler) HandleCreate(message []byte) {
 
 func (s SvcEndpointHandler) HandleDelete(message []byte) {
 	pod := &apiobjects.Pod{}
-    err := json.Unmarshal(message, pod)
+	err := json.Unmarshal(message, pod)
 	if err != nil {
 		fmt.Println("error")
 	}
@@ -201,13 +202,13 @@ func (s SvcEndpointHandler) HandleUpdate(message []byte) {
 		exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
 		fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
 		if !exist && fit {
-			if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING{
-				createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)	
+			if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING {
+				createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)
 			}
 			//createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)
 		} else if exist && !fit {
 			deleteEndpoints(svc, pod)
-		}else if exist && pod.Status.PodPhase != apiobjects.PodPhase_POD_RUNNING{
+		} else if exist && pod.Status.PodPhase != apiobjects.PodPhase_POD_RUNNING {
 			deleteEndpoints(svc, pod)
 		}
 	}
@@ -232,12 +233,12 @@ func allocateClusterIP() string {
 func createEndpointsFromPodList(svc *apiobjects.Service) {
 	//从apiserver获取pod列表
 	podlist := []*apiobjects.Pod{}
-	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
+	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
 	if err != nil {
 		fmt.Println("get podlist error")
 		log.Info("[svc controller] get podlist error")
 	}
-	
+
 	var edptList []*apiobjects.Endpoint
 	for _, pod := range podlist {
 	    //筛选符合selector条件的pod
@@ -286,7 +287,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 		}
 		edpt := &apiobjects.Endpoint{
 			ServiceName: svc.Data.Name,
-			Spec: spec,
+			Spec:        spec,
 			Data: apiobjects.MetaData{
 				Name:      svc.Data.Name + "-" + pod.Name + "-port:" + port.TargetPort,
 				Namespace: svc.Data.Namespace,
@@ -305,7 +306,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 		fmt.Println(response)
 		*edptList = append(*edptList, edpt)
 
-        if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+		if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
 			spec2 := apiobjects.EndpointSpec{
 				SvcIP:    "HostIP",
 				SvcPort:  port.Port,
@@ -314,7 +315,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 			}
 			edpt2 := &apiobjects.Endpoint{
 				ServiceName: svc.Data.Name,
-				Spec: spec2,
+				Spec:        spec2,
 				Data: apiobjects.MetaData{
 					Name:      "nodeport-" + svc.Data.Name + "-" + pod.Name + "-port:" + port.TargetPort,
 					Namespace: svc.Data.Namespace,
@@ -370,8 +371,7 @@ func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 	svcToEndpoints[svc.Status.ClusterIP] = &newEdptList
 }
 
-
-func (ss *SvcServiceHandler)HandleService(controller api.Controller, message apiobjects.TopicMessage)(error){
+func (ss *SvcServiceHandler) HandleService(controller api.Controller, message apiobjects.TopicMessage) error {
 	fmt.Println("HandleServiceApply")
 	switch message.ActionType {
 	case apiobjects.Create:
@@ -387,23 +387,23 @@ func (ss *SvcServiceHandler)HandleService(controller api.Controller, message api
 	case apiobjects.Delete:
 		//调用ServiceController删除service
 		svc := &apiobjects.Service{}
-        err2 := json.Unmarshal([]byte(message.Object),svc)
+		err2 := json.Unmarshal([]byte(message.Object), svc)
 		if err2 != nil {
 			fmt.Println(err2)
-			return err2	
+			return err2
 		}
 		//fmt.Println("HandleServiceDelete ",svc.Data.Name)
 		svcJson, _ := json.Marshal(svc)
 		ss.HandleDelete([]byte(svcJson))
 	case apiobjects.Update:
 		//调用ServiceController更新service
-		
+
 	default:
 		fmt.Println("error")
 	}
 	return nil
 }
-func (ss *SvcEndpointHandler)HandleEndpoints(controller api.Controller, message apiobjects.TopicMessage) (error){
+func (ss *SvcEndpointHandler) HandleEndpoints(controller api.Controller, message apiobjects.TopicMessage) error {
 	pod := &apiobjects.Pod{}
 	err := json.Unmarshal([]byte(message.Object), pod)
 	if err != nil {
@@ -425,7 +425,7 @@ func (ss *SvcEndpointHandler)HandleEndpoints(controller api.Controller, message 
 	}
 	return nil
 }
-func (ss *SvcEndpointHandler)HandleBindingEndpoints(controller api.Controller, message apiobjects.TopicMessage) (error){
+func (ss *SvcEndpointHandler) HandleBindingEndpoints(controller api.Controller, message apiobjects.TopicMessage) error {
 	nodepod := &apiobjects.NodePodBinding{}
 	err := json.Unmarshal([]byte(message.Object), nodepod)
 	if err != nil {
@@ -450,15 +450,15 @@ func (ss *SvcEndpointHandler)HandleBindingEndpoints(controller api.Controller, m
 func CheckAllService(controller api.Controller)(error) {
 	utils.Info("CheckAllService")
 	podlist := []*apiobjects.Pod{}
-	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
+	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
 	if err != nil {
 		fmt.Println("error")
 	}
-	//遍历service列表，检查所有的service                              
+	//遍历service列表，检查所有的service
 	for _, svc := range svcList {
 		svcUrl := svc.Data.Namespace + "/" + svc.Data.Name
 		tmpsvc := apiobjects.Service{}
-		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneservice/"+svcUrl,&tmpsvc)
+		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneService/"+svcUrl, &tmpsvc)
 		if err != nil {
 			fmt.Println("error")
 			return err
@@ -470,7 +470,7 @@ func CheckAllService(controller api.Controller)(error) {
 			if err != nil {
 				fmt.Println("error")
 			}
-		
+
 			response, err := utils.PostWithString("http://localhost:8080/api/service", string(svcByte))
 			if err != nil {
 				print("create service error")
@@ -479,18 +479,18 @@ func CheckAllService(controller api.Controller)(error) {
 			fmt.Println(response)
 		}
 
-		for _,pod := range podlist{
+		for _, pod := range podlist {
 			utils.Info("get one pod: ",pod.Name)
 			exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
 			fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
 			if !exist && fit {
-				if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING{
-					createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)	
+				if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING {
+					createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)
 				}
 				//createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)
 			} else if exist && !fit {
 				deleteEndpoints(svc, pod)
-			}else if exist && pod.Status.PodPhase != apiobjects.PodPhase_POD_RUNNING{
+			} else if exist && pod.Status.PodPhase != apiobjects.PodPhase_POD_RUNNING {
 				deleteEndpoints(svc, pod)
 			}
 		}

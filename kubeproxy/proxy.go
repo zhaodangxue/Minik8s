@@ -20,7 +20,7 @@ import (
 	//"minik8s/listwatch"
 	"strconv"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -144,7 +144,7 @@ func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
 	if edpt.Spec.SvcIP == "HostIP" {
-		log.Info("[proxy] Add HostIP Endpoint: svcIP:",edpt.Spec.SvcIP, "SvcPort:",edpt.Spec.SvcPort, "DestIP:",edpt.Spec.DestIP, "DestPort:",edpt.Spec.DestPort)
+		log.Info("[proxy] Add HostIP Endpoint: svcIP:", edpt.Spec.SvcIP, "SvcPort:", edpt.Spec.SvcPort, "DestIP:", edpt.Spec.DestIP, "DestPort:", edpt.Spec.DestPort)
 		edpt.Spec.SvcIP = utils.GetLocalIP()
 		ipvs.AddService(edpt.Spec.SvcIP, uint16(edpt.Spec.SvcPort))
 		key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
@@ -153,14 +153,14 @@ func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 	}
 
 	key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
-	log.Info("[proxy] Add Endpoint: svcIP:",edpt.Spec.SvcIP, "SvcPort:",edpt.Spec.SvcPort)
+	log.Info("[proxy] Add Endpoint: svcIP:", edpt.Spec.SvcIP, "SvcPort:", edpt.Spec.SvcPort)
 	ipvs.AddEndpoint(key, edpt.Spec.DestIP, uint16(edpt.Spec.DestPort))
 }
 
 func (e ProxyEndpointHandler) HandleDelete(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
-	if edpt.Spec.SvcIP == "HostIP"{
+	if edpt.Spec.SvcIP == "HostIP" {
 		edpt.Spec.SvcIP = utils.GetLocalIP()
 		svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
 		dstKey := edpt.Spec.DestIP + ":" + strconv.Itoa(int(edpt.Spec.DestPort))
