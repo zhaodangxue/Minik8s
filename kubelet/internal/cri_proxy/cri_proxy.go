@@ -2,7 +2,10 @@ package cri_proxy
 
 import (
 	"minik8s/apiobjects"
+	"minik8s/apiserver/src/route"
+	"minik8s/global"
 	"minik8s/utils"
+	"os/exec"
 
 	cri "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
@@ -112,7 +115,11 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 			Mounts:     nil,
 			Devices:    nil,
 		}
-
+		volumemounts := container.VolumeMounts
+		if len(volumemounts) != 0 {
+			volumes := pod.Spec.Volumes
+			containerConfig.Mounts = MountContainer(volumes, volumemounts, pod.ObjectMeta.UID)
+		}
 		sandboxConfig.Metadata.Attempt = 1
 
 		createContainerRequest := &cri.CreateContainerRequest{
@@ -170,5 +177,80 @@ func DeletePod(podSandboxId string) (err error) {
 		return
 	}
 	utils.Info("Pod sandbox removed with ID:", podSandboxId)
+	return
+}
+func MountContainer(volumes []apiobjects.Volume, volumeMounts []apiobjects.VolumeMount, uuid string) (mounts []*cri.Mount) {
+	//TODO
+	var mountPath string
+	var mountName string
+	for _, volumeMount := range volumeMounts {
+		mountPath = volumeMount.MountPath
+		mountName = volumeMount.Name
+		for _, volume := range volumes {
+			if volume.Name == mountName {
+				if volume.HostPath != nil {
+					mounts = append(mounts, &cri.Mount{
+						ContainerPath: mountPath,
+						HostPath:      volume.HostPath.Path,
+					})
+				} else if volume.NFS != nil {
+					server_ip := volume.NFS.Server
+					server_path := volume.NFS.Path
+					local_path := NFSMountLocal(server_ip, server_path, uuid, mountName)
+					mounts = append(mounts, &cri.Mount{
+						ContainerPath: mountPath,
+						HostPath:      local_path,
+					})
+				} else if volume.PersistentVolumeClaim != nil {
+					pvcName := volume.PersistentVolumeClaim.ClaimName
+					pvcNamespace := volume.PersistentVolumeClaim.ClaimNamespace
+					local_path := PVMountLocal(pvcName, pvcNamespace, uuid)
+					mounts = append(mounts, &cri.Mount{
+						ContainerPath: mountPath,
+						HostPath:      local_path,
+					})
+				}
+			}
+		}
+	}
+	return
+}
+func NFSMountLocal(server_ip string, server_path string, uuid string, DirName string) (local_path string) {
+	//TODO
+	url := server_ip + ":" + server_path
+	url_local := global.WorkerMountDir + "/" + uuid + "/" + DirName
+	cmd_mkdir := exec.Command("mkdir", "-p", url_local)
+	err_mkdir := cmd_mkdir.Run()
+	if err_mkdir != nil {
+		utils.Error("NFSMountLocal error:", err_mkdir)
+		local_path = ""
+		return
+	}
+	cmd := exec.Command("sudo", "mount", "-t", "nfs", url, url_local)
+	//打印出执行的命令
+	utils.Info("mount -t nfs", url, url_local)
+	err := cmd.Run()
+	if err != nil {
+		utils.Error("NFSMountLocal error:", err)
+		local_path = ""
+		return
+	}
+	utils.Info("NFS mounted with url:", url)
+	local_path = url_local
+	return
+}
+func PVMountLocal(pvcName string, pvcNamespace string, uuid string) (local_path string) {
+	url := route.Prefix + route.PVCPath + "/" + pvcNamespace + "/" + pvcName
+	var pvc apiobjects.PersistentVolumeClaim
+	err := utils.GetUnmarshal(url, &pvc)
+	if err != nil {
+		utils.Error("PVMountLocal error:", err)
+		local_path = ""
+		return
+	}
+	server_ip := global.Nfsserver
+	server_path := pvc.PVBinding.PVpath
+	DirName := pvc.Namespace + "-" + pvc.Name
+	local_path = NFSMountLocal(server_ip, server_path, uuid, DirName)
 	return
 }
