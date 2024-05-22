@@ -98,10 +98,6 @@ func PodDeleteHandler(c *gin.Context) {
 	if val_binding == "" {
 		fmt.Println("no binding")
 	}
-	var msg apiobjects.TopicMessage
-	msg.ActionType = apiobjects.Delete
-	msg.Object = val_binding
-	msgJson, _ := json.Marshal(msg)
 	var msg2 apiobjects.TopicMessage
 	msg2.ActionType = apiobjects.Delete
 	msg2.Object = val
@@ -109,7 +105,6 @@ func PodDeleteHandler(c *gin.Context) {
 	etcd.Delete(url)
 	etcd.Delete(binding.GetBindingPath())
 	listwatch.Publish(global.PodRelevantTopic(), string(msgJson2))
-	listwatch.Publish(global.BindingTopic(), string(msgJson))
 	ret := "delete podname:" + podName + " namespace:" + np + " success"
 	c.String(200, ret)
 }
