@@ -1,4 +1,4 @@
-kind: dns
+kind: Dns
 apiVersion: app/v1
 name: dns-test1
 namespace: default

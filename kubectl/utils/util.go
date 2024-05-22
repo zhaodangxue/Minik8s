@@ -73,6 +73,8 @@ func ParseApiObjectType(s []byte) ApiObjectType {
 		return Service
 	case "replicaset":
 		return Replicaset
+	case "dns":
+		return Dns
 	default:
 		return Unknown
 	}
