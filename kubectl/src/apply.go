@@ -106,7 +106,7 @@ func RunApply_Cmd(file_path string) error {
 			return err
 		}
 		url := route.Prefix + "/api/dns/apply"
-		fmt.Println("appyly service: ", dns)
+		fmt.Println("appyly dns: ", dns)
 		//TODO service格式是否符合要求
 		utils.ApplyApiObject(url, dns)
 	}
