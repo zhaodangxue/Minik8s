@@ -90,7 +90,7 @@ func (s SvcServiceHandler) HandleCreate(message []byte) {
 	//TODO 发送http给apiserver,创建service,带有分配好的cluster ip
 	svcByte, err := svc.MarshalJSON()
 	if err != nil {
-		fmt.Println("error")
+		fmt.Println("marshajson error")
 	}
 
 	response, err := utils.PostWithString("http://localhost:8080/api/service", string(svcByte))
@@ -234,7 +234,7 @@ func createEndpointsFromPodList(svc *apiobjects.Service) {
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods",&podlist)
 	if err != nil {
-		fmt.Println("error")
+		fmt.Println("get podlist error")
 	}
 	
 	var edptList []*apiobjects.Endpoint
