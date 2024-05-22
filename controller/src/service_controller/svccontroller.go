@@ -241,6 +241,7 @@ func createEndpointsFromPodList(svc *apiobjects.Service) {
 	var edptList []*apiobjects.Endpoint
 	for _, pod := range podlist {
 	    //筛选符合selector条件的pod
+		utils.Info("get one pod", pod.Name)
 		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
 			createEndpoints(&edptList, svc, pod)
 		}
@@ -457,7 +458,7 @@ func CheckAllService(controller api.Controller)(error) {
 	for _, svc := range svcList {
 		svcUrl := svc.Data.Namespace + "/" + svc.Data.Name
 		tmpsvc := apiobjects.Service{}
-		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneService/"+svcUrl,&tmpsvc)
+		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneservice/"+svcUrl,&tmpsvc)
 		if err != nil {
 			fmt.Println("error")
 			return err
