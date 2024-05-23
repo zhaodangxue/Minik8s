@@ -180,6 +180,13 @@ func healthReport() {
 		}
 	}
 
+	// Update node status
+	stats, err := internal.GetNodeStats()
+	if err != nil {
+		utils.Error("kubelet:healthReport GetNodeStats error:", err)
+	}
+	server.Node.Stats = *stats
+
 	// Update pod status
 	for _, pod := range server.Pods {
 		cri.UpdatePodStatus(pod)

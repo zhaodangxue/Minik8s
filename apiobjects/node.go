@@ -4,6 +4,7 @@ type Node struct {
 	Object `yaml:",inline"`
 	Info   NodeInfo   `yaml:"info"`
 	Status NodeStatus `yaml:"status"`
+	Stats  NodeStats  `yaml:"-"`
 }
 
 type NodeInfo struct {
@@ -12,8 +13,26 @@ type NodeInfo struct {
 
 type NodeStatus struct {
 	State      string  `yaml:"state"`
-	CpuPercent float64 `yaml:"-"`
-	MemPercent float64 `yaml:"-"`
+}
+
+type NodeStats struct {
+	CpuUsage	NodeCpuUsage
+	MemUsage	NodeMemoryUsage
+}
+
+type NodeCpuUsage struct {
+	Total uint64
+	Idle  uint64
+	Iowait uint64
+}
+
+func (cpu *NodeCpuUsage) GetCpuUsage() float32 {
+	return float32(cpu.Total - cpu.Idle - cpu.Iowait) / float32(cpu.Total)
+}
+
+type NodeMemoryUsage struct {
+	UsageBytes     uint64
+	AvailableBytes uint64
 }
 
 const (
