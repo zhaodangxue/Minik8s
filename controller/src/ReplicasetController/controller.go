@@ -29,7 +29,7 @@ func (c *ReplicasetController) Init(init api.InitStruct) {
 	c.ListFuncEnvelops = make([]api.ListFuncEnvelop, 0)
 	c.ListFuncEnvelops = append(c.ListFuncEnvelops, api.ListFuncEnvelop{
 		Func:     c.Sync,
-		Interval: 20,
+		Interval: 20 * time.Second,
 	})
 	c.WatchFuncEnvelops = make([]api.WatchFuncEnvelop, 0)
 	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
