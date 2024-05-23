@@ -33,6 +33,9 @@ func getSandboxConfig(pod *apiobjects.Pod) (sandboxConfig cri.PodSandboxConfig) 
 		}
 	}
 
+	linux := cri.LinuxPodSandboxConfig{}
+	linux.CgroupParent = "/kubelet/pod-" + pod.ObjectMeta.UID
+
 	sandboxConfig = cri.PodSandboxConfig{
 		Metadata: &cri.PodSandboxMetadata{
 			Name:      pod.ObjectMeta.Name,
@@ -42,7 +45,7 @@ func getSandboxConfig(pod *apiobjects.Pod) (sandboxConfig cri.PodSandboxConfig) 
 		Hostname:     "",
 		Labels:       pod.ObjectMeta.Labels,
 		Annotations:  make(map[string]string),
-		Linux:        &cri.LinuxPodSandboxConfig{},
+		Linux:        &linux,
 		Windows:      nil,
 		PortMappings: portMappings,
 	}
@@ -107,7 +110,6 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 			Image: &cri.ImageSpec{
 				Image: container.Image,
 			},
-			Command:    []string{"/bin/sh", "-c", "sleep 1000"},
 			Args:       nil,
 			WorkingDir: "/root",
 			Envs:       nil,
@@ -115,6 +117,8 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 			Mounts:     nil,
 			Devices:    nil,
 		}
+
+		// VolumeMounts
 		volumemounts := container.VolumeMounts
 		if len(volumemounts) != 0 {
 			volumes := pod.Spec.Volumes
