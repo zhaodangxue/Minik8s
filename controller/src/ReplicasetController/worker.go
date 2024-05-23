@@ -63,13 +63,8 @@ func (c *worker) GetPodsByReplicasetUID() []*apiobjects.Pod {
 	return Pods
 }
 
-func (c *worker) NumPodsRunning(pods []*apiobjects.Pod) int {
-	count := 0
-	for _, pod := range pods {
-		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING {
-			count++
-		}
-	}
+func (c *worker) NumPods(pods []*apiobjects.Pod) int {
+	count := len(pods)
 	return count
 }
 
@@ -85,16 +80,16 @@ func (c *worker) UpdateReplicasetReady(rs *apiobjects.Replicaset) {
 func (c *worker) SyncLoop() bool {
 	expected_num := c.target.Spec.Replicas
 	pods := c.GetPodsByReplicasetUID()
-	num_run := c.NumPodsRunning(pods)
-	diff := expected_num - num_run
-	fmt.Printf("expected_num: %d, num_run: %d, diff: %d\n", expected_num, num_run, diff)
+	num_pods := c.NumPods(pods)
+	diff := expected_num - num_pods
+	fmt.Printf("expected_num: %d, num_run: %d, diff: %d\n", expected_num, num_pods, diff)
 	if diff > 0 {
 		go c.AddPodToApiserver()
 	}
 	if diff < 0 {
 		go c.DeletePodToApiserver(pods[0].Name, pods[0].Namespace)
 	}
-	c.target.Spec.Ready = num_run
+	c.target.Spec.Ready = num_pods
 	c.UpdateReplicasetReady(c.target)
 	timeout := time.NewTimer(20 * time.Second)
 	select {
