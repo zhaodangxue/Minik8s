@@ -31,6 +31,10 @@ func (c *ReplicasetController) Init(init api.InitStruct) {
 		Func:     c.Sync,
 		Interval: 20 * time.Second,
 	})
+	c.ListFuncEnvelops = append(c.ListFuncEnvelops, api.ListFuncEnvelop{
+		Func:     c.Recover,
+		Interval: 20 * time.Second,
+	})
 	c.WatchFuncEnvelops = make([]api.WatchFuncEnvelop, 0)
 	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
 		Func:  c.WatchReplicaset,
@@ -104,6 +108,24 @@ func (c *ReplicasetController) Sync(controller api.Controller) error {
 		worker.SetPods(pods)
 	}
 	return err
+}
+
+func (c *ReplicasetController) Recover(controller api.Controller) error {
+	var replicasets []*apiobjects.Replicaset
+	err := utils.GetUnmarshal(route.Prefix+route.ReplicasetPath, &replicasets)
+	if err != nil {
+		return err
+	}
+	for _, replicaset := range replicasets {
+		uid := replicaset.ObjectMeta.UID
+		if _, exist := c.Workers[uid]; !exist {
+			utils.Info("Replicaset", replicaset.ObjectMeta.Name, "reocvered")
+			worker := NewWorker(replicaset)
+			c.Workers[uid] = worker
+			go worker.Run()
+		}
+	}
+	return nil
 }
 
 func (c *ReplicasetController) WatchReplicaset(controller api.Controller, message apiobjects.TopicMessage) error {
