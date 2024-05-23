@@ -6,7 +6,7 @@ const Host = "192.168.1.12"
 
 const ApiVersion = "v1"
 const NFSdir = "/home/nfs"
-const ApiserverMountDir = "/home/nfs"
+const ApiserverMountDir = "/mount/nfs"
 const WorkerMountDir = "/home/.k8s-volume"
 const Nfsserver = "192.168.1.14"
 
