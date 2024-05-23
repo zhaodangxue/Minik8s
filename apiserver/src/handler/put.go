@@ -38,12 +38,14 @@ func NodeHealthHandler(c *gin.Context) {
 		// Check binding
 		binding, err := etcd.Get(apiobjects.GetBindingPath(pod))
 		if err != nil {
+			utils.Info("NodeHealthHandler: etcd.Get failed: ", err)
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 		var nodePodBinding apiobjects.NodePodBinding
 		err = json.Unmarshal([]byte(binding), &nodePodBinding)
 		if err != nil {
+			utils.Info("NodeHealthHandler: json.Unmarshal failed: ", err, " binding=", binding)
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}

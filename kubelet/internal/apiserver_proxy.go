@@ -28,7 +28,7 @@ func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (p
 	response := api.NodeHealthReportResponse{}
 	err = json.Unmarshal([]byte(responseStr), &response)
 	if err != nil {
-		utils.Error("SendHealthReport json.Unmarshal error:", err)
+		utils.Error("SendHealthReport json.Unmarshal error:", err, "\nresponseStr:", responseStr)
 		return
 	}
 	
