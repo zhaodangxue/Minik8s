@@ -127,6 +127,17 @@ func UpdatePodStatus(pod *apiobjects.Pod) {
 	pod.Status.PodPhase = internal.SandboxStateToPodPhase(podStatus.Status.State)
 	pod.Status.PodIP = podStatus.Status.Network.Ip
 
+	// 获取Pod资源占用情况
+	podStats, err := GetPodStats(pod.Status.SandboxId)
+	if err != nil {
+		utils.Error("getPodStats error:", err)
+		return
+	}
+	pod.Stats.CpuUsage.TotalNanos = podStats.Stats.Linux.Cpu.UsageCoreNanoSeconds.Value
+	pod.Stats.MemoryUsage.WorkingSetBytes = podStats.Stats.Linux.Memory.WorkingSetBytes.Value
+	pod.Stats.MemoryUsage.AvailableBytes = podStats.Stats.Linux.Memory.AvailableBytes.Value
+	pod.Stats.MemoryUsage.UsageBytes = podStats.Stats.Linux.Memory.UsageBytes.Value
+
 	// 更新Container状态
 	for i := range pod.Spec.Containers {
 		container := &pod.Spec.Containers[i]
@@ -158,6 +169,7 @@ func UpdateContainerStatus(container *apiobjects.Container) {
 		return
 	}
 
+	// Get container general status
 	containerRequest := &cri.ContainerStatusRequest{ContainerId: container.Status.Id}
 	response, err := runtimeServiceClient.ContainerStatus(ctx, containerRequest)
 	if err != nil {
@@ -172,4 +184,19 @@ func UpdateContainerStatus(container *apiobjects.Container) {
 	container.Status.ExitCode = response.Status.ExitCode
 	container.Status.Reason = response.Status.Reason
 	container.Status.Message = response.Status.Message
+}
+
+func GetPodStats(sandboxId string) (statsResponse *cri.PodSandboxStatsResponse, err error) {
+	ctx := getContext()
+
+	runtimeServiceClient, err := getRuntimeServiceClient()
+	if err != nil {
+		return
+	}
+
+	statsRequest := &cri.PodSandboxStatsRequest{}
+	statsRequest.PodSandboxId = sandboxId
+	statsResponse, err = runtimeServiceClient.PodSandboxStats(ctx, statsRequest)
+
+	return
 }

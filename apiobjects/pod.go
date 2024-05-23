@@ -4,6 +4,7 @@ type Pod struct {
 	Object `yaml:",inline"`
 	Spec   PodSpec  `yaml:"spec"`
 	Status PodState `yaml:"-"`
+	Stats  PodStats `yaml:"-"`
 }
 
 type PodSpec struct {
@@ -25,6 +26,25 @@ type PodState struct {
 	// TODO: conditions
 	HostIP string
 	PodIP  string
+}
+
+type PodStats struct {
+	CpuUsage CpuUsage 
+	MemoryUsage MemoryUsage
+}
+
+type CpuUsage struct {
+	// 每秒内在所有核上一共占用了CPU多少纳秒
+	TotalNanos uint64
+}
+
+type MemoryUsage struct {
+	// 工作集大小
+	WorkingSetBytes uint64
+	// 可用内存大小，即可以被Pod使用的内存大小
+	AvailableBytes uint64
+	// 实际使用的内存大小
+	UsageBytes     uint64
 }
 
 type PodPhase string
