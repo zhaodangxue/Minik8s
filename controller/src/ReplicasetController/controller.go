@@ -29,7 +29,11 @@ func (c *ReplicasetController) Init(init api.InitStruct) {
 	c.ListFuncEnvelops = make([]api.ListFuncEnvelop, 0)
 	c.ListFuncEnvelops = append(c.ListFuncEnvelops, api.ListFuncEnvelop{
 		Func:     c.Sync,
-		Interval: 20,
+		Interval: 20 * time.Second,
+	})
+	c.ListFuncEnvelops = append(c.ListFuncEnvelops, api.ListFuncEnvelop{
+		Func:     c.Recover,
+		Interval: 20 * time.Second,
 	})
 	c.WatchFuncEnvelops = make([]api.WatchFuncEnvelop, 0)
 	c.WatchFuncEnvelops = append(c.WatchFuncEnvelops, api.WatchFuncEnvelop{
@@ -47,6 +51,7 @@ func (c *ReplicasetController) HandleReplicasetCreate(data string) error {
 	}
 	uid := replicaset.ObjectMeta.UID
 	if _, exist := c.Workers[uid]; !exist {
+		utils.Info("Replicaset", replicaset.ObjectMeta.Name, "created")
 		worker := NewWorker(&replicaset)
 		c.Workers[uid] = worker
 		go worker.Run()
@@ -63,6 +68,7 @@ func (c *ReplicasetController) HandleReplicasetUpdate(data string) error {
 	uid := replicaset.ObjectMeta.UID
 	if worker, exist := c.Workers[uid]; exist {
 		// TO DO update replicaset
+		utils.Info("Replicaset", replicaset.ObjectMeta.Name, "updated")
 		worker.ResetTarget(&replicaset)
 		worker.SyncCh() <- struct{}{}
 	}
@@ -81,6 +87,7 @@ func (c *ReplicasetController) HandleReplicasetDelete(data string) error {
 		close(worker.SyncCh())
 		worker.Done()
 		delete(c.Workers, uid)
+		utils.Info("Replicaset", replicaset.ObjectMeta.Name, "deleted")
 	}
 	return nil
 }
@@ -95,11 +102,30 @@ func (c *ReplicasetController) GetWatchFuncEnvelops() []api.WatchFuncEnvelop {
 
 func (c *ReplicasetController) Sync(controller api.Controller) error {
 	var pods []*apiobjects.Pod
+	utils.Info("ReplicasetController Sync")
 	err := utils.GetUnmarshal(route.Prefix+route.PodPath, &pods)
 	for _, worker := range c.Workers {
 		worker.SetPods(pods)
 	}
 	return err
+}
+
+func (c *ReplicasetController) Recover(controller api.Controller) error {
+	var replicasets []*apiobjects.Replicaset
+	err := utils.GetUnmarshal(route.Prefix+route.ReplicasetPath, &replicasets)
+	if err != nil {
+		return err
+	}
+	for _, replicaset := range replicasets {
+		uid := replicaset.ObjectMeta.UID
+		if _, exist := c.Workers[uid]; !exist {
+			utils.Info("Replicaset", replicaset.ObjectMeta.Name, "reocvered")
+			worker := NewWorker(replicaset)
+			c.Workers[uid] = worker
+			go worker.Run()
+		}
+	}
+	return nil
 }
 
 func (c *ReplicasetController) WatchReplicaset(controller api.Controller, message apiobjects.TopicMessage) error {

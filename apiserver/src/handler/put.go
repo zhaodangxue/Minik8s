@@ -38,15 +38,27 @@ func NodeHealthHandler(c *gin.Context) {
 		// Check binding
 		binding, err := etcd.Get(apiobjects.GetBindingPath(pod))
 		if err != nil {
+			utils.Warn("NodeHealthHandler: etcd.Get failed: ", err)
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		// binding not found
+		if binding == "" {
+			utils.Debug("NodeHealthHandler: binding not found, pod=", pod.ObjectMeta.Name, " node=", healthReport.Node.ObjectMeta.Name)
+			response.UnmatchedPodPaths = append(response.UnmatchedPodPaths, pod.GetObjectPath())
+			continue
+		}
+
 		var nodePodBinding apiobjects.NodePodBinding
 		err = json.Unmarshal([]byte(binding), &nodePodBinding)
 		if err != nil {
+			utils.Warn("NodeHealthHandler: json.Unmarshal failed: ", err, " binding=", binding)
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		// Unmatched pod
 		if healthReport.Node.Equals(&nodePodBinding.Node.Object) == false {
 			utils.Warn("NodeHealthHandler: node not match, pod=", pod.ObjectMeta.Name, " node=", nodePodBinding.Node.ObjectMeta.Name)
 			response.UnmatchedPodPaths = append(response.UnmatchedPodPaths, pod.GetObjectPath())
