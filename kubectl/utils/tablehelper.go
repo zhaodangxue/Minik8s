@@ -55,7 +55,7 @@ func ReplicasetTbl() table.Table {
 func ServiceTbl() table.Table {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("NAME", "NameSpace","TYPE", "CLUSTER-IP", "EXTERNAL-IP", "PORT(S)")
+	tbl := table.New("NAME", "NameSpace", "TYPE", "CLUSTER-IP", "EXTERNAL-IP", "PORT(S)")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
@@ -64,6 +64,13 @@ func DNSRecordTbl() table.Table {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
 	tbl := table.New("Name", "Namespace", "Host", "Paths")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
+}
+func HPARecordTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Name", "Namespace", "MinReplicas", "MaxReplicas", "TargetCPUUtilizationPercentage", "TargetMemoryUtilizationPercentage", "ScaleInterval")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
@@ -90,6 +97,11 @@ func GetPVCFromApiserver(namespace string) (pvcs []*apiobjects.PersistentVolumeC
 func GetReplicasetFromApiserver(namespace string) (replicasets []*apiobjects.Replicaset, err error) {
 	url := route.Prefix + route.ReplicasetPath + "/" + namespace
 	err = utils.GetUnmarshal(url, &replicasets)
+	return
+}
+func GetHPAFromApiserver(namespace string) (hpas []*apiobjects.HorizontalPodAutoscaler, err error) {
+	url := route.Prefix + route.HorizontalPodAutoscalerPath + "/" + namespace
+	err = utils.GetUnmarshal(url, &hpas)
 	return
 }
 
@@ -160,8 +172,6 @@ func PrintPVCTable(namespace string) error {
 	return nil
 }
 
-
-
 func PrintServiceTable() error {
 	svcs := []*apiobjects.Service{}
 	url := route.Prefix + route.GetAllServicesPath
@@ -175,7 +185,7 @@ func PrintServiceTable() error {
 		var externalIP string
 		var ports string
 		for _, p := range svc.Spec.Ports {
-			ports += p.Name + ":" + strconv.FormatInt(int64(p.Port),10) + "/" + string(p.Protocol) + ", "
+			ports += p.Name + ":" + strconv.FormatInt(int64(p.Port), 10) + "/" + string(p.Protocol) + ", "
 		}
 		if svc.Status.ClusterIP == "" {
 			clusterIP = "<none>"
@@ -214,10 +224,22 @@ func PrintDNSTable() error {
 	for _, dnsRecord := range dnsRecords {
 		var paths string
 		for _, path := range dnsRecord.Paths {
-			paths += path.PathName + ":" + path.Service + " " + path.Address + ":"+ strconv.Itoa(path.Port) + ", "
+			paths += path.PathName + ":" + path.Service + " " + path.Address + ":" + strconv.Itoa(path.Port) + ", "
 		}
 		tbl.AddRow(dnsRecord.Name, dnsRecord.NameSpace, dnsRecord.Host, paths)
 	}
-    tbl.Print()
+	tbl.Print()
+	return nil
+}
+func PrintHPATable(namespace string) error {
+	hpas, err := GetHPAFromApiserver(namespace)
+	if err != nil {
+		return err
+	}
+	tbl := HPARecordTbl()
+	for _, hpa := range hpas {
+		tbl.AddRow(hpa.Name, hpa.Namespace, hpa.Spec.MinReplicas, hpa.Spec.MaxReplicas, strconv.Itoa(hpa.Stat.CurrnentReplicaseCPUUsage)+"/"+strconv.Itoa(hpa.Spec.Metrics.CPUUtilizationPercentage), strconv.Itoa(hpa.Stat.CurrentReplicaseMemUsage)+"/"+strconv.Itoa(hpa.Spec.Metrics.MemoryUtilizationPercentage), hpa.Spec.ScaleInterval)
+	}
+	tbl.Print()
 	return nil
 }

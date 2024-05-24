@@ -140,3 +140,20 @@ func TestApplyReplicaset(t *testing.T) {
 	err := command.RunApply_Cmd("./replicaset-example.yaml")
 	assert.Nil(t, err)
 }
+func TestApplyHPA(t *testing.T) {
+	fmt.Println("TestApplyHPA")
+	etcd.Clear()
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunApply_Cmd("./hpa-example.yaml")
+	assert.Nil(t, err)
+}
+func TestGetHPA(t *testing.T) {
+	fmt.Println("TestGetHPA")
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.RunGet_Cmd("hpa", "hpa")
+	assert.Nil(t, err)
+}

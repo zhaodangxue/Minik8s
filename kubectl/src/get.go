@@ -53,6 +53,8 @@ func RunGet_Cmd(apiObjType string, apiObjName string) error {
 		err = ctlutils.PrintServiceTable()
 	case "dns":
 		err = ctlutils.PrintDNSTable()
+	case "hpa":
+		err = ctlutils.PrintHPATable(namespace)
 	}
 	return err
 }

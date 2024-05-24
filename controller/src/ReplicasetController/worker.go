@@ -15,6 +15,7 @@ type Worker interface {
 	Run()
 	SyncCh() chan<- struct{}
 	ResetTarget(target *apiobjects.Replicaset)
+	ScaleTarget(target *apiobjects.Replicaset)
 	SetPods(pods []*apiobjects.Pod)
 	GetMtx() *sync.Mutex
 	Done()
@@ -63,9 +64,19 @@ func (c *worker) GetPodsByReplicasetUID() []*apiobjects.Pod {
 	return Pods
 }
 
-func (c *worker) NumPods(pods []*apiobjects.Pod) int {
+func (c *worker) NumPods(pods []*apiobjects.Pod) (int, float32, float32) {
+	c.mtx.Lock()
 	count := len(pods)
-	return count
+	var cpu float32
+	var mem float32
+	for _, pod := range pods {
+		cpu += pod.Stats.CpuUsage.GetCpuUsage()
+		mem += pod.Stats.MemoryUsage.GetMemPercent()
+	}
+	AverageCPUPercent := cpu / float32(count)
+	AverageMemPercent := mem / float32(count)
+	c.mtx.Unlock()
+	return count, AverageCPUPercent, AverageMemPercent
 }
 
 func (c *worker) UpdateReplicasetReady(rs *apiobjects.Replicaset) {
@@ -80,7 +91,7 @@ func (c *worker) UpdateReplicasetReady(rs *apiobjects.Replicaset) {
 func (c *worker) SyncLoop() bool {
 	expected_num := c.target.Spec.Replicas
 	pods := c.GetPodsByReplicasetUID()
-	num_pods := c.NumPods(pods)
+	num_pods, AverageCPUPercent, AverageMemPercent := c.NumPods(pods)
 	diff := expected_num - num_pods
 	fmt.Printf("expected_num: %d, num_run: %d, diff: %d\n", expected_num, num_pods, diff)
 	if diff > 0 {
@@ -90,6 +101,8 @@ func (c *worker) SyncLoop() bool {
 		go c.DeletePodToApiserver(pods[0].Name, pods[0].Namespace)
 	}
 	c.target.Spec.Ready = num_pods
+	c.target.Stat.AverageCpuPercent = AverageCPUPercent
+	c.target.Stat.AverageMemPercent = AverageMemPercent
 	c.UpdateReplicasetReady(c.target)
 	timeout := time.NewTimer(20 * time.Second)
 	select {
@@ -147,7 +160,10 @@ func (c *worker) SetPods(pods []*apiobjects.Pod) {
 func (c *worker) GetMtx() *sync.Mutex {
 	return &c.mtx
 }
-
+func (c *worker) ScaleTarget(target *apiobjects.Replicaset) {
+	c.target = target
+	utils.Info("replicaset worker scale target", target.Name)
+}
 func NewWorker(target *apiobjects.Replicaset) Worker {
 	return &worker{
 		syncCh: make(chan struct{}, 3),

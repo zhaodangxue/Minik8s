@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa
+  namespace: default
+spec:
+  minReplicas: 2
+  maxReplicas: 6
+  scaleTargetRef:
+    apiVersion: v1
+    kind: ReplicaSet # we only support replicaSet now
+    metadata:
+      name: rs
+  metrics:
+    CPUUtilizationPercentage: 90
+  scaleInterval: 25

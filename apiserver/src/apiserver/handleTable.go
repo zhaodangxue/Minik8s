@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"minik8s/apiserver/src/handler"
+	hpa_handler "minik8s/apiserver/src/handler/hpa"
 	node "minik8s/apiserver/src/handler/node"
 	persistentvolume_handler "minik8s/apiserver/src/handler/persistentvolume"
 	replicaset_handler "minik8s/apiserver/src/handler/replicaset"
@@ -21,38 +22,40 @@ var PostTable = map[string]HandlerFunc{
 	route.EndpointCreaetPath: handler.EndpointCreateHandler,
 	route.ServiceApplyPath:   handler.ServiceApplyHandler,
 	// route.EndpointUpdatePath: handler.EndpointUpdateHandler,
-	route.PodPath:           handler.PodApplyHandler,
-	route.PVPath:            handler.PVApplyHandler,
-	route.PVCPath:           handler.PVCApplyHandler,
-	route.PVCPathDetail:     persistentvolume_handler.PVCApplyDetailHandler,
-	route.PVPathDetail:      persistentvolume_handler.PVApplyDetailHandler,
-	route.PVDynamicAllocate: persistentvolume_handler.PVDynamicAllocateHandler,
-	route.ReplicasetPath:    replicaset_handler.ReplicasetApplyHandler,
-	route.DnsApplyPath:      handler.DnsApplyHandler,
+	route.PodPath:                     handler.PodApplyHandler,
+	route.PVPath:                      handler.PVApplyHandler,
+	route.PVCPath:                     handler.PVCApplyHandler,
+	route.PVCPathDetail:               persistentvolume_handler.PVCApplyDetailHandler,
+	route.PVPathDetail:                persistentvolume_handler.PVApplyDetailHandler,
+	route.PVDynamicAllocate:           persistentvolume_handler.PVDynamicAllocateHandler,
+	route.ReplicasetPath:              replicaset_handler.ReplicasetApplyHandler,
+	route.DnsApplyPath:                handler.DnsApplyHandler,
+	route.HorizontalPodAutoscalerPath: hpa_handler.HPAApplyHandler,
 }
 
 var GetTable = map[string]HandlerFunc{
-	route.TestGetPath:      handler.TestGetHandler,
-	route.TestCtlPath:      handler.TestCtlGetHandler,
-	route.NodePath:         handler.NodeGetHandler,
-	route.PodPath:          handler.PodGetHandler,
-	route.PodPathNamespace: handler.PodGetWithNamespaceHandler,
-	route.PodPathDetail:    handler.PodGetDetailHandler,
-	route.GetAllPodsPath:   handler.GetAllPodsHandler,
-	route.GetOneServicePath: handler.GetOneServiceHandler,
-	route.GetAllServicesPath: handler.GetAllServicesHandler,
-	route.GetOneEndpointPath: handler.GetOneEndpointHandler,
+	route.TestGetPath:         handler.TestGetHandler,
+	route.TestCtlPath:         handler.TestCtlGetHandler,
+	route.NodePath:            handler.NodeGetHandler,
+	route.PodPath:             handler.PodGetHandler,
+	route.PodPathNamespace:    handler.PodGetWithNamespaceHandler,
+	route.PodPathDetail:       handler.PodGetDetailHandler,
+	route.GetAllPodsPath:      handler.GetAllPodsHandler,
+	route.GetOneServicePath:   handler.GetOneServiceHandler,
+	route.GetAllServicesPath:  handler.GetAllServicesHandler,
+	route.GetOneEndpointPath:  handler.GetOneEndpointHandler,
 	route.GetAllEndpointsPath: handler.GetAllEndpointsHandler,
-	route.PVPathNamespace:  handler.PVGetWithNamespaceHandler,
-	route.PVCPathNamespace: handler.PVCGetWithNamespaceHandler,
+	route.PVPathNamespace:     handler.PVGetWithNamespaceHandler,
+	route.PVCPathNamespace:    handler.PVCGetWithNamespaceHandler,
 
-	route.NodePodBindingAllPath:   handler.NodePodBindingAllHandler,
-	route.PVPathSpecified:         persistentvolume_handler.PVGetSpecifiedHandler,
-	route.PVCPathSpecified:        persistentvolume_handler.PVCGetSpecifiedHandler,
-	route.PVCPath:                 persistentvolume_handler.PVCSGetHandler,
-	route.ReplicasetPath:          replicaset_handler.ReplicasetGetHandler,
-	route.ReplicasetPathNamespace: replicaset_handler.ReplicasetGetWithNamespaceHandler,
-	route.DnsGetAllPath:              handler.DnsGetAllHandler,
+	route.NodePodBindingAllPath:                handler.NodePodBindingAllHandler,
+	route.PVPathSpecified:                      persistentvolume_handler.PVGetSpecifiedHandler,
+	route.PVCPathSpecified:                     persistentvolume_handler.PVCGetSpecifiedHandler,
+	route.PVCPath:                              persistentvolume_handler.PVCSGetHandler,
+	route.ReplicasetPath:                       replicaset_handler.ReplicasetGetHandler,
+	route.ReplicasetPathNamespace:              replicaset_handler.ReplicasetGetWithNamespaceHandler,
+	route.DnsGetAllPath:                        handler.DnsGetAllHandler,
+	route.HorizontalPodAutoscalerPathNamespace: hpa_handler.HPAGetWithNamespaceHandler,
 }
 
 var PutTable = map[string]HandlerFunc{

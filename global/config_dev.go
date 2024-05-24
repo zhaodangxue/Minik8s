@@ -3,6 +3,7 @@
 package global
 
 const Host = "127.0.0.1"
+const EtcdAndRedisHost = "106.15.10.160"
 
 const ApiVersion = "v1"
 const NFSdir = "/home/nfs"

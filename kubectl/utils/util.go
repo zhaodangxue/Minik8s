@@ -18,6 +18,7 @@ const (
 	Service
 	Replicaset
 	Dns
+	HPA
 )
 
 func (a ApiObjectType) String() string {
@@ -37,7 +38,9 @@ func (a ApiObjectType) String() string {
 	case Replicaset:
 		return "replicaset"
 	case Dns:
-	    return "dns"
+		return "dns"
+	case HPA:
+		return "horizontalpodautoscaler"
 	default:
 		return "unknown"
 	}
@@ -75,6 +78,8 @@ func ParseApiObjectType(s []byte) ApiObjectType {
 		return Replicaset
 	case "dns":
 		return Dns
+	case "horizontalpodautoscaler":
+		return HPA
 	default:
 		return Unknown
 	}

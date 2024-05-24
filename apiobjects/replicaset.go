@@ -3,6 +3,7 @@ package apiobjects
 type Replicaset struct {
 	Object `yaml:",inline"`
 	Spec   ReplicasetSpec `yaml:"spec"`
+	Stat   ReplicasetStat `yaml:"-"`
 }
 type ReplicasetSpec struct {
 	Replicas int           `yaml:"replicas"`
@@ -12,4 +13,8 @@ type ReplicasetSpec struct {
 }
 type LabelSelector struct {
 	MatchLabels map[string]string `yaml:"matchLabels"`
+}
+type ReplicasetStat struct {
+	AverageCpuPercent float32 `yaml:"-"`
+	AverageMemPercent float32 `yaml:"-"`
 }
