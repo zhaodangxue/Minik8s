@@ -12,27 +12,31 @@ type NodeInfo struct {
 }
 
 type NodeStatus struct {
-	State      string  `yaml:"state"`
+	State string `yaml:"state"`
 }
 
 type NodeStats struct {
-	CpuUsage	NodeCpuUsage
-	MemUsage	NodeMemoryUsage
+	CpuUsage NodeCpuUsage
+	MemUsage NodeMemoryUsage
 }
 
 type NodeCpuUsage struct {
-	Total uint64
-	Idle  uint64
+	Total  uint64
+	Idle   uint64
 	Iowait uint64
 }
 
 func (cpu *NodeCpuUsage) GetCpuUsage() float32 {
-	return float32(cpu.Total - cpu.Idle - cpu.Iowait) / float32(cpu.Total)
+	return float32(cpu.Total-cpu.Idle-cpu.Iowait) / float32(cpu.Total)
 }
 
 type NodeMemoryUsage struct {
-	UsageBytes     uint64
+	UsedBytes      uint64
 	AvailableBytes uint64
+}
+
+func (memory *NodeMemoryUsage) GetMemPercent() float32 {
+	return float32(memory.UsedBytes) / float32(memory.AvailableBytes+memory.UsedBytes)
 }
 
 const (
