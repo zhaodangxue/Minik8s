@@ -353,11 +353,14 @@ func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
 func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 	utils.Info("[svc controller] Delete endpoints.")
 
-	edptList := svcToEndpoints[svc.Status.ClusterIP]
+	edptList, exist := svcToEndpoints[svc.Status.ClusterIP]
+	if !exist {
+		return
+	}
 	var newEdptList []*apiobjects.Endpoint
-	for key, edpt := range *edptList {
+	for _, edpt := range *edptList {
 		if edpt.Spec.DestIP == pod.Status.PodIP {
-			edpt := (*edptList)[key]
+			//edpt := (*edptList)[key]
 			//TODO 发送http给apiserver,更新edpt
 			response, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
 			if err != nil {
