@@ -39,6 +39,8 @@ func (c *HPAController) Init(init api.InitStruct) {
 		Func:  c.WatchHPA,
 		Topic: global.HPARelevantTopic(),
 	})
+	c.CancelFunctions = make(map[string]context.CancelFunc)
+	c.workers = make(map[string]Worker)
 }
 func (c *HPAController) GetListFuncEnvelops() []api.ListFuncEnvelop {
 	return c.ListFuncEnvelops
