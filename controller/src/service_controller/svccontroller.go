@@ -277,7 +277,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
 		if dstPort == 1314 {
 			log.Fatal("[svc controller] No Match for Target Port!")
-			return
+			continue
 		}
 		spec := apiobjects.EndpointSpec{
 			SvcIP:    svc.Status.ClusterIP,
