@@ -14,7 +14,7 @@ import (
 //	})
 var ctx = context.Background()
 var client = redis.NewClient(&redis.Options{
-	Addr:     global.EtcdAndRedisHost + ":6379",
+	Addr:     global.Host + ":6379",
 	Password: "",
 	DB:       0,
 })

@@ -18,7 +18,7 @@ var (
 
 func init() {
 	config = clientv3.Config{
-		Endpoints:   []string{global.EtcdAndRedisHost + ":2379"},
+		Endpoints:   []string{global.Host + ":2379"},
 		DialTimeout: 5 * time.Second,
 	}
 	client, Err = clientv3.New(config)
