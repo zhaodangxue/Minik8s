@@ -3,6 +3,7 @@ package sched_utils
 import (
 	"math/rand"
 	"minik8s/apiobjects"
+	"minik8s/utils"
 )
 
 // 第一个是我们的标签选择器接口
@@ -72,6 +73,8 @@ func (mcs *MininumCpuStrategySelector) StrategySelector(nodes []*apiobjects.Node
 			minNode = node
 		}
 	}
+
+	utils.Info("minCPUNode:", minNode.ObjectMeta.Name)
 	return minNode
 }
 
@@ -90,6 +93,7 @@ func (mms *MininumMemStrategySelector) StrategySelector(nodes []*apiobjects.Node
 			minNode = node
 		}
 	}
+	utils.Info("minMemNode:", minNode.ObjectMeta.Name)
 	return minNode
 }
 func NewStrategy(strategy byte) StrategySelector {

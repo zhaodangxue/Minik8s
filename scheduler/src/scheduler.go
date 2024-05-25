@@ -33,6 +33,7 @@ func (s *scheduler) GetAllNodesFromApiServer() (nodes []*apiobjects.Node) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	utils.Info("get all nodes from apiserver")
 	return
 }
 func (s *scheduler) SendScheduleInfoToApiServer(pod *apiobjects.Pod, node *apiobjects.Node) {
