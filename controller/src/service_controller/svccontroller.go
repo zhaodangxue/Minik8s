@@ -452,8 +452,21 @@ func CheckAllService(controller api.Controller)(error) {
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
 	if err != nil {
-		fmt.Println("error")
+		fmt.Println("get pod list error")
 	}
+	etcd_svc_list := []*apiobjects.Service{}
+	err = utils.GetUnmarshal("http://localhost:8080/api/get/allservices", &etcd_svc_list)
+	if err != nil {
+		fmt.Println("get svc list error")
+	}
+
+	for _, etcd_svc := range etcd_svc_list {
+        _, exist := svcList[etcd_svc.Status.ClusterIP]
+		if !exist {
+			svcList[etcd_svc.Status.ClusterIP] = etcd_svc
+		}
+	}
+
 	//遍历service列表，检查所有的service
 	for _, svc := range svcList {
 		svcUrl := svc.Data.Namespace + "/" + svc.Data.Name
@@ -480,7 +493,7 @@ func CheckAllService(controller api.Controller)(error) {
 		}
 
 		for _, pod := range podlist {
-			utils.Info("get one pod: ",pod.Name)
+			//utils.Info("get one pod: ",pod.Name)
 			exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
 			fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
 			if !exist && fit {

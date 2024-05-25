@@ -16,15 +16,12 @@ spec:
       volumeMounts:
         - name: volume
           mountPath: /usr/share/nginx/html/files
-    - name: downloader
-      image: dplsming/aria2ng-downloader:1.0
+    - name: ubuntu
+      image: ubuntu
       ports:
-        - name: nginx
+        - name: hello
           containerPort: 6800
           hostPort: 6800
-        - name: nginx
-          containerPort: 6880
-          hostPort: 6880
       volumeMounts:
         - name: volume
           mountPath: /data
