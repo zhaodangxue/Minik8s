@@ -16,6 +16,11 @@ func TestGetPodInfo(t *testing.T) {
 		if err != nil {
 			t.Error("GetPodInfo error:", err)
 		}
+		podStats, err := cri.GetPodStats(sandbox.Id)
+		if err != nil {
+			t.Error("GetPodStats error:", err)
+		}
 		t.Log("Pod info:", pod)
+		t.Log("Pod stats:", podStats)
 	}
 }

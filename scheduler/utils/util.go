@@ -64,11 +64,11 @@ func (mcs *MininumCpuStrategySelector) StrategySelector(nodes []*apiobjects.Node
 	if len(nodes) == 0 {
 		return nil
 	}
-	min := nodes[0].Status.CpuPercent
+	min := nodes[0].Stats.CpuUsage.GetCpuUsage()
 	minNode := nodes[0]
 	for _, node := range nodes {
-		if node.Status.CpuPercent < min {
-			min = node.Status.CpuPercent
+		if node.Stats.CpuUsage.GetCpuUsage() < min {
+			min = node.Stats.CpuUsage.GetCpuUsage()
 			minNode = node
 		}
 	}
@@ -82,11 +82,11 @@ func (mms *MininumMemStrategySelector) StrategySelector(nodes []*apiobjects.Node
 	if len(nodes) == 0 {
 		return nil
 	}
-	min := nodes[0].Status.MemPercent
+	min := nodes[0].Stats.MemUsage.GetMemPercent()
 	minNode := nodes[0]
 	for _, node := range nodes {
-		if node.Status.MemPercent < min {
-			min = node.Status.MemPercent
+		if node.Stats.MemUsage.GetMemPercent() < min {
+			min = node.Stats.MemUsage.GetMemPercent()
 			minNode = node
 		}
 	}

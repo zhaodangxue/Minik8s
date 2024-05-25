@@ -4,16 +4,15 @@ metadata:
   name: nfsserver
 spec:
   capacity:
-    storage: 50Gi
+    storage: 2Gi
   volumeMode: Filesystem
   accessModes:
-    - ReadWriteOnce
     - ReadWriteMany
-  persistentVolumeReclaimPolicy: Delete
+  persistentVolumeReclaimPolicy: Retain
   storageClassName: slow  
   mountOptions:
     - hard
     - nfsvers=4.1
   nfs:
-    path: /exports
-    server: 172.22.0.42
+    path: /home/nfs
+    server: 192.168.1.14

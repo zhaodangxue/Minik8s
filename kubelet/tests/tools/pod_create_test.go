@@ -28,8 +28,8 @@ func TestPodCreate(t *testing.T) {
 		Spec: apiobjects.PodSpec{
 			Containers: []apiobjects.Container{
 				{
-					Name:  "test-container",
-					Image: "docker.io/library/busybox:latest",
+					Name:  "viewer",
+					Image: "dplsming/nginx-fileserver:1.0",
 				},
 			},
 		},
