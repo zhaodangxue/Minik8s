@@ -474,7 +474,7 @@ func CheckAllService(controller api.Controller)(error) {
 	for _, svc := range svcList {
 		svcUrl := svc.Data.Namespace + "/" + svc.Data.Name
 		tmpsvc := apiobjects.Service{}
-		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneService/"+svcUrl, &tmpsvc)
+		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneservice/"+svcUrl, &tmpsvc)
 		if err != nil {
 			fmt.Println("error")
 			return err
