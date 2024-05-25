@@ -171,6 +171,8 @@ func (c *ReplicasetController) ReplicasetHandler(msg *redis.Message) {
 		c.HandleReplicasetUpdate(topicMessage.Object)
 	case apiobjects.Delete:
 		c.HandleReplicasetDelete(topicMessage.Object)
+	case apiobjects.Scale:
+		c.HandleReplicasetScale(topicMessage.Object)
 	}
 }
 

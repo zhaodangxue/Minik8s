@@ -45,3 +45,17 @@ func ReplicasetGetHandler(c *gin.Context) {
 	}
 	c.JSON(200, replicasets)
 }
+func ReplicasetGetSpecifiedHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	value, err := etcd.Get(route.ReplicasetPath + "/" + namespace + "/" + name)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var replicaset apiobjects.Replicaset
+	err = json.Unmarshal([]byte(value), &replicaset)
+	if err != nil {
+		fmt.Println(err)
+	}
+	c.JSON(200, replicaset)
+}

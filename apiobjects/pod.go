@@ -48,10 +48,18 @@ type MemoryUsage struct {
 }
 
 func (c *CpuUsage) GetCpuUsage() float32 {
-	return float32(c.TotalNanos / 1e9)
+	if c.TotalNanos == 0 {
+		return 0
+	}
+	ret := float32(c.TotalNanos) / 1e9
+	return ret
 }
 func (m *MemoryUsage) GetMemPercent() float32 {
-	return float32(m.UsageBytes / m.AvailableBytes)
+	if m.AvailableBytes == 0 {
+		return 0
+	}
+	ret := float32(m.UsageBytes) / float32(m.AvailableBytes)
+	return ret
 }
 
 type PodPhase string

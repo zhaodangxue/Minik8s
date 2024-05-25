@@ -46,6 +46,7 @@ const (
 	ReplicasetPath                       = "/api/replicaset"
 	ReplicasetPathNamespace              = "/api/replicaset/:namespace"
 	ReplicasetPathSpecified              = "/api/replicaset/:namespace/:name"
+	ReplicasetScale                      = "/api/scale/replicaset"
 	HorizontalPodAutoscalerPath          = "/api/horizontalpodautoscaler"
 	HorizontalPodAutoscalerPathNamespace = "/api/horizontalpodautoscaler/:namespace"
 	HorizontalPodAutoscalerPathSpecified = "/api/horizontalpodautoscaler/:namespace/:name"
