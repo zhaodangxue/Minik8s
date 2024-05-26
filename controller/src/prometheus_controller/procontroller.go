@@ -94,7 +94,19 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 			tmp_podList[pod.Status.PodIP] = strconv.Itoa(int(dstPort))
 		}
 	}
-
+	//打印一下tmp_nodeList和tmp_podList
+	for key, value := range nodeList {
+		utils.Info("[Prometheus Controller] nodeList: ", key, value)
+	}
+	for key, value := range podList {
+		utils.Info("[Prometheus Controller] podList: ", key, value)
+	}
+	for key, value := range tmp_nodeList {
+		utils.Info("[Prometheus Controller] tmp_nodeList: ", key, value)
+	}
+	for key, value := range tmp_podList {
+		utils.Info("[Prometheus Controller] tmp_podList: ", key, value)
+	}
     isNodeUpdate := false
 	for key, _ := range tmp_nodeList {
 		_, exist := nodeList[key]
@@ -104,8 +116,19 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 		}
 	}
 
-	isPodUpdate := !IsMapEqual(tmp_podList, podList)
-    
+	isPodUpdate := false
+	for key, v1 := range tmp_podList {
+		v2, exist := podList[key]
+		if !exist {
+			isPodUpdate = true
+			break
+		}
+		if v1 != v2 {
+			isPodUpdate = true
+			break
+		}
+	}
+
 	if isNodeUpdate || isPodUpdate {
 		// update prometheus config
 		utils.Info("[Prometheus Controller] update config")
