@@ -1,6 +1,7 @@
 package ctlutils
 
 import (
+	"fmt"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
@@ -238,7 +239,9 @@ func PrintHPATable(namespace string) error {
 	}
 	tbl := HPARecordTbl()
 	for _, hpa := range hpas {
-		tbl.AddRow(hpa.Name, hpa.Namespace, hpa.Spec.MinReplicas, hpa.Spec.MaxReplicas, strconv.Itoa(hpa.Stat.CurrnentReplicaseCPUUsage)+"/"+strconv.Itoa(hpa.Spec.Metrics.CPUUtilizationPercentage), strconv.Itoa(hpa.Stat.CurrentReplicaseMemUsage)+"/"+strconv.Itoa(hpa.Spec.Metrics.MemoryUtilizationPercentage), hpa.Spec.ScaleInterval)
+		strMem_HPA := fmt.Sprintf("%f", hpa.Stat.CurrentReplicaseMemUsage)
+		expected_HPA := fmt.Sprintf("%f", hpa.Spec.Metrics.MemoryUtilizationUsage)
+		tbl.AddRow(hpa.Name, hpa.Namespace, hpa.Spec.MinReplicas, hpa.Spec.MaxReplicas, strconv.Itoa(hpa.Stat.CurrnentReplicaseCPUUsage)+"/"+strconv.Itoa(hpa.Spec.Metrics.CPUUtilizationPercentage), strMem_HPA+"/"+expected_HPA, hpa.Spec.ScaleInterval)
 	}
 	tbl.Print()
 	return nil

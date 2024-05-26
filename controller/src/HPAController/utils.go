@@ -27,22 +27,22 @@ func ScaleByCPUPercent(rs *apiobjects.Replicaset, min int, max int, target int) 
 		ratio := float32(current_cpu_usage) / float32(target)
 		replicas = GetMiddle(int(ratio*float32(rs.Spec.Replicas)), min, max)
 	}
-	utils.Info("current_cpu_usage:", current_cpu_usage, "replicas:", replicas)
+	utils.Info("current_cpu_usage(%):", current_cpu_usage, "replicas:", replicas)
 	return current_cpu_usage, replicas
 }
-func ScaleByMemPercent(rs *apiobjects.Replicaset, min int, max int, target int) (int, int) {
+func ScaleByMemPercent(rs *apiobjects.Replicaset, min int, max int, target float32) (float32, int) {
 	var replicaset_mem_usage float32
-	replicaset_mem_usage = rs.Stat.AverageMemPercent
+	replicaset_mem_usage = rs.Stat.AverageMemUsage
 	//乘以100并转化为int
-	var current_mem_usage int
+	var current_mem_usage float32
 	var replicas int
-	current_mem_usage = int(replicaset_mem_usage * 100)
+	current_mem_usage = replicaset_mem_usage
 	if current_mem_usage == 0 {
 		replicas = min
 	} else {
-		ratio := float32(current_mem_usage) / float32(target)
+		ratio := current_mem_usage / target
 		replicas = GetMiddle(int(ratio*float32(rs.Spec.Replicas)), min, max)
 	}
-	utils.Info("current_mem_usage:", current_mem_usage, "replicas:", replicas)
+	utils.Info("current_mem_usage(Gi):", current_mem_usage, "replicas:", replicas)
 	return current_mem_usage, replicas
 }

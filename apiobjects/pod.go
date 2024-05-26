@@ -54,11 +54,11 @@ func (c *CpuUsage) GetCpuUsage() float32 {
 	ret := float32(c.TotalNanos) / 1e9
 	return ret
 }
-func (m *MemoryUsage) GetMemPercent() float32 {
+func (m *MemoryUsage) GetMemUsage() float32 {
 	if m.AvailableBytes == 0 {
 		return 0
 	}
-	ret := float32(m.UsageBytes) / float32(m.AvailableBytes)
+	ret := float32(m.UsageBytes) / float32(1024) / float32(1024) / float32(1024)
 	return ret
 }
 

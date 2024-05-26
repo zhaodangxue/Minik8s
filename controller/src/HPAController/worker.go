@@ -68,14 +68,14 @@ func (c *worker) Sync() bool {
 		return false
 	}
 	ExpectedCPUPercent := c.target.Spec.Metrics.CPUUtilizationPercentage
-	ExpectedMemPercent := c.target.Spec.Metrics.MemoryUtilizationPercentage
+	ExpectedMemUsage := c.target.Spec.Metrics.MemoryUtilizationUsage
 	var NumReplicas int
 	if ExpectedCPUPercent > 0 {
 		current_cpu_usage, replicas := ScaleByCPUPercent(rs, c.target.Spec.MinReplicas, c.target.Spec.MaxReplicas, ExpectedCPUPercent)
 		NumReplicas = replicas
 		c.target.Stat.CurrnentReplicaseCPUUsage = current_cpu_usage
 	} else {
-		current_mem_usage, replicas := ScaleByMemPercent(rs, c.target.Spec.MinReplicas, c.target.Spec.MaxReplicas, ExpectedMemPercent)
+		current_mem_usage, replicas := ScaleByMemPercent(rs, c.target.Spec.MinReplicas, c.target.Spec.MaxReplicas, ExpectedMemUsage)
 		NumReplicas = replicas
 		c.target.Stat.CurrentReplicaseMemUsage = current_mem_usage
 	}

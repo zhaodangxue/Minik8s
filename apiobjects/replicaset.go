@@ -16,5 +16,5 @@ type LabelSelector struct {
 }
 type ReplicasetStat struct {
 	AverageCpuPercent float32 `yaml:"-"`
-	AverageMemPercent float32 `yaml:"-"`
+	AverageMemUsage   float32 `yaml:"-"`
 }

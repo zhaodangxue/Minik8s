@@ -72,7 +72,7 @@ func (c *worker) NumPods(pods []*apiobjects.Pod) (int, float32, float32) {
 	var mem float32
 	for _, pod := range pods {
 		cpu += pod.Stats.CpuUsage.GetCpuUsage()
-		mem += pod.Stats.MemoryUsage.GetMemPercent()
+		mem += pod.Stats.MemoryUsage.GetMemUsage()
 	}
 	var AverageCPUPercent float32
 	var AverageMemPercent float32
@@ -100,7 +100,7 @@ func (c *worker) SyncLoop() bool {
 	c.global_mtx.Lock()
 	expected_num := c.target.Spec.Replicas
 	pods := c.GetPodsByReplicasetUID()
-	num_pods, AverageCPUPercent, AverageMemPercent := c.NumPods(pods)
+	num_pods, AverageCPUPercent, AverageMemUsage := c.NumPods(pods)
 	diff := expected_num - num_pods
 	fmt.Printf("expected_num: %d, num_run: %d, diff: %d\n", expected_num, num_pods, diff)
 	if diff > 0 {
@@ -111,7 +111,7 @@ func (c *worker) SyncLoop() bool {
 	}
 	c.target.Spec.Ready = num_pods
 	c.target.Stat.AverageCpuPercent = AverageCPUPercent
-	c.target.Stat.AverageMemPercent = AverageMemPercent
+	c.target.Stat.AverageMemUsage = AverageMemUsage
 	c.UpdateReplicasetReady(c.target)
 	timeout := time.NewTimer(20 * time.Second)
 	c.global_mtx.Unlock()
