@@ -74,6 +74,7 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 	}
 
 	for _, pod := range pod_list{
+		utils.Info("[Prometheus Controller] get pod")
 		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING {
 			flag := false
 			for key, value := range pod.Labels {
@@ -116,7 +117,7 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 			configs = append(configs, key+":9100")
 		}
 		for key, value := range podList {
-			utils.Info("[Prometheus Controller] get pod")
+			//utils.Info("[Prometheus Controller] get pod")
 			configs = append(configs, key+":"+value)
 		}
 		prometheus.GenerateProConfig(configs)
@@ -146,9 +147,11 @@ func IsMapEqual(a map[string]string, b map[string]string) bool {
 	for k, v := range a {
 		_,exist := b[k]
 		if !exist {
+			utils.Info("[Prometheus Controller] map not equal")
 			return false
 		}
 		if b[k] != v {
+			utils.Info("[Prometheus Controller] map not equal")
 			return false
 		}
 	}
