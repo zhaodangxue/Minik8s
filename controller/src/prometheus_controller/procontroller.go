@@ -60,12 +60,13 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 		fmt.Println("get pod list error")
 	}
 	node_list := []*apiobjects.Node{}
-	err = utils.GetUnmarshal("http://localhost:8080/api/get/allservices", &node_list)
+	err = utils.GetUnmarshal("http://localhost:8080/api/node", &node_list)
 	if err != nil {
 		fmt.Println("get svc list error")
 	}
 
 	for _, node := range node_list {
+		utils.Info("[Prometheus Controller] find Node")
 		if node.Status.State == apiobjects.NodeStateHealthy {
 			tmp_nodeList[node.Info.Ip] = node
 		}
