@@ -10,6 +10,7 @@ import (
 	"minik8s/controller/api"
 	"minik8s/utils"
 	"strconv"
+	"reflect"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -107,26 +108,31 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 	for key, value := range tmp_podList {
 		utils.Info("[Prometheus Controller] tmp_podList: ", key, value)
 	}
-    isNodeUpdate := false
-	for key, _ := range tmp_nodeList {
-		_, exist := nodeList[key]
-		if !exist {
-			isNodeUpdate = true
-			break
-		}
-	}
+    // isNodeUpdate := false
+	// for key, _ := range tmp_nodeList {
+	// 	_, exist := nodeList[key]
+	// 	if !exist {
+	// 		isNodeUpdate = true
+	// 		break
+	// 	}
+	// }
 
-	isPodUpdate := false
-	for key, v1 := range tmp_podList {
-		v2, exist := podList[key]
-		if !exist {
-			isPodUpdate = true
-			break
-		}
-		if v1 != v2 {
-			isPodUpdate = true
-			break
-		}
+	// isPodUpdate := false
+	// for key, v1 := range tmp_podList {
+	// 	v2, exist := podList[key]
+	// 	if !exist {
+	// 		isPodUpdate = true
+	// 		break
+	// 	}
+	// 	if v1 != v2 {
+	// 		isPodUpdate = true
+	// 		break
+	// 	}
+	// }
+	isNodeUpdate := !reflect.DeepEqual(tmp_nodeList, nodeList)
+	isPodUpdate := !reflect.DeepEqual(tmp_podList, podList)
+	if isPodUpdate {
+		utils.Info("[Prometheus Controller] pod update")
 	}
 
 	if isNodeUpdate || isPodUpdate {
