@@ -50,6 +50,7 @@ func (c *PrometheusController) GetWatchFuncEnvelops() []api.WatchFuncEnvelop {
 }
 
 func CheckAllNodeAndPod(controller api.Controller)(error) {
+	utils.Info("[Prometheus Controller] CheckAllNodeAndPod")
    tmp_nodeList := make(map[string]*apiobjects.Node)
    tmp_podList := make(map[string]string)
 
@@ -66,7 +67,7 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 	}
 
 	for _, node := range node_list {
-		utils.Info("[Prometheus Controller] find Node")
+		//utils.Info("[Prometheus Controller] find Node")
 		if node.Status.State == apiobjects.NodeStateHealthy {
 			tmp_nodeList[node.Info.Ip] = node
 		}
@@ -106,6 +107,7 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
     
 	if isNodeUpdate || isPodUpdate {
 		// update prometheus config
+		utils.Info("[Prometheus Controller] update config")
 		podList = tmp_podList
 		nodeList = tmp_nodeList
 		
@@ -114,6 +116,7 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 			configs = append(configs, key+":9100")
 		}
 		for key, value := range podList {
+			utils.Info("[Prometheus Controller] get pod")
 			configs = append(configs, key+":"+value)
 		}
 		prometheus.GenerateProConfig(configs)
@@ -141,6 +144,10 @@ func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
 
 func IsMapEqual(a map[string]string, b map[string]string) bool {
 	for k, v := range a {
+		_,exist := b[k]
+		if !exist {
+			return false
+		}
 		if b[k] != v {
 			return false
 		}
