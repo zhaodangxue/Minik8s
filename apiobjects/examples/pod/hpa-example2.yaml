@@ -12,5 +12,5 @@ spec:
     metadata:
       name: rs
   metrics:
-    MemoryUtilizationUsage: 1.0 # 1.0 means target is 1.0Gi
+    MemoryUtilizationUsage: 0.2 # 0.2 means target is 0.2Gi
   scaleInterval: 25
