@@ -98,6 +98,26 @@ type ServiceStatus struct {
 	ClusterIP string `json:"clusterIP" yaml:"clusterIP"`
 }
 
+type ServiceRef struct {
+	ObjectRef
+	ClusterIP string
+}
+
+func (s *Service) GetServiceRef() ServiceRef {
+	return ServiceRef{
+		ObjectRef: ObjectRef{
+			TypeMeta: TypeMeta{
+				ApiVersion: s.APIVersion,
+				Kind:       "Service",
+			},
+			Name:      s.Data.Name,
+			Namespace: s.Data.Namespace,
+			UID:       s.Data.UID,
+		},
+		ClusterIP: s.Status.ClusterIP,
+	}
+}
+
 func (s *Service) GetType() string {
 	return "service"
 }

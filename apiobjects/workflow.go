@@ -13,14 +13,18 @@ type Workflow struct {
 	Begin      string                  `json:"begin"`
 	Nodes      map[string]WorkflowNode `json:"nodes"`
 }
+
 type WorkflowNode struct {
-	Type      NodeType `json:"type"`
-	*Function `json:",inline"`
-	*Branchs  `json:",inline"`
+	Type          NodeType `json:"type"`
+	*FunctionNode `json:",inline"`
+	*Branchs      `json:",inline"`
 }
-type Function struct {
-	Next *string `json:"next"`
+
+type FunctionNode struct {
+	FunctionName string  `json:"functionName"`
+	Next         *string `json:"next"`
 }
+
 type Branchs struct {
 	Branchs []Branch `json:"branchs"`
 }
