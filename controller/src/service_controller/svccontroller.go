@@ -277,7 +277,7 @@ func createEndpoints(edptList *[]*apiobjects.Endpoint, svc *apiobjects.Service, 
 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
 		if dstPort == 1314 {
 			log.Fatal("[svc controller] No Match for Target Port!")
-			return
+			continue
 		}
 		spec := apiobjects.EndpointSpec{
 			SvcIP:    svc.Status.ClusterIP,
@@ -353,11 +353,14 @@ func findDstPort(targetPort string, containers []apiobjects.Container) int32 {
 func deleteEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 	utils.Info("[svc controller] Delete endpoints.")
 
-	edptList := svcToEndpoints[svc.Status.ClusterIP]
+	edptList, exist := svcToEndpoints[svc.Status.ClusterIP]
+	if !exist {
+		return
+	}
 	var newEdptList []*apiobjects.Endpoint
-	for key, edpt := range *edptList {
+	for _, edpt := range *edptList {
 		if edpt.Spec.DestIP == pod.Status.PodIP {
-			edpt := (*edptList)[key]
+			//edpt := (*edptList)[key]
 			//TODO 发送http给apiserver,更新edpt
 			response, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
 			if err != nil {
@@ -452,13 +455,26 @@ func CheckAllService(controller api.Controller)(error) {
 	podlist := []*apiobjects.Pod{}
 	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
 	if err != nil {
-		fmt.Println("error")
+		fmt.Println("get pod list error")
 	}
+	etcd_svc_list := []*apiobjects.Service{}
+	err = utils.GetUnmarshal("http://localhost:8080/api/get/allservices", &etcd_svc_list)
+	if err != nil {
+		fmt.Println("get svc list error")
+	}
+
+	for _, etcd_svc := range etcd_svc_list {
+        _, exist := svcList[etcd_svc.Status.ClusterIP]
+		if !exist {
+			svcList[etcd_svc.Status.ClusterIP] = etcd_svc
+		}
+	}
+
 	//遍历service列表，检查所有的service
 	for _, svc := range svcList {
 		svcUrl := svc.Data.Namespace + "/" + svc.Data.Name
 		tmpsvc := apiobjects.Service{}
-		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneService/"+svcUrl, &tmpsvc)
+		err := utils.GetUnmarshal("http://localhost:8080/api/get/oneservice/"+svcUrl, &tmpsvc)
 		if err != nil {
 			fmt.Println("error")
 			return err
@@ -480,7 +496,7 @@ func CheckAllService(controller api.Controller)(error) {
 		}
 
 		for _, pod := range podlist {
-			utils.Info("get one pod: ",pod.Name)
+			//utils.Info("get one pod: ",pod.Name)
 			exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
 			fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
 			if !exist && fit {

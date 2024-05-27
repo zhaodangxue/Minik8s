@@ -1,10 +1,11 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: pod2
+  name: prometheus_pod
   namespace: default
   labels:
     app: nginx
+    log: prometheus
 spec:
   restartPolicy: Always
   containers:
@@ -16,12 +17,15 @@ spec:
       volumeMounts:
         - name: volume
           mountPath: /usr/share/nginx/html/files
-    - name: ubuntu
-      image: ubuntu
+    - name: prometheus
+      image: ubuntu:20.04
       ports:
-        - name: hello
-          containerPort: 6800
-          hostPort: 6800
+        - name: prometheus
+          containerPort: 2331
+          hostPort: 2331
+        - name: nginx
+          containerPort: 6880
+          hostPort: 6880
       volumeMounts:
         - name: volume
           mountPath: /data
