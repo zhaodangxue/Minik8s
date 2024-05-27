@@ -55,4 +55,8 @@ const (
 	DnsApplyPath  = "/api/dns/apply"
 	DnsGetAllPath = "/api/dns/get/all"
 	DnsDeletePath = "/api/dns/delete/:namespace/:name"
+
+	WorkflowPath          = "/api/workflow"
+	WorkflowPathNamespace = "/api/workflow/:namespace"
+	WorkflowPathSpecified = "/api/workflow/:namespace/:name"
 )

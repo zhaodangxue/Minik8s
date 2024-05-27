@@ -10,6 +10,7 @@ import (
 	"minik8s/apiserver/src/apiserver"
 	"minik8s/apiserver/src/etcd"
 	command "minik8s/kubectl/src"
+	ctlutils "minik8s/kubectl/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -155,5 +156,31 @@ func TestGetHPA(t *testing.T) {
 	go apiServer.RUN()
 	time.Sleep(3 * time.Second)
 	err := command.RunGet_Cmd("hpa", "hpa")
+	assert.Nil(t, err)
+}
+func TestApplyWorkflow(t *testing.T) {
+	fmt.Println("TestApplyWorkflow")
+	etcd.Clear()
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	var data []byte
+	var err error
+	data, err = ctlutils.LoadFile("./workflow.json")
+	assert.Nil(t, err)
+	workflow := apiobjects.Workflow{}
+	if err = json.Unmarshal(data, &workflow); err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = command.AddWorkflowToApiServer(workflow)
+	assert.Nil(t, err)
+}
+func TestDeleteWorkflow(t *testing.T) {
+	fmt.Println("TestDeleteWorkflow")
+	apiServer = apiserver.New()
+	go apiServer.RUN()
+	time.Sleep(3 * time.Second)
+	err := command.DeleteWorkflowFromApiServer("example")
 	assert.Nil(t, err)
 }

@@ -15,6 +15,7 @@ const (
 	pvcRelevantTopic             = "pvc-relevant"            // PVC相关的信息
 	replicasetTopic              = "replicaset"              // Replicaset相关的信息
 	HorizontalPodAutoscalerTopic = "horizontalpodautoscaler" // HorizontalPodAutoscaler相关的信息
+	WorkflowTopic                = "workflow"                // 工作流相关的信息
 )
 
 //	func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -60,4 +61,7 @@ func ReplicasetTopic() string {
 }
 func HPARelevantTopic() string {
 	return HorizontalPodAutoscalerTopic
+}
+func WorkFlowTopic() string {
+	return WorkflowTopic
 }

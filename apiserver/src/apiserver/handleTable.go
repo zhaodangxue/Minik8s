@@ -6,6 +6,7 @@ import (
 	node "minik8s/apiserver/src/handler/node"
 	persistentvolume_handler "minik8s/apiserver/src/handler/persistentvolume"
 	replicaset_handler "minik8s/apiserver/src/handler/replicaset"
+	workflow_handler "minik8s/apiserver/src/handler/workflow"
 	"minik8s/apiserver/src/route"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +32,7 @@ var PostTable = map[string]HandlerFunc{
 	route.ReplicasetPath:              replicaset_handler.ReplicasetApplyHandler,
 	route.DnsApplyPath:                handler.DnsApplyHandler,
 	route.HorizontalPodAutoscalerPath: hpa_handler.HPAApplyHandler,
+	route.WorkflowPath:                workflow_handler.WorkflowApplyHandler,
 }
 
 var GetTable = map[string]HandlerFunc{
@@ -81,4 +83,5 @@ var DeleteTable = map[string]HandlerFunc{
 	route.ReplicasetPathSpecified:              replicaset_handler.ReplicasetDeleteHandler,
 	route.DnsDeletePath:                        handler.DnsDeleteHandler,
 	route.HorizontalPodAutoscalerPathSpecified: hpa_handler.HPADeleteHandler,
+	route.WorkflowPathSpecified:                workflow_handler.WorkflowDeleteHandler,
 }

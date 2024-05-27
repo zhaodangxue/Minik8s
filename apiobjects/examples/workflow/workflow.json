@@ -1,0 +1,36 @@
+{
+  "apiVersion": "/api/v1",
+  "kind": "Workflow",
+  "metadata": {
+    "namespace": "default",
+    "name": "example"
+  },
+  "begin": "addFive",
+  "nodes": {
+    "addFive": {
+      "type": "Function",
+      "next": "judge"
+    },
+    "judge": {
+      "type": "Branch",
+      "branchs": [
+        {
+          "variable": "x",
+          "integerEqual": 5,
+          "next": "printFive"
+        },
+        {
+          "variable": "x",
+          "integerNotEqual": 5,
+          "next": "printTen"
+        }
+      ]
+    },
+    "printFive": {
+      "type": "Function"
+    },
+    "printTen": {
+      "type": "Function"
+    }
+  }
+}
