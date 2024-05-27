@@ -1,7 +1,6 @@
 package image
 
 import (
-	"image"
 	"io"
 	"minik8s/apiobjects"
 	"os"
@@ -15,41 +14,41 @@ import (
 const serverIp = "192.168.1.15"
 
 // CreateImage to create image for function
-func CreateImage(input apiobjects.FunctionCtlInput) (string,error) {
+func CreateImage(input apiobjects.FunctionCtlInput) (string, error) {
 	// 1. create the image
 	// 1.1 generate tmp dockerfile for the function from the basic dockerfile
 	imageName := "Function-" + input.Name
-    err := GenerateDockerfile(input)
-    if err != nil {
+	err := GenerateDockerfile(input)
+	if err != nil {
 		log.Error("[GenerateDockerfile] error")
-		return "",err
+		return "", err
 	}
 
 	// 1.2 create the image
-	cmd := exec.Command("docker", "build", "-t", imageName , "/home/tmpdata/Dockerfile")
+	cmd := exec.Command("docker", "build", "-t", imageName, "/home/tmpdata/Dockerfile")
 	err = cmd.Run()
 	if err != nil {
 		log.Error("[CreateImage] create image error: ", err)
-		return "",err
+		return "", err
 	}
 
-	cmd = exec.Command("docker", "tag", imageName, serverIp+":5000/"+ imageName +":latest")
+	cmd = exec.Command("docker", "tag", imageName, serverIp+":5000/"+imageName+":latest")
 	err = cmd.Run()
 	if err != nil {
 		log.Error("[CreateImage] tag image error: ", err)
-		return "",err
+		return "", err
 	}
 
 	// 2. save the image to the registry
 	err = SaveImage(imageName)
 	if err != nil {
 		log.Error("[CreateImage] save image error: ", err)
-		return "",err
+		return "", err
 	}
-	return imageName,nil
+	return imageName, nil
 }
 
-func GenerateDockerfile(input apiobjects.FunctionCtlInput) error{
+func GenerateDockerfile(input apiobjects.FunctionCtlInput) error {
 	// 1.1 copy the basic dockerfile to tmp dockerfile for the function
 	srcFile, err := os.Open("/home/imagedata/Dockerfile")
 	if err != nil {
@@ -76,7 +75,7 @@ func GenerateDockerfile(input apiobjects.FunctionCtlInput) error{
 		dstFile.WriteString(command + "\n")
 	}
 	dstFile.WriteString("\n")
-	copyDir := "COPY "+ input.BuildOptions.FunctionFileDir + " /function"
+	copyDir := "COPY " + input.BuildOptions.FunctionFileDir + " /function"
 	dstFile.WriteString(copyDir + "\n")
 
 	defer dstFile.Close()

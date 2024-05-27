@@ -16,6 +16,7 @@ const (
 	replicasetTopic              = "replicaset"              // Replicaset相关的信息
 	HorizontalPodAutoscalerTopic = "horizontalpodautoscaler" // HorizontalPodAutoscaler相关的信息
 	WorkflowTopic                = "workflow"                // 工作流相关的信息
+	Functiontopic                = "function"                // 函数相关的信息
 )
 
 //	func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -64,4 +65,7 @@ func HPARelevantTopic() string {
 }
 func WorkFlowTopic() string {
 	return WorkflowTopic
+}
+func FunctionTopic() string {
+	return Functiontopic
 }

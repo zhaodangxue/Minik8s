@@ -59,4 +59,8 @@ const (
 	WorkflowPath          = "/api/workflow"
 	WorkflowPathNamespace = "/api/workflow/:namespace"
 	WorkflowPathSpecified = "/api/workflow/:namespace/:name"
+
+	FunctionPath          = "/api/function"
+	FunctionPathNamespace = "/api/function/:namespace"
+	FunctionPathSpecified = "/api/function/:namespace/:name"
 )

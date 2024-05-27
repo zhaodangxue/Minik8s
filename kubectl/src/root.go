@@ -27,6 +27,8 @@ func init() {
 	deleteCmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
 	wfCommand.Flags().StringVarP(&filepath, "filepath", "f", "", "input a json filepath")
 	wfCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
+	funcCommand.Flags().StringVarP(&filepath, "filepath", "f", "", "input a yaml filepath")
+	funcCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
 	applyCmd.MarkFlagRequired("filepath")
 	rootCmd.AddCommand(applyCmd)
 	rootCmd.AddCommand(getCmd)
@@ -34,6 +36,7 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 	rootCmd.AddCommand(schedCommand)
 	rootCmd.AddCommand(wfCommand)
+	rootCmd.AddCommand(funcCommand)
 }
 
 func RunRoot(cmd *cobra.Command, args []string) {

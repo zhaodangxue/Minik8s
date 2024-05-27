@@ -40,6 +40,10 @@ func RunWf(cmd *cobra.Command, args []string) {
 	var err error
 	switch options {
 	case "create":
+		if filepath == "" {
+			fmt.Println("Please input the json filepath")
+			return
+		}
 		var data []byte
 		data, err = ctlutils.LoadFile(filepath)
 		if err != nil {
