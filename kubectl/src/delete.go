@@ -61,7 +61,11 @@ func deleteSpecifiedDNS(np, apiObjName string) (string, error) {
 	val, err := utils.Delete(url)
 	return val, err
 }
-
+func deleteSpecifiedHPA(np, apiObjName string) (string, error) {
+	url := route.Prefix + route.HorizontalPodAutoscalerPath + "/" + np + "/" + apiObjName
+	val, err := utils.Delete(url)
+	return val, err
+}
 func RunDelete(cmd *cobra.Command, args []string) {
 	apiObjType := args[0]
 	apiObjName := args[1]
@@ -100,6 +104,11 @@ func RunDelete_Cmd(apiObjType, apiObjName string) error {
 		}
 	case "dns":
 		val, err = deleteSpecifiedDNS(np, apiObjName)
+		if err == nil {
+			fmt.Println(val)
+		}
+	case "hpa":
+		val, err = deleteSpecifiedHPA(np, apiObjName)
 		if err == nil {
 			fmt.Println(val)
 		}

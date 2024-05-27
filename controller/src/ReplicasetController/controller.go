@@ -74,6 +74,21 @@ func (c *ReplicasetController) HandleReplicasetUpdate(data string) error {
 	}
 	return nil
 }
+func (c *ReplicasetController) HandleReplicasetScale(data string) error {
+	replicaset := apiobjects.Replicaset{}
+	err := json.Unmarshal([]byte(data), &replicaset)
+	if err != nil {
+		return err
+	}
+	uid := replicaset.ObjectMeta.UID
+	if worker, exist := c.Workers[uid]; exist {
+		// TO DO scale replicaset
+		utils.Info("Replicaset", replicaset.ObjectMeta.Name, "scaled")
+		worker.ScaleTarget(&replicaset)
+		worker.SyncCh() <- struct{}{}
+	}
+	return nil
+}
 
 func (c *ReplicasetController) HandleReplicasetDelete(data string) error {
 	replicaset := apiobjects.Replicaset{}
@@ -137,6 +152,8 @@ func (c *ReplicasetController) WatchReplicaset(controller api.Controller, messag
 		err = c.HandleReplicasetUpdate(message.Object)
 	case apiobjects.Delete:
 		err = c.HandleReplicasetDelete(message.Object)
+	case apiobjects.Scale:
+		err = c.HandleReplicasetScale(message.Object)
 	}
 	return err
 }
@@ -154,6 +171,8 @@ func (c *ReplicasetController) ReplicasetHandler(msg *redis.Message) {
 		c.HandleReplicasetUpdate(topicMessage.Object)
 	case apiobjects.Delete:
 		c.HandleReplicasetDelete(topicMessage.Object)
+	case apiobjects.Scale:
+		c.HandleReplicasetScale(topicMessage.Object)
 	}
 }
 

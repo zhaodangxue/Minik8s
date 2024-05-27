@@ -14,6 +14,7 @@ const (
 	Create ActionType = iota //从0开始，依次加1
 	Update
 	Delete
+	Scale
 )
 
 type TopicMessage struct {

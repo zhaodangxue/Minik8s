@@ -3,17 +3,18 @@ package global
 //import "minik8s/apiobjects"
 
 const (
-	podStateTopic       = "pod-state"       // 专门用于发布Pod状态变化
-	testTopic           = "test"            // 测试
-	bindingTopic        = "binding"         // Pod和Node的绑定
-	serviceTopic        = "service"         // servicecontroller处理之后对Service真正执行增删改查之后publish，由各个node上的kube-proxy监听
-	serviceCmdTopic     = "service-cmd"     // apiserver收到kubctl对Service的增删改查命令,初步处理之后publish，由servicecontroller监听
-	endpointTopic       = "endpoint"        // Endpoint的增删
-	strategyUpdateTopic = "strategy-update" // 策略更新
-	podRelevantTopic    = "pod-relevant"    // Pod相关的信息
-	pvRelevantTopic     = "pv-relevant"     // PV相关的信息
-	pvcRelevantTopic    = "pvc-relevant"    // PVC相关的信息
-	replicasetTopic     = "replicaset"      // Replicaset相关的信息
+	podStateTopic                = "pod-state"               // 专门用于发布Pod状态变化
+	testTopic                    = "test"                    // 测试
+	bindingTopic                 = "binding"                 // Pod和Node的绑定
+	serviceTopic                 = "service"                 // servicecontroller处理之后对Service真正执行增删改查之后publish，由各个node上的kube-proxy监听
+	serviceCmdTopic              = "service-cmd"             // apiserver收到kubctl对Service的增删改查命令,初步处理之后publish，由servicecontroller监听
+	endpointTopic                = "endpoint"                // Endpoint的增删
+	strategyUpdateTopic          = "strategy-update"         // 策略更新
+	podRelevantTopic             = "pod-relevant"            // Pod相关的信息
+	pvRelevantTopic              = "pv-relevant"             // PV相关的信息
+	pvcRelevantTopic             = "pvc-relevant"            // PVC相关的信息
+	replicasetTopic              = "replicaset"              // Replicaset相关的信息
+	HorizontalPodAutoscalerTopic = "horizontalpodautoscaler" // HorizontalPodAutoscaler相关的信息
 )
 
 //	func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -56,4 +57,7 @@ func PvcRelevantTopic() string {
 }
 func ReplicasetTopic() string {
 	return replicasetTopic
+}
+func HPARelevantTopic() string {
+	return HorizontalPodAutoscalerTopic
 }

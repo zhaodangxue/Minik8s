@@ -29,7 +29,7 @@ type PodState struct {
 }
 
 type PodStats struct {
-	CpuUsage CpuUsage 
+	CpuUsage    CpuUsage
 	MemoryUsage MemoryUsage
 }
 
@@ -44,7 +44,19 @@ type MemoryUsage struct {
 	// 可用内存大小，即可以被Pod使用的内存大小
 	AvailableBytes uint64
 	// 实际使用的内存大小
-	UsageBytes     uint64
+	UsageBytes uint64
+}
+
+func (c *CpuUsage) GetCpuUsage() float32 {
+	if c.TotalNanos == 0 {
+		return 0
+	}
+	ret := float32(c.TotalNanos) / 1e9
+	return ret
+}
+func (m *MemoryUsage) GetMemUsage() float32 {
+	ret := float32(m.UsageBytes) / float32(1024) / float32(1024) / float32(1024)
+	return ret
 }
 
 type PodPhase string

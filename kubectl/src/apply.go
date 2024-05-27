@@ -7,6 +7,7 @@ import (
 	"minik8s/apiserver/src/route"
 	ctlutils "minik8s/kubectl/utils"
 	"minik8s/utils"
+
 	//"net/url"
 
 	//"google.golang.org/grpc/internal/resolver/dns"
@@ -107,6 +108,16 @@ func RunApply_Cmd(file_path string) error {
 		url := route.Prefix + "/api/dns/apply"
 		fmt.Println("appyly dns: ", dns)
 		utils.ApplyApiObject(url, dns)
+	case ctlutils.HPA:
+		hpa := apiobjects.HorizontalPodAutoscaler{}
+		err = yaml.Unmarshal(content, &hpa)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		url := route.Prefix + route.HorizontalPodAutoscalerPath
+		utils.ApplyApiObject(url, hpa)
 	}
+
 	return nil
 }

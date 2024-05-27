@@ -2,6 +2,7 @@ package registry
 
 import (
 	"minik8s/controller/api"
+	hpacontroller "minik8s/controller/src/HPAController"
 	"minik8s/controller/src/PVcontroller"
 	replicasetcontroller "minik8s/controller/src/ReplicasetController"
 	"minik8s/controller/src/health"
@@ -17,4 +18,5 @@ var ControllerList []api.Controller = []api.Controller{
 	&PVcontroller.PVcontroller{},
 	&replicasetcontroller.ReplicasetController{},
 	&prometheuscontroller.PrometheusController{},
+	&hpacontroller.HPAController{},
 }
