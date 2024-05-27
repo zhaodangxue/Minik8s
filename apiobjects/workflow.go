@@ -21,8 +21,7 @@ type WorkflowNode struct {
 }
 
 type FunctionNode struct {
-	FunctionName string  `json:"functionName"`
-	Next         *string `json:"next"`
+	Next *string `json:"next"`
 }
 
 type Branchs struct {

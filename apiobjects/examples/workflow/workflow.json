@@ -8,11 +8,11 @@
   "begin": "addFive",
   "nodes": {
     "addFive": {
-      "type": "Function",
+      "type": "function",
       "next": "judge"
     },
     "judge": {
-      "type": "Branch",
+      "type": "branch",
       "branchs": [
         {
           "variable": "x",
@@ -27,10 +27,10 @@
       ]
     },
     "printFive": {
-      "type": "Function"
+      "type": "function"
     },
     "printTen": {
-      "type": "Function"
+      "type": "function"
     }
   }
 }
