@@ -11,21 +11,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const serverIp = "192.168.1.15"
-
 // CreateImage to create image for function
 func CreateImage(input apiobjects.FunctionCtlInput) (string, error) {
 	// 1. create the image
 	// 1.1 generate tmp dockerfile for the function from the basic dockerfile
 	imageName := "Function-" + input.Name
-	err := GenerateDockerfile(input)
+	dstFilePath, err := GenerateDockerfile(input)
 	if err != nil {
 		log.Error("[GenerateDockerfile] error")
 		return "", err
 	}
 
 	// 1.2 create the image
-	cmd := exec.Command("docker", "build", "-t", imageName, "/home/tmpdata/Dockerfile")
+	cmd := exec.Command("docker", "build", "-t", imageName, dstFilePath)
 	err = cmd.Run()
 	if err != nil {
 		log.Error("[CreateImage] create image error: ", err)
@@ -48,24 +46,25 @@ func CreateImage(input apiobjects.FunctionCtlInput) (string, error) {
 	return imageName, nil
 }
 
-func GenerateDockerfile(input apiobjects.FunctionCtlInput) error {
+func GenerateDockerfile(input apiobjects.FunctionCtlInput) (dstFilePath string, err error) {
 	// 1.1 copy the basic dockerfile to tmp dockerfile for the function
-	srcFile, err := os.Open("/home/imagedata/Dockerfile")
+	srcFile, err := os.Open(baseDir+"/imagedata/Dockerfile")
 	if err != nil {
 		log.Error("[CreateImage] open basic docker file error: ", err)
-		return err
+		return
 	}
 	defer srcFile.Close()
 
-	dstFile, err := os.OpenFile("/home/tmpdata/Dockerfile", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	dstFilePath = baseDir + "tmpdata/Dockerfile"
+	dstFile, err := os.OpenFile(dstFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Error("[CreateImage] open tmp docker file error: ", err)
-		return err
+		return
 	}
 	_, err = io.Copy(dstFile, srcFile)
 	if err != nil {
 		log.Error("[CreateImage] copy file error: ", err)
-		return err
+		return
 	}
 
 	//add the extra commands
@@ -79,7 +78,7 @@ func GenerateDockerfile(input apiobjects.FunctionCtlInput) error {
 	dstFile.WriteString(copyDir + "\n")
 
 	defer dstFile.Close()
-	return nil
+	return
 }
 
 // save the image to the registry

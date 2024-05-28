@@ -6,6 +6,7 @@ RELEASE_TAGS=release
 BUILDDIR=build
 BINDIR=$(BUILDDIR)/bin
 YAMLDIR=$(BUILDDIR)/yamls
+IMAGEDIR=$(BUILDDIR)/imagebase
 
 all: build
 
@@ -22,6 +23,7 @@ _build: prepare bin_targets scripts yamls
 prepare: deps
 	mkdir -p $(BINDIR)
 	mkdir -p $(YAMLDIR)
+	mkdir -p $(IMAGEDIR)
 
 deps:
 	go mod tidy
@@ -72,3 +74,10 @@ yamls: apiobject_example
 
 apiobject_example:
 	cp -r apiobjects/examples/* $(YAMLDIR)
+
+##### Image Base #####
+
+image_base:
+	cp -r serverless/imagebase $(IMAGEDIR)
+
+.PHONY: function_base
