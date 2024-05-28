@@ -69,5 +69,5 @@ func (a *serverlessGateway) RUN() {
 	a.BindHandler()
 	a.Watch()
 	fmt.Println("serverlessGateway is running")
-	log.Fatal(a.router.Run(":8080"))
+	log.Fatal(a.router.Run(":8081"))
 }
