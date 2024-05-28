@@ -40,3 +40,45 @@ func TestBuildDAG(t *testing.T) {
 	dag := serveless_utils.Workflow2DAG(&workflow)
 	assert.NotNil(t, dag)
 }
+func TestCompareFunction(t *testing.T) {
+	t.Log("TestCompareFunction")
+	var a int64
+	a = 5
+	var jsonMap map[string]interface{}
+	jsonMap = make(map[string]interface{})
+	jsonMap["a"] = 5
+	jsonMap["b"] = 5
+	jsonMapJson, _ := json.Marshal(jsonMap)
+	flag := serveless_utils.IntegerEqual(string(jsonMapJson), "a", a)
+	assert.True(t, flag)
+}
+func TestChooseBranch(t *testing.T) {
+	t.Log("TestChooseBranch")
+	var branches []*serveless_utils.Branch
+	var branch1 serveless_utils.Branch
+	var branch2 serveless_utils.Branch
+	branch1.Next = nil
+	branch1.Value = int64(5)
+	branch1.BranchFunc = serveless_utils.IntegerEqual
+	branch1.Variable = "a"
+	branch2.Next = nil
+	branch2.Value = int64(5)
+	branch2.BranchFunc = serveless_utils.IntegerNotEqual
+	branch2.Variable = "a"
+	branches = append(branches, &branch1)
+	branches = append(branches, &branch2)
+	var jsonMap1 map[string]interface{}
+	jsonMap1 = make(map[string]interface{})
+	jsonMap1["a"] = 5
+	jsonMap1["b"] = 5
+	jsonMapJson1, _ := json.Marshal(jsonMap1)
+	var jsonMap2 map[string]interface{}
+	jsonMap2 = make(map[string]interface{})
+	jsonMap2["a"] = 6
+	jsonMap2["b"] = 5
+	jsonMapJson2, _ := json.Marshal(jsonMap2)
+	node1 := serveless_utils.ChooseBranch(branches, string(jsonMapJson1))
+	node2 := serveless_utils.ChooseBranch(branches, string(jsonMapJson2))
+	assert.Nil(t, node1)
+	assert.Nil(t, node2)
+}

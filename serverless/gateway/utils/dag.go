@@ -13,16 +13,17 @@ type node struct {
 	Type NodeType
 	Name string
 	*function
-	*choices
+	*choice
 }
 type function struct {
 	Next *node
 }
-type choices struct {
-	Branches []*branch
+type choice struct {
+	Branches []*Branch
 }
-type branch struct {
+type Branch struct {
 	Variable   string
+	Value      interface{}
 	Next       *node
 	BranchFunc branchFunc
 }
@@ -31,8 +32,9 @@ type DAG struct {
 	Root *node
 }
 
-func (c *choices) chooseBranch(data string, result interface{}) *node {
-	for _, br := range c.Branches {
+func ChooseBranch(Branches []*Branch, data string) *node {
+	for _, br := range Branches {
+		result := br.Value
 		if br.BranchFunc(data, br.Variable, result) {
 			return br.Next
 		}
@@ -106,11 +108,11 @@ func BuildDAG(currentNode string, dagMap map[string]*node, nodeMap map[string]ap
 			function: &function{
 				Next: next,
 			},
-			choices: nil,
+			choice: nil,
 		}
 	case apiobjects.NodeTypeBranch:
 		branchs := wfNode.Branchs
-		var branches []*branch
+		var branches []*Branch
 		if branchs != nil {
 			for _, b := range branchs.Branchs {
 				if b.Next != nil {
@@ -118,8 +120,9 @@ func BuildDAG(currentNode string, dagMap map[string]*node, nodeMap map[string]ap
 				} else {
 					next = nil
 				}
-				br := &branch{
+				br := &Branch{
 					Variable:   b.Variable,
+					Value:      GetJudgeVal(b),
 					Next:       next,
 					BranchFunc: chooseJudgeFunction(b),
 				}
@@ -130,10 +133,39 @@ func BuildDAG(currentNode string, dagMap map[string]*node, nodeMap map[string]ap
 			Type:     BranchType,
 			Name:     currentNode,
 			function: nil,
-			choices: &choices{
+			choice: &choice{
 				Branches: branches,
 			},
 		}
+	}
+	return nil
+}
+func GetJudgeVal(branch apiobjects.Branch) interface{} {
+	switch {
+	case branch.IntegerEqual != nil:
+		return *branch.IntegerEqual
+	case branch.IntegerNotEqual != nil:
+		return *branch.IntegerNotEqual
+	case branch.IntegerGreaterThan != nil:
+		return *branch.IntegerGreaterThan
+	case branch.IntegerLessThan != nil:
+		return *branch.IntegerLessThan
+	case branch.BooleanEqual != nil:
+		return *branch.BooleanEqual
+	case branch.BooleanNotEqual != nil:
+		return *branch.BooleanNotEqual
+	case branch.StringEqual != nil:
+		return *branch.StringEqual
+	case branch.StringNotEqual != nil:
+		return *branch.StringNotEqual
+	case branch.FloatEqual != nil:
+		return *branch.FloatEqual
+	case branch.FloatNotEqual != nil:
+		return *branch.FloatNotEqual
+	case branch.FloatGreaterThan != nil:
+		return *branch.FloatGreaterThan
+	case branch.FloatLessThan != nil:
+		return *branch.FloatLessThan
 	}
 	return nil
 }

@@ -30,10 +30,10 @@ type Branchs struct {
 type Branch struct {
 	Variable           string   `json:"variable"`
 	Next               *string  `json:"next"`
-	IntegerEqual       *int     `json:"integerEqual,omitempty"`
-	IntegerNotEqual    *int     `json:"integerNotEqual,omitempty"`
-	IntegerLessThan    *int     `json:"integerLessThan,omitempty"`
-	IntegerGreaterThan *int     `json:"integerGreaterThan,omitempty"`
+	IntegerEqual       *int64   `json:"integerEqual,omitempty"`
+	IntegerNotEqual    *int64   `json:"integerNotEqual,omitempty"`
+	IntegerLessThan    *int64   `json:"integerLessThan,omitempty"`
+	IntegerGreaterThan *int64   `json:"integerGreaterThan,omitempty"`
 	BooleanEqual       *bool    `json:"booleanEqual,omitempty"`
 	BooleanNotEqual    *bool    `json:"booleanNotEqual,omitempty"`
 	StringEqual        *string  `json:"stringEqual,omitempty"`
