@@ -115,3 +115,20 @@ func Delete(url string) (string, error) {
 	}
 	return string(value), nil
 }
+func PostWithJsonReturnJson(url string, v interface{}) (map[string]interface{}, error) {
+	res, err := PostWithJson(url, v)
+	if err != nil {
+		return nil, err
+	}
+	value, err := io.ReadAll(res.Body)
+	defer res.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	var jsonParam map[string]interface{}
+	err = json.Unmarshal(value, &jsonParam)
+	if err != nil {
+		return nil, err
+	}
+	return jsonParam, nil
+}
