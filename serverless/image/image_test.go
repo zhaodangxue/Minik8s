@@ -1,17 +1,16 @@
 package image
 
 import (
-	"testing"
 	"minik8s/apiobjects"
+	"testing"
 )
 
-
 func TestGenetateDockerFile(t *testing.T) {
-    input := apiobjects.FunctionCtlInput{
+	input := apiobjects.FunctionCtlInput{
 		Object: apiobjects.Object{
 			TypeMeta: apiobjects.TypeMeta{
-			   ApiVersion: "app/v1",
-			   Kind:       "Function",
+				ApiVersion: "app/v1",
+				Kind:       "Function",
 			},
 			ObjectMeta: apiobjects.ObjectMeta{
 				Name: "dns-function",
@@ -23,12 +22,14 @@ func TestGenetateDockerFile(t *testing.T) {
 			TargetQPSPerReplica: 100,
 		},
 		BuildOptions: apiobjects.BuildOptions{
-			ExtraCommands:   []string{"RUN apt-get update","RUN apt-get install -y curl"},
-			FunctionFileDir: "/test",
+			ExtraCommands:   []string{"RUN apt-get update", "RUN apt-get install -y curl"},
+			FunctionFileDir: "/tmp/test",
 		},
 	}
-	err := GenerateDockerfile(input)
+	path, err := PrepareBuildEnv(input)
 	if err != nil {
 		t.Error("GenerateDockerfile error")
 	}
+	t.Log(path)
+
 }

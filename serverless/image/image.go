@@ -1,8 +1,8 @@
 package image
 
 import (
-	"io"
 	"minik8s/apiobjects"
+	"minik8s/utils"
 	"os"
 	"os/exec"
 
@@ -16,7 +16,7 @@ func CreateImage(input apiobjects.FunctionCtlInput) (string, error) {
 	// 1. create the image
 	// 1.1 generate tmp dockerfile for the function from the basic dockerfile
 	imageName := "Function-" + input.Name
-	dstFilePath, err := GenerateDockerfile(input)
+	dstFilePath, err := PrepareBuildEnv(input)
 	if err != nil {
 		log.Error("[GenerateDockerfile] error")
 		return "", err
@@ -46,38 +46,48 @@ func CreateImage(input apiobjects.FunctionCtlInput) (string, error) {
 	return imageName, nil
 }
 
-func GenerateDockerfile(input apiobjects.FunctionCtlInput) (dstFilePath string, err error) {
+func PrepareBuildEnv(input apiobjects.FunctionCtlInput) (buildPath string, err error) {
 	// 1.1 copy the basic dockerfile to tmp dockerfile for the function
-	srcFile, err := os.Open(baseDir+"/imagedata/Dockerfile")
+	buildPath = baseDir + "/buildenv"
+	// 删除原有的文件
+	err = os.RemoveAll(buildPath)
 	if err != nil {
-		log.Error("[CreateImage] open basic docker file error: ", err)
+		log.Error("[CreateImage] remove old build path error: ", err)
 		return
 	}
-	defer srcFile.Close()
+	// 拷贝基础镜像
+	err = utils.CopyDir(baseDir+"/imagedata", buildPath)
+	if err != nil {
+		log.Error("[CreateImage] copy base image error: ", err)
+		return
+	}
+	// 拷贝用户文件
+	err = utils.CopyDir(input.BuildOptions.FunctionFileDir, buildPath+input.BuildOptions.FunctionFileDir)
+	if err != nil {
+		log.Error("[CreateImage] copy user file error: ", err)
+		return
+	}
 
-	dstFilePath = baseDir + "tmpdata/Dockerfile"
-	dstFile, err := os.OpenFile(dstFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	// 打开Dockerfile文件
+	dstFile, err := os.OpenFile(buildPath+"/Dockerfile", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	defer dstFile.Close()
 	if err != nil {
 		log.Error("[CreateImage] open tmp docker file error: ", err)
 		return
 	}
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		log.Error("[CreateImage] copy file error: ", err)
-		return
-	}
 
-	//add the extra commands
+	// 加入用户自定义的命令
 	dstFile.WriteString("\n")
 	for _, command := range input.BuildOptions.ExtraCommands {
 		dstFile.WriteString("\n")
 		dstFile.WriteString(command + "\n")
 	}
+
+	// 加入默认文件
 	dstFile.WriteString("\n")
 	copyDir := "COPY " + input.BuildOptions.FunctionFileDir + " /function"
 	dstFile.WriteString(copyDir + "\n")
 
-	defer dstFile.Close()
 	return
 }
 

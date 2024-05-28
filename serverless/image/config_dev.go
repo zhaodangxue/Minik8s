@@ -3,5 +3,5 @@ package image
 
 const (
 	serverIp = "10.119.13.186"
-	baseDir  = "/opt/minik8s/imagebase"
+	baseDir  = "/tmp/minik8s/imagebase"
 )

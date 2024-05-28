@@ -3,16 +3,12 @@
 # RUN apt-get update && apt-get install -y python3 python3-pip
 FROM python:3.10-slim
 
-COPY ../function /function
+COPY ./function /function
 # set workdir
 WORKDIR /function
 
 EXPOSE 8080
 
-ENTRYPOINT ["python3", "-m", "function.handler"]
-
-# copy file into workdir
-COPY . .
 # install dependencies from requirements.txt
 RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --default-timeout=60 --no-cache-dir -r ./requirements.txt
 

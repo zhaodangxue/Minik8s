@@ -7,6 +7,7 @@ BUILDDIR=build
 BINDIR=$(BUILDDIR)/bin
 YAMLDIR=$(BUILDDIR)/yamls
 IMAGEDIR=$(BUILDDIR)/imagebase
+DEV_INSTALL_DIR=/tmp/minik8s
 
 all: build
 
@@ -18,7 +19,12 @@ build:
 build_dev:
 	make _build TAGS=$(DEV_TAGS)
 
-_build: prepare bin_targets scripts yamls 
+install_dev:
+	mkdir -p $(DEV_INSTALL_DIR)
+	rm -rf $(DEV_INSTALL_DIR)/*
+	cp -r build/* $(DEV_INSTALL_DIR)
+
+_build: prepare bin_targets scripts yamls image_base
 
 prepare: deps
 	mkdir -p $(BINDIR)
@@ -78,6 +84,6 @@ apiobject_example:
 ##### Image Base #####
 
 image_base:
-	cp -r serverless/imagebase $(IMAGEDIR)
+	cp -r serverless/imagebase/* $(IMAGEDIR)
 
-.PHONY: function_base
+.PHONY: image_base
