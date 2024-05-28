@@ -13,11 +13,12 @@ import (
 )
 
 var funcCommand = &cobra.Command{
-	Use:   "func",
-	Short: "Manage the function",
-	Long:  `Manage the function. The function is used in serveless.`,
-	Run:   RunFunc,
-	Args:  cobra.RangeArgs(1, 2),
+	Use:     "func",
+	Short:   "Manage the function",
+	Long:    `Manage the function. The function is used in serveless.`,
+	Run:     RunFunc,
+	Args:    cobra.RangeArgs(1, 2),
+	Example: `kubectl func create -f ./function-example.yaml`,
 }
 
 func AddFunctionToApiServer(function apiobjects.Function) error {

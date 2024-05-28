@@ -11,6 +11,7 @@ type HandlerFunc = gin.HandlerFunc
 var PostTable = map[string]HandlerFunc{
 	"/serverless/function/:name": serverless_handler.FunctionHandler,
 	"/serverless/workflow/:name": serverless_handler.WorkflowHandler,
+	"/serverless/test":           serverless_handler.TestHandler,
 }
 
 var GetTable = map[string]HandlerFunc{}
