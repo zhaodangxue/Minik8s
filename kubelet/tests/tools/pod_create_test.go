@@ -36,7 +36,11 @@ func TestPodCreate(t *testing.T) {
 		Status: apiobjects.PodState{},
 	}
 
-	cri.CreatePod(&pod)
+	err := cri.CreatePod(&pod)
+
+	if err != nil {
+		t.Error(err)
+	}
 
 }
 func TestPodCreateWithVolume(t *testing.T) {
