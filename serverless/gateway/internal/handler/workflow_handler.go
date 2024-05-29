@@ -102,5 +102,5 @@ func GetServiceUrl(name string) string {
 	if err := json.Unmarshal([]byte(data), &service); err != nil {
 		return ""
 	}
-	return service.Status.ClusterIP + ":8080"
+	return "http://" + service.Status.ClusterIP + ":8080"
 }
