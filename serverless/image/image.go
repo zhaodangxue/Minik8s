@@ -15,7 +15,7 @@ import (
 func CreateImage(input apiobjects.FunctionCtlInput) (string, error) {
 	// 1. create the image
 	// 1.1 generate tmp dockerfile for the function from the basic dockerfile
-	imageName := "Function-" + input.Name
+	imageName := "function-" + input.Name
 	dstFilePath, err := PrepareBuildEnv(input)
 	if err != nil {
 		log.Error("[GenerateDockerfile] error")
