@@ -16,4 +16,4 @@ RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --default-timeout=6
 ENV PATH="/usr/local/bin:${PATH}"
 
 # run watchdog.py, start the function server
-CMD ["python3", "watchdog.py"]
+CMD ["python3", "/function/watchdog.py"]
