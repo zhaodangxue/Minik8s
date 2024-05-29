@@ -34,6 +34,11 @@ func FunctionHandler(c *gin.Context) {
 	}
 
 	response, err := utils.PostWithJson(svc.Status.ClusterIP+":8080", jsonParam)
+	if err != nil {
+		c.String(500, err.Error())
+		return
+	}
+	utils.Info("response: ", response)
 	value, err = io.ReadAll(response.Body)
 	defer response.Body.Close()
 	if err != nil {
