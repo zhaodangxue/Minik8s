@@ -16,7 +16,7 @@ import (
 
 func TestAddNumber(t *testing.T) {
 	t.Log("TestAddNumber")
-	gateway := internal.New()
+	gateway := internal.GetServerlessGatewayInstance()
 	go gateway.RUN()
 	time.Sleep(3 * time.Second)
 	var jsonData map[string]interface{}

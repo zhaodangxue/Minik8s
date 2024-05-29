@@ -1,7 +1,7 @@
 package internal
 
 import (
-	serverless_handler "minik8s/serverless/handler"
+	serverless_handler "minik8s/serverless/gateway/internal/handler"
 
 	"github.com/gin-gonic/gin"
 )
