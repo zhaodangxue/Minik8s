@@ -148,7 +148,7 @@ func JudgeReplicas(name string) string {
 		if err != nil {
 			return "Failed to scale replicaset"
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 	return "success"
 }
