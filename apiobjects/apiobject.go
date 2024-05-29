@@ -41,8 +41,8 @@ type ObjectMeta struct {
 // 可以使用GetObjectRef从Object中获取ObjectRef。
 // 可以使用GetObjectPath获取Object的路径。
 type Object struct {
-	TypeMeta   `yaml:",inline"`
-	ObjectMeta `yaml:"metadata"`
+	TypeMeta   `yaml:",inline" json:",inline"`
+	ObjectMeta `yaml:"metadata" json:"metadata"`
 }
 
 func (obj *Object) GetObjectRef() ObjectRef {

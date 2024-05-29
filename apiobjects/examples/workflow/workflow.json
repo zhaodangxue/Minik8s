@@ -5,9 +5,9 @@
     "namespace": "default",
     "name": "example"
   },
-  "begin": "addFive",
+  "begin": "add_five",
   "nodes": {
-    "addFive": {
+    "add_five": {
       "type": "function",
       "next": "judge"
     },
@@ -17,19 +17,19 @@
         {
           "variable": "x",
           "integerEqual": 5,
-          "next": "printFive"
+          "next": "print_five"
         },
         {
           "variable": "x",
           "integerNotEqual": 5,
-          "next": "printTen"
+          "next": "print_ten"
         }
       ]
     },
-    "printFive": {
+    "print_five": {
       "type": "function"
     },
-    "printTen": {
+    "print_ten": {
       "type": "function"
     }
   }
