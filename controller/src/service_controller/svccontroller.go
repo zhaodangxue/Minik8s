@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+	"minik8s/apiserver/src/route"
 	"minik8s/global"
 	"time"
 
@@ -30,6 +31,7 @@ var IPStart = "10.10.0."
 
 var svcToEndpoints = map[string]*[]*apiobjects.Endpoint{}
 var svcList = map[string]*apiobjects.Service{}
+var restartFlag = true
 
 //var nodePortList = map[string] bool{}
 
@@ -110,7 +112,7 @@ func (s SvcServiceHandler) HandleDelete(message []byte) {
 	svc := &apiobjects.Service{}
 	svc.UnMarshalJSON(message)
 	delete(svcList, svc.Status.ClusterIP)
-	index := strings.SplitN(svc.Status.ClusterIP, ",", -1)
+	index := strings.SplitN(svc.Status.ClusterIP, ".", -1)
 	indexLast, _ := strconv.Atoi(index[len(index)-1])
 	print(indexLast)
 	IPMap[indexLast] = false
@@ -452,21 +454,51 @@ func (ss *SvcEndpointHandler) HandleBindingEndpoints(controller api.Controller, 
 
 func CheckAllService(controller api.Controller)(error) {
 	utils.Info("CheckAllService")
-	podlist := []*apiobjects.Pod{}
-	err := utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
-	if err != nil {
-		fmt.Println("get pod list error")
-	}
 	etcd_svc_list := []*apiobjects.Service{}
-	err = utils.GetUnmarshal("http://localhost:8080/api/get/allservices", &etcd_svc_list)
+	err := utils.GetUnmarshal("http://localhost:8080/api/get/allservices", &etcd_svc_list)
 	if err != nil {
 		fmt.Println("get svc list error")
+	}
+
+	if restartFlag == true {
+		restartFlag = false
+		edptList := []*apiobjects.Endpoint{}
+		err := utils.GetUnmarshal("http://localhost:8080" + route.GetAllEndpointsPath, &edptList)
+		if err != nil {
+			utils.Info("[ServiceController] get all endpoints error")
+			return err
+		}
+		for _, edpt := range edptList {
+			_, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
+			if err != nil {
+				print("delete endpoints error")
+				return err
+			}
+		}
+		for _, svc := range etcd_svc_list {
+			svcList[svc.Status.ClusterIP] = svc
+			index := strings.SplitN(svc.Status.ClusterIP, ".", -1)
+			indexLast, _ := strconv.Atoi(index[len(index)-1])
+			//print(indexLast)
+			IPMap[indexLast] = true
+			createEndpointsFromPodList(svc)
+		}
+		return nil
+	}
+
+	podlist := []*apiobjects.Pod{}
+	err = utils.GetUnmarshal("http://localhost:8080/api/get/allpods", &podlist)
+	if err != nil {
+		fmt.Println("get pod list error")
 	}
 
 	for _, etcd_svc := range etcd_svc_list {
         _, exist := svcList[etcd_svc.Status.ClusterIP]
 		if !exist {
 			svcList[etcd_svc.Status.ClusterIP] = etcd_svc
+			index := strings.SplitN(etcd_svc.Status.ClusterIP, ".", -1)
+			indexLast, _ := strconv.Atoi(index[len(index)-1])
+			IPMap[indexLast] = true
 		}
 	}
 
@@ -482,17 +514,18 @@ func CheckAllService(controller api.Controller)(error) {
 
 		if tmpsvc.Data.Name == "" {
 			//etcd中没有这个service
-			svcByte, err := svc.MarshalJSON()
-			if err != nil {
-				fmt.Println("error")
+			//删除service
+			svcList[svc.Status.ClusterIP] = nil
+			index := strings.SplitN(svc.Status.ClusterIP, ".", -1)
+			indexLast, _ := strconv.Atoi(index[len(index)-1])
+			IPMap[indexLast] = false
+			for _, edpt := range *svcToEndpoints[svc.Status.ClusterIP] {
+				_, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
+				if err != nil {
+					print("delete endpoints error")
+				}
 			}
-
-			response, err := utils.PostWithString("http://localhost:8080/api/service", string(svcByte))
-			if err != nil {
-				print("create service error")
-				return err
-			}
-			fmt.Println(response)
+			svcToEndpoints[svc.Status.ClusterIP] = nil
 		}
 
 		for _, pod := range podlist {
@@ -503,7 +536,6 @@ func CheckAllService(controller api.Controller)(error) {
 				if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING {
 					createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)
 				}
-				//createEndpoints(svcToEndpoints[svc.Status.ClusterIP], svc, pod)
 			} else if exist && !fit {
 				deleteEndpoints(svc, pod)
 			} else if exist && pod.Status.PodPhase != apiobjects.PodPhase_POD_RUNNING {

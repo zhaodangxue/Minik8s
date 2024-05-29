@@ -75,7 +75,7 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 	}
 
 	for _, pod := range pod_list{
-		utils.Info("[Prometheus Controller] get pod")
+		//utils.Info("[Prometheus Controller] get pod")
 		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING {
 			flag := false
 			for key, value := range pod.Labels {
@@ -96,18 +96,18 @@ func CheckAllNodeAndPod(controller api.Controller)(error) {
 		}
 	}
 	//打印一下tmp_nodeList和tmp_podList
-	for key, value := range nodeList {
-		utils.Info("[Prometheus Controller] nodeList: ", key, value)
-	}
-	for key, value := range podList {
-		utils.Info("[Prometheus Controller] podList: ", key, value)
-	}
-	for key, value := range tmp_nodeList {
-		utils.Info("[Prometheus Controller] tmp_nodeList: ", key, value)
-	}
-	for key, value := range tmp_podList {
-		utils.Info("[Prometheus Controller] tmp_podList: ", key, value)
-	}
+	// for key, value := range nodeList {
+	// 	utils.Info("[Prometheus Controller] nodeList: ", key, value)
+	// }
+	// for key, value := range podList {
+	// 	utils.Info("[Prometheus Controller] podList: ", key, value)
+	// }
+	// for key, value := range tmp_nodeList {
+	// 	utils.Info("[Prometheus Controller] tmp_nodeList: ", key, value)
+	// }
+	// for key, value := range tmp_podList {
+	// 	utils.Info("[Prometheus Controller] tmp_podList: ", key, value)
+	// }
     // isNodeUpdate := false
 	// for key, _ := range tmp_nodeList {
 	// 	_, exist := nodeList[key]

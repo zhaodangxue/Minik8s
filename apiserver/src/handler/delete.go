@@ -107,8 +107,9 @@ func EndpointDeleteHandler(c *gin.Context) {
 	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
 
 	url := "/api/nodeport/endpoint/" + serviceName + "/" + namespace+"/"+name
-	val2,_ := etcd.Get(url)
-	if val2 == "" {
+	val2,err := etcd.Get(url)
+	if val2 == "" || err != nil{
+		c.String(http.StatusOK, "delete endpoint namespace:%s name:%s success", namespace, name)
 		return
 	}
 	etcd.Delete(url)

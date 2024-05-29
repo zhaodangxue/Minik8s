@@ -36,6 +36,14 @@ func FunctionHandlerOnWatch(msg *redis.Message) {
 		}
 		functionJson, _ := json.Marshal(function)
 		HandleUpdate([]byte(functionJson))
+	case apiobjects.Delete:
+		function := &apiobjects.Function{}
+		err2 := json.Unmarshal([]byte(topicMessage.Object), function)
+		if err2 != nil {
+			fmt.Println(err2)
+		}
+		functionJson, _ := json.Marshal(function)
+		HandleDelete([]byte(functionJson))
 	}
 }
 
@@ -119,6 +127,34 @@ func HandleCreate(data []byte) {
 	}
 	url = route.Prefix + route.ServiceApplyPath
 	utils.ApplyApiObject(url, service)
+}
+
+func HandleDelete(data []byte) {
+	//utils.Info("Handle Function Delete")
+	function := &apiobjects.Function{}
+	err := json.Unmarshal(data, function)
+	if err != nil {
+		fmt.Println(err)
+	}
+	utils.Info("Delete function: ", function)
+	
+	// 1. delete the replicaset
+	url := route.Prefix + route.ReplicasetPath + "/" + function.ObjectMeta.Namespace + "/function-" + function.ObjectMeta.Name + "-rs"
+	_, err =utils.Delete(url)
+	if  err != nil {
+		fmt.Println(err)
+	}
+	
+	// 2. delete the service
+	url = route.Prefix + "/api/service/cmd/delete/" + function.ObjectMeta.Namespace + "/function-" + function.ObjectMeta.Name + "-service"
+	_, err = utils.Delete(url)
+	if  err != nil {
+		fmt.Println(err)
+	}
+
+	// 3. delete the function
+	url = route.Prefix + route.FunctionPath + "/" + function.ObjectMeta.Namespace + "/" + function.ObjectMeta.Name
+	utils.Delete(url)
 }
 
 func HandleUpdate(data []byte) {
