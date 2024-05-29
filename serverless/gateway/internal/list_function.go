@@ -59,11 +59,11 @@ func FunctionHandlerOnList() error {
 			if CurrentQps == 0 {
 				replicas = 0
 			} else {
-				if CurrentQps/(int64(TargetQps)*20) > 1 {
+				if CurrentQps/(int64(TargetQps)*30) > 1 {
 					if replicas+1 <= function.Spec.MaxReplicas {
 						replicas = replicas + 1
 					}
-				} else if CurrentQps/(int64(TargetQps)*20) < 1 {
+				} else if CurrentQps/(int64(TargetQps)*30) < 1 {
 					if replicas-1 >= function.Spec.MinReplicas {
 						replicas = replicas - 1
 					}
