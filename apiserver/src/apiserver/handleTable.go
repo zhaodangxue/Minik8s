@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"minik8s/apiserver/src/handler"
+	"minik8s/apiserver/src/handler/event"
 	function_handler "minik8s/apiserver/src/handler/function"
 	hpa_handler "minik8s/apiserver/src/handler/hpa"
 	node "minik8s/apiserver/src/handler/node"
@@ -35,6 +36,7 @@ var PostTable = map[string]HandlerFunc{
 	route.HorizontalPodAutoscalerPath: hpa_handler.HPAApplyHandler,
 	route.WorkflowPath:                workflow_handler.WorkflowApplyHandler,
 	route.FunctionPath:                function_handler.FunctionApplyHandler,
+	route.EventPath:                   event.EventCreateHandler,
 }
 
 var GetTable = map[string]HandlerFunc{
@@ -87,4 +89,5 @@ var DeleteTable = map[string]HandlerFunc{
 	route.HorizontalPodAutoscalerPathSpecified: hpa_handler.HPADeleteHandler,
 	route.WorkflowPathSpecified:                workflow_handler.WorkflowDeleteHandler,
 	route.FunctionPathSpecified:                function_handler.FunctionDeleteHandler,
+	route.EventPathSpecified:                   event.EventDeleteHandler,
 }

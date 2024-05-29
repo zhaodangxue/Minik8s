@@ -1,0 +1,10 @@
+{
+    "name":"wakeup-morning",
+    "type":"timer",
+    "workflows":["wakeup-service-workflow"],
+    "timeEvent":{
+        "type":"loop",
+        "startTime":"2019-01-01T06:00:00Z",
+        "cron":"1000"
+    }
+}

@@ -63,4 +63,7 @@ const (
 	FunctionPath          = "/api/function"
 	FunctionPathNamespace = "/api/function/:namespace"
 	FunctionPathSpecified = "/api/function/:namespace/:name"
+
+	EventPath 		   = "/api/event"
+	EventPathSpecified = "/api/event/:name"
 )

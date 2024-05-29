@@ -17,6 +17,7 @@ const (
 	HorizontalPodAutoscalerTopic = "horizontalpodautoscaler" // HorizontalPodAutoscaler相关的信息
 	WorkflowTopic                = "workflow"                // 工作流相关的信息
 	Functiontopic                = "function"                // 函数相关的信息
+	eventTopic 				     = "event"                   // 事件
 )
 
 //	func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -68,4 +69,7 @@ func WorkFlowTopic() string {
 }
 func FunctionTopic() string {
 	return Functiontopic
+}
+func EventTopic() string {
+	return eventTopic
 }
