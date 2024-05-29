@@ -1,7 +1,8 @@
-package serverless_handler
+package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
@@ -9,6 +10,7 @@ import (
 	serveless_utils "minik8s/serverless/gateway/utils"
 	"minik8s/utils"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,6 +71,11 @@ func WorkflowTrigger(params map[string]interface{}, dag *serveless_utils.DAG) (m
 			if serviceUrl == "" {
 				return nil, err
 			} else {
+				val := JudgeReplicas(funcName)
+				if val != "success" {
+					fmt.Println(val)
+				}
+				AddQpsCounter(funcName)
 				params, err = utils.PostWithJsonReturnJson(serviceUrl, params)
 				if err != nil {
 					return nil, err
@@ -103,4 +110,45 @@ func GetServiceUrl(name string) string {
 		return ""
 	}
 	return "http://" + service.Status.ClusterIP + ":8080"
+}
+func AddQpsCounter(name string) {
+	// TO DO
+	if ServerlessGatewayInstance.functions[name] == nil {
+		return
+	} else {
+		currentQps := ServerlessGatewayInstance.functions[name].QPSCounter.Load()
+		ServerlessGatewayInstance.functions[name].QPSCounter.Store(currentQps + 1)
+	}
+}
+func JudgeReplicas(name string) string {
+	if ServerlessGatewayInstance.functions[name] == nil {
+		return "ServerlessGatewayInstance.functions[name] is nil"
+	}
+	if ServerlessGatewayInstance.functions[name].ScaleTarget == 0 {
+		//这个时候我们必须要去etcd中获取这个function的replicaset并为他扩容
+		rs, _ := etcd.Get(route.ReplicasetPath + "/" + "default" + "/" + "function-" + name + "-rs")
+		if rs == "" {
+			return "Replicaset not found with name: " + "function-" + name + "-rs"
+		}
+		replicaset := apiobjects.Replicaset{}
+		if err := json.Unmarshal([]byte(rs), &replicaset); err != nil {
+			return err.Error()
+		}
+		fun, _ := etcd.Get(route.FunctionPath + "/" + "default" + "/" + name)
+		if fun == "" {
+			return "Function not found with name: " + name
+		}
+		function := apiobjects.Function{}
+		if err := json.Unmarshal([]byte(fun), &function); err != nil {
+			return err.Error()
+		}
+		replicaset.Spec.Replicas = function.Spec.MinReplicas
+		url := route.Prefix + route.ReplicasetScale
+		_, err := utils.PutWithJson(url, replicaset)
+		if err != nil {
+			return "Failed to scale replicaset"
+		}
+		time.Sleep(5 * time.Second)
+	}
+	return "success"
 }

@@ -11,12 +11,13 @@ import (
 )
 
 type ServerlessGateway struct {
-	router *gin.Engine
-	functions map[string]FunctionWrapper
+	router    *gin.Engine
+	functions map[string]*FunctionWrapper
 }
 
 func (a *ServerlessGateway) Init() {
 	a.router = gin.Default()
+	a.functions = make(map[string]*FunctionWrapper)
 }
 
 func (a *ServerlessGateway) BindHandler() {
@@ -68,12 +69,12 @@ func (a *ServerlessGateway) RUN() {
 }
 
 // Single Instance
-var serverlessGatewayInstance *ServerlessGateway
+var ServerlessGatewayInstance *ServerlessGateway
 
 func GetServerlessGatewayInstance() *ServerlessGateway {
-	if serverlessGatewayInstance == nil {
-		serverlessGatewayInstance = &ServerlessGateway{}
-		serverlessGatewayInstance.Init()
+	if ServerlessGatewayInstance == nil {
+		ServerlessGatewayInstance = &ServerlessGateway{}
+		ServerlessGatewayInstance.Init()
 	}
-	return serverlessGatewayInstance
+	return ServerlessGatewayInstance
 }

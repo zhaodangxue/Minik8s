@@ -1,7 +1,8 @@
-package serverless_handler
+package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"minik8s/apiobjects"
 	"minik8s/global"
@@ -22,17 +23,21 @@ func FunctionHandler(c *gin.Context) {
 	err = json.Unmarshal(value, &jsonParam)
 	if err != nil {
 		c.String(500, err.Error())
-		return 
+		return
 	}
 
-	svcUrl := global.DefaultNamespace + "/" + "function-"+name+"-service"
+	svcUrl := global.DefaultNamespace + "/" + "function-" + name + "-service"
 	svc := apiobjects.Service{}
 	err = utils.GetUnmarshal("http://localhost:8080/api/get/oneservice/"+svcUrl, &svc)
 	if err != nil {
 		c.String(500, err.Error())
 		return
 	}
-
+	val := JudgeReplicas(name)
+	if val != "success" {
+		fmt.Println(val)
+	}
+	AddQpsCounter(name)
 	response, err := utils.PostWithJson("http://"+svc.Status.ClusterIP+":8080", jsonParam)
 	if err != nil {
 		c.String(500, err.Error())
@@ -48,7 +53,7 @@ func FunctionHandler(c *gin.Context) {
 
 	var jsonParam2 map[string]interface{}
 	err = json.Unmarshal(value, &jsonParam2)
-    if err != nil {
+	if err != nil {
 		c.String(500, err.Error())
 		return
 	}

@@ -1,6 +1,8 @@
 package internal
 
-import "time"
+import (
+	"time"
+)
 
 type ListFunc func() error
 
@@ -10,5 +12,8 @@ type ListFuncEnvelop struct {
 }
 
 var ListTable = []ListFuncEnvelop{
-
+	{
+		Func:     FunctionHandlerOnList,
+		Interval: 20 * time.Second,
+	},
 }
