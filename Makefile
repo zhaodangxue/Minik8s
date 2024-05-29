@@ -24,7 +24,7 @@ install_dev:
 	rm -rf $(DEV_INSTALL_DIR)/*
 	cp -r build/* $(DEV_INSTALL_DIR)
 
-_build: prepare bin_targets scripts yamls image_base
+_build: prepare bin_targets scripts yamls image_base serverless_gateway
 
 prepare: deps
 	mkdir -p $(BINDIR)
@@ -62,6 +62,9 @@ proxy:
 
 controller:
 	$(GOBUILD) -o $(BINDIR)/ctlmgr -v -tags $(TAGS) controller/cmd/main.go
+
+serverless_gateway:
+	$(GOBUILD) -o $(BINDIR)/sl_gtw -v -tags $(TAGS) serverless/gateway/cmd/server.go
 
 ##### Scripts #####
 
