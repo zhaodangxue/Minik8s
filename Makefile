@@ -7,6 +7,7 @@ BUILDDIR=build
 BINDIR=$(BUILDDIR)/bin
 YAMLDIR=$(BUILDDIR)/yamls
 IMAGEDIR=$(BUILDDIR)/imagebase
+FUNCTIONDIR=$(BUILDDIR)/functions
 DEV_INSTALL_DIR=/tmp/minik8s
 
 all: build
@@ -24,12 +25,13 @@ install_dev:
 	rm -rf $(DEV_INSTALL_DIR)/*
 	cp -r build/* $(DEV_INSTALL_DIR)
 
-_build: prepare bin_targets scripts yamls image_base serverless_gateway
+_build: prepare bin_targets scripts yamls serverless
 
 prepare: deps
 	mkdir -p $(BINDIR)
 	mkdir -p $(YAMLDIR)
 	mkdir -p $(IMAGEDIR)
+	mkdir -p $(FUNCTIONDIR)
 
 deps:
 	go mod tidy
@@ -41,7 +43,7 @@ clean:
 
 ##### Binaries #####
 
-bin_targets: kubelet kubectl apiserver scheduler controller proxy
+bin_targets: kubelet kubectl apiserver scheduler controller proxy serverless_gateway
 
 .PHONY: kubelet kubectl apiserver scheduler controller proxy
 
@@ -84,9 +86,14 @@ yamls: apiobject_example
 apiobject_example:
 	cp -r apiobjects/examples/* $(YAMLDIR)
 
-##### Image Base #####
+##### Serverless #####
+
+serverless: serverless_examples image_base
+
+serverless_examples:
+	cp -r serverless/examples/* $(FUNCTIONDIR)
 
 image_base:
 	cp -r serverless/imagebase/* $(IMAGEDIR)
 
-.PHONY: image_base
+.PHONY: serverless serverless_examples image_base
