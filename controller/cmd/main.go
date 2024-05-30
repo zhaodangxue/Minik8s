@@ -36,7 +36,7 @@ func topicHandlerGenerator(controller api.Controller, handler api.WatchFunc) lis
 		}
 		err = handler(controller, topicMessage)
 		if err != nil {
-			utils.Error("Failed to handle message:", err)
+			utils.Error("Failed to handle topic message:", err)
 		}
 	}
 }

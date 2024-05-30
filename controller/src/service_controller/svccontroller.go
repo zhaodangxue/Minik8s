@@ -185,6 +185,7 @@ func (s SvcEndpointHandler) HandleDelete(message []byte) {
 	if err != nil {
 		fmt.Println("error")
 	}
+    utils.Info("[SVC Controller]delete pod: ",pod.Name)
 	//todo删除对应的endpoints
 	for _, svc := range svcList {
 		deleteEndpoints(svc, pod)
@@ -413,6 +414,9 @@ func (ss *SvcEndpointHandler) HandleEndpoints(controller api.Controller, message
 	err := json.Unmarshal([]byte(message.Object), pod)
 	if err != nil {
 		fmt.Println(err)
+		utils.Error("[ServiceController] HandleEndpoints error: ", err)
+		utils.Error("[ServiceController] HandleEndpoints error: ", message.ActionType)
+		utils.Error("[ServiceController] HandleEndpoints error: ", message.Object)
 		return err
 	}
 	podJson, _ := json.Marshal(pod)
@@ -435,6 +439,7 @@ func (ss *SvcEndpointHandler) HandleBindingEndpoints(controller api.Controller, 
 	err := json.Unmarshal([]byte(message.Object), nodepod)
 	if err != nil {
 		fmt.Println(err)
+		utils.Error("[ServiceController] HandleBindingEndpoints error: ", err)
 		return err
 	}
 	podJson, _ := json.Marshal(nodepod.Pod)
@@ -460,14 +465,15 @@ func CheckAllService(controller api.Controller)(error) {
 		fmt.Println("get svc list error")
 	}
 
+	edptList := []*apiobjects.Endpoint{}
+	err = utils.GetUnmarshal("http://localhost:8080" + route.GetAllEndpointsPath, &edptList)
+	if err != nil {
+		utils.Info("[ServiceController] get all endpoints error")
+		return err
+	}
+
 	if restartFlag == true {
 		restartFlag = false
-		edptList := []*apiobjects.Endpoint{}
-		err := utils.GetUnmarshal("http://localhost:8080" + route.GetAllEndpointsPath, &edptList)
-		if err != nil {
-			utils.Info("[ServiceController] get all endpoints error")
-			return err
-		}
 		for _, edpt := range edptList {
 			_, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
 			if err != nil {
@@ -542,6 +548,37 @@ func CheckAllService(controller api.Controller)(error) {
 				deleteEndpoints(svc, pod)
 			}
 		}
+		for _, edpt := range edptList {
+			if edpt.ServiceName == svc.Data.Name {
+				flag := false
+				for _, pod := range podlist {
+					if pod.Status.PodIP == edpt.Spec.DestIP {
+						flag = true
+						break
+					}
+				}
+				if !flag {
+					_, err := utils.Delete("http://localhost:8080/api/endpoint/delete/" + edpt.ServiceName + "/" + edpt.Data.Namespace + "/" + edpt.Data.Name)
+					if err != nil {
+						return err
+					}
+					exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], edpt.Spec.DestIP)
+					if exist {
+						var newEdptList []*apiobjects.Endpoint
+						for _, edpt2 := range *svcToEndpoints[svc.Status.ClusterIP]{
+							if edpt2.Spec.DestIP == edpt.Spec.DestIP {
+								//do nothing
+								continue
+							} else {
+								newEdptList = append(newEdptList, edpt2)
+							}
+						}
+						svcToEndpoints[svc.Status.ClusterIP] = &newEdptList
+					}
+				}
+			}
+		}
 	}
+
 	return nil
 }

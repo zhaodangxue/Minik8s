@@ -10,6 +10,7 @@ import (
 	apiserver_utils "minik8s/apiserver/src/utils"
 	"minik8s/global"
 	"minik8s/listwatch"
+	"minik8s/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -151,8 +152,9 @@ func PodDeleteHandler(c *gin.Context) {
 	etcd.Delete(url)
 	etcd.Delete(binding.GetBindingPath())
 	listwatch.Publish(global.PodRelevantTopic(), string(msgJson2))
-	listwatch.Publish(global.PodStateTopic(), string(val))
-	ret := "delete podname:" + podName + " namespace:" + np + " success"
+	listwatch.Publish(global.PodStateTopic(), string(msgJson2))
+	utils.Info("delete podname:",val)
+	ret := "delete podname:" + podName + " namespace:" + np + " success "
 	c.String(200, ret)
 }
 func PVCDeleteHandler(c *gin.Context) {
