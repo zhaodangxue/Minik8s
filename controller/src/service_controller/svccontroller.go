@@ -185,6 +185,7 @@ func (s SvcEndpointHandler) HandleDelete(message []byte) {
 	if err != nil {
 		fmt.Println("error")
 	}
+    utils.Info("[SVC Controller]delete pod: ",pod.Name)
 	//todo删除对应的endpoints
 	for _, svc := range svcList {
 		deleteEndpoints(svc, pod)
