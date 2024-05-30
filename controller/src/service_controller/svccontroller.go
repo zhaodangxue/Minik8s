@@ -415,6 +415,7 @@ func (ss *SvcEndpointHandler) HandleEndpoints(controller api.Controller, message
 	if err != nil {
 		fmt.Println(err)
 		utils.Error("[ServiceController] HandleEndpoints error: ", err)
+		utils.Error("[ServiceController] HandleEndpoints error: ", message.Object)
 		return err
 	}
 	podJson, _ := json.Marshal(pod)
