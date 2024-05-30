@@ -152,9 +152,9 @@ func PodDeleteHandler(c *gin.Context) {
 	etcd.Delete(url)
 	etcd.Delete(binding.GetBindingPath())
 	listwatch.Publish(global.PodRelevantTopic(), string(msgJson2))
-	listwatch.Publish(global.PodStateTopic(), string(val))
+	listwatch.Publish(global.PodStateTopic(), string(msgJson2))
 	utils.Info("delete podname:",val)
-	ret := "delete podname:" + podName + " namespace:" + np + " success " + "val " + val
+	ret := "delete podname:" + podName + " namespace:" + np + " success "
 	c.String(200, ret)
 }
 func PVCDeleteHandler(c *gin.Context) {
