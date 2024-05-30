@@ -16,4 +16,8 @@ var ListTable = []ListFuncEnvelop{
 		Func:     FunctionHandlerOnList,
 		Interval: 60 * time.Second,
 	},
+	{
+		Func:     EventHandlerOnList,
+		Interval: EventListInterval * time.Second,
+	},
 }

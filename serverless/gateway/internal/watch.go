@@ -8,4 +8,5 @@ import (
 var WatchTable = map[string]listwatch.HandlerOnWatch{
 	// "Topic": handlerFunc,
 	global.FunctionTopic(): FunctionHandlerOnWatch,
+	global.EventTopic():    EventHandlerOnWatch,
 }

@@ -23,28 +23,11 @@ func WorkflowHandler(c *gin.Context) {
 		c.String(http.StatusBadRequest, err.Error())
 		return
 	}
-	jsonData["WorkflowId"] = utils.NewUUID()
 	defer c.Request.Body.Close()
-	data, _ := etcd.Get(route.WorkflowPath + "/" + "default" + "/" + name)
-	if data == "" {
-		c.JSON(404, gin.H{
-			"message": "Workflow not found",
-		})
-		return
-	}
-	workflow := apiobjects.Workflow{}
-	if err := json.Unmarshal([]byte(data), &workflow); err != nil {
-		c.JSON(404, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	dag := serveless_utils.Workflow2DAG(&workflow)
-	res, err := WorkflowTrigger(jsonData, dag)
+
+	res, err := WorkflowExecutor(name, jsonData)
 	if err != nil {
-		c.JSON(404, gin.H{
-			"message": err.Error(),
-		})
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 	c.JSON(200, res)
