@@ -121,11 +121,14 @@ func AddQpsCounter(name string) {
 	}
 }
 func JudgeReplicas(name string) string {
+	fmt.Println("JudgeReplicas")
 	if ServerlessGatewayInstance.functions[name] == nil {
+		fmt.Println("ServerlessGatewayInstance.functions[name] is nil")
 		return "ServerlessGatewayInstance.functions[name] is nil"
 	}
 	if ServerlessGatewayInstance.functions[name].ScaleTarget == 0 {
 		//这个时候我们必须要去etcd中获取这个function的replicaset并为他扩容
+		fmt.Println("ScaleTarget is 0, need to scale replicaset")
 		rs, _ := etcd.Get(route.ReplicasetPath + "/" + "default" + "/" + "function-" + name + "-rs")
 		if rs == "" {
 			return "Replicaset not found with name: " + "function-" + name + "-rs"
@@ -148,7 +151,8 @@ func JudgeReplicas(name string) string {
 		if err != nil {
 			return "Failed to scale replicaset"
 		}
-		time.Sleep(10 * time.Second)
+		fmt.Println("Scale replicaset success")
+		time.Sleep(20 * time.Second)
 	}
 	return "success"
 }

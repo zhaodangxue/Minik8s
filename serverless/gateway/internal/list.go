@@ -14,6 +14,6 @@ type ListFuncEnvelop struct {
 var ListTable = []ListFuncEnvelop{
 	{
 		Func:     FunctionHandlerOnList,
-		Interval: 30 * time.Second,
+		Interval: 60 * time.Second,
 	},
 }

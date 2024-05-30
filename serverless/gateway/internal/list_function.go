@@ -59,14 +59,17 @@ func FunctionHandlerOnList() error {
 			tmp := replicas
 			TargetQps := function.Spec.TargetQPSPerReplica
 			CurrentQps := ServerlessGatewayInstance.functions[name].QPSCounter.Load()
+			fmt.Println("CurrentQps: ", CurrentQps)
 			if CurrentQps == 0 {
 				replicas = 0
 			} else {
-				if CurrentQps/(int64(TargetQps)*30) > 1 {
+				if CurrentQps/(int64(TargetQps)*60) > 1 {
+					fmt.Println("CurrentQps/(int64(TargetQps)*60): ", CurrentQps/(int64(TargetQps)*60))
 					if replicas+1 <= function.Spec.MaxReplicas {
 						replicas = replicas + 1
 					}
-				} else if CurrentQps/(int64(TargetQps)*30) < 1 {
+				} else if CurrentQps/(int64(TargetQps)*60) < 1 {
+					fmt.Println("CurrentQps/(int64(TargetQps)*60): ", CurrentQps/(int64(TargetQps)*60))
 					if replicas-1 >= function.Spec.MinReplicas {
 						replicas = replicas - 1
 					}
