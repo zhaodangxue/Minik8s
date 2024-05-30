@@ -1,4 +1,4 @@
-package serverless__test
+package test
 
 import (
 	"encoding/json"
