@@ -1,4 +1,4 @@
-package event
+package internal
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/apiserver/src/route"
-	"minik8s/serverless/gateway/internal"
 	"minik8s/utils"
+	events "minik8s/serverless/gateway/internal/event"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -40,51 +40,51 @@ func generateTrigerFunction(event *apiobjects.Event) func() {
 		for _, workflow := range event.Workflows {
 			name := string(workflow)
 			// Start workflow
-			go internal.WorkflowExecutor(name, make(map[string]interface{}));
+			go WorkflowExecutor(name, make(map[string]interface{}));
 		}
 	}
 }
 
 func addTimerEvent(event *apiobjects.Event) {
-	timerExecutor := TimerExecutor{}
+	timerExecutor := events.TimerExecutor{}
 	timerExecutor.Init(event.TimeEvent.Cron, generateTrigerFunction(event))
-	orival, ok := EventStorageInstance.TimerExecutors.Load(event.Name)
+	orival, ok := events.EventStorageInstance.TimerExecutors.Load(event.Name)
 	if ok {
-		orival.(*TimerExecutor).Stop()
+		orival.(*events.TimerExecutor).Stop()
 	}
-	EventStorageInstance.TimerExecutors.Store(event.Name, &timerExecutor)
+	events.EventStorageInstance.TimerExecutors.Store(event.Name, &timerExecutor)
 	timerExecutor.Start()
 }
 
 func removeEvent(name string) error {
-	orival, ok := EventStorageInstance.Events.Load(name)
+	orival, ok := events.EventStorageInstance.Events.Load(name)
 	if !ok {
 		return errors.New("Event not found: " + name)
 	}
 	event := orival.(*apiobjects.Event)
 	switch event.Type {
 	case apiobjects.EventTypeTimer:
-		timerExecutor, ok := EventStorageInstance.TimerExecutors.Load(name)
+		timerExecutor, ok := events.EventStorageInstance.TimerExecutors.Load(name)
 		if !ok {
 			return errors.New("Corresponse TimerExecutor not found: " + name)
 		}
-		timerExecutor.(*TimerExecutor).Stop()
-		EventStorageInstance.TimerExecutors.Delete(name)
+		timerExecutor.(*events.TimerExecutor).Stop()
+		events.EventStorageInstance.TimerExecutors.Delete(name)
 	default:
 		return errors.New("Unknown event type: " + (string)(event.Type))
 	}
-	EventStorageInstance.Events.Delete(name)
+	events.EventStorageInstance.Events.Delete(name)
 	return nil
 }
 
 func createEvent(event *apiobjects.Event) error {
-	_, ok := EventStorageInstance.Events.Load(event.Name)
+	_, ok := events.EventStorageInstance.Events.Load(event.Name)
 	if ok {
 		return errors.New("Event already exists: " + event.Name)
 	}
 	switch event.Type {
 	case apiobjects.EventTypeTimer:
-		EventStorageInstance.Events.Store(event.Name, event)
+		events.EventStorageInstance.Events.Store(event.Name, event)
 		addTimerEvent(event)
 	default:
 		return errors.New("Unknown event type: " + (string)(event.Type))

@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"minik8s/serverless/gateway/internal/event"
 	"time"
 )
 
@@ -18,7 +17,7 @@ var ListTable = []ListFuncEnvelop{
 		Interval: 30 * time.Second,
 	},
 	{
-		Func:     event.EventHandlerOnList,
-		Interval: event.EventListInterval * time.Second,
+		Func:     EventHandlerOnList,
+		Interval: EventListInterval * time.Second,
 	},
 }
