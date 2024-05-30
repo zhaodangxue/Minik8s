@@ -30,7 +30,7 @@ func init() {
 	funcCommand.Flags().StringVarP(&filepath, "filepath", "f", "", "input a yaml filepath")
 	funcCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
 	eventCommand.Flags().StringVarP(&filepath, "filepath", "f", "", "input a json filepath")
-	funcCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
+	eventCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
 	applyCmd.MarkFlagRequired("filepath")
 	rootCmd.AddCommand(applyCmd)
 	rootCmd.AddCommand(getCmd)
