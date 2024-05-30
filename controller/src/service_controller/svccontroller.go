@@ -414,6 +414,7 @@ func (ss *SvcEndpointHandler) HandleEndpoints(controller api.Controller, message
 	err := json.Unmarshal([]byte(message.Object), pod)
 	if err != nil {
 		fmt.Println(err)
+		utils.Error("[ServiceController] HandleEndpoints error: ", err)
 		return err
 	}
 	podJson, _ := json.Marshal(pod)
@@ -436,6 +437,7 @@ func (ss *SvcEndpointHandler) HandleBindingEndpoints(controller api.Controller, 
 	err := json.Unmarshal([]byte(message.Object), nodepod)
 	if err != nil {
 		fmt.Println(err)
+		utils.Error("[ServiceController] HandleBindingEndpoints error: ", err)
 		return err
 	}
 	podJson, _ := json.Marshal(nodepod.Pod)
