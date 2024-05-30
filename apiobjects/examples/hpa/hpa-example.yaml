@@ -12,5 +12,5 @@ spec:
     metadata:
       name: rs
   metrics:
-    CPUUtilizationPercentage: 30
+    CPUUtilizationPercentage: 5
   scaleInterval: 25

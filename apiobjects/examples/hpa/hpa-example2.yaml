@@ -12,5 +12,5 @@ spec:
     metadata:
       name: rs
   metrics:
-    CPUUtilizationPercentage: 30
+    MemoryUtilizationUsage: 0.2 # 0.2 means target is 0.2Gi
   scaleInterval: 25
