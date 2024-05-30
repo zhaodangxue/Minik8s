@@ -11,6 +11,7 @@ import (
 )
 
 func FunctionHandlerOnList() error {
+	fmt.Println("Function Handler On List")
 	var vals []string
 	vals, _ = etcd.Get_prefix(route.FunctionPath)
 	var functions []apiobjects.Function
@@ -24,6 +25,7 @@ func FunctionHandlerOnList() error {
 	}
 	for _, function := range functions {
 		name := function.ObjectMeta.Name
+		fmt.Println("Function name: " + name)
 		if ServerlessGatewayInstance.functions[name] == nil {
 			rs, _ := etcd.Get(route.ReplicasetPath + "/" + "default" + "/" + "function-" + name + "-rs")
 			if rs == "" {
@@ -40,6 +42,7 @@ func FunctionHandlerOnList() error {
 				QPSCounter:  &atomic.Int64{},
 				ScaleTarget: replicaset.Spec.Replicas,
 			}
+			fmt.Println("Function: " + name + " added to ServerlessGatewayInstance.functions")
 		} else {
 			var replicas int
 			val, _ := etcd.Get(route.ReplicasetPath + "/" + "default" + "/" + "function-" + name + "-rs")
@@ -80,6 +83,7 @@ func FunctionHandlerOnList() error {
 					fmt.Println("Failed to scale replicaset")
 					return err
 				}
+				fmt.Println("Function: " + name + " scale ")
 			}
 		}
 	}

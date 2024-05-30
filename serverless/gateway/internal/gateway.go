@@ -44,6 +44,7 @@ func (a *ServerlessGateway) Watch() {
 func listFuncGenerator(listFunc ListFunc, interval time.Duration) {
 	go func() {
 		for {
+			fmt.Println("ListFunc start")
 			err := listFunc()
 			if err != nil {
 				utils.Error("Err occur when calling list func err: ", err)
@@ -64,6 +65,7 @@ func (a *ServerlessGateway) RUN() {
 	a.router = gin.Default()
 	a.BindHandler()
 	a.Watch()
+	a.List()
 	fmt.Println("serverlessGateway is running")
 	log.Fatal(a.router.Run(":8081"))
 }
