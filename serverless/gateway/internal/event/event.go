@@ -1,7 +1,6 @@
 package event
 
 import (
-	"minik8s/apiobjects"
 	"sync"
 )
 

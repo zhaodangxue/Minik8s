@@ -4,6 +4,12 @@ package event
 定时事件
 
 每个定时事件都对应一个Executor
+
+CHECK: 检查锁相关实现是否正确
+OPT: 实际上更符合信号量语义
+	每个时刻只能有一个正在运行的executor goroutine，可以看作一种资源。
+	Stop时，释放资源，Start时，申请资源。
+	使用信号量重写。 
 */
 
 import (
