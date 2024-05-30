@@ -152,7 +152,7 @@ func JudgeReplicas(name string) string {
 			return "Failed to scale replicaset"
 		}
 		fmt.Println("Scale replicaset success")
-		time.Sleep(20 * time.Second)
+		time.Sleep(15 * time.Second)
 	}
 	return "success"
 }
