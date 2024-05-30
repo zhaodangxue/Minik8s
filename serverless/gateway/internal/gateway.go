@@ -11,12 +11,13 @@ import (
 )
 
 type ServerlessGateway struct {
-	router *gin.Engine
-	functions map[string]FunctionWrapper
+	router    *gin.Engine
+	functions map[string]*FunctionWrapper
 }
 
 func (a *ServerlessGateway) Init() {
 	a.router = gin.Default()
+	a.functions = make(map[string]*FunctionWrapper)
 }
 
 func (a *ServerlessGateway) BindHandler() {
@@ -43,6 +44,7 @@ func (a *ServerlessGateway) Watch() {
 func listFuncGenerator(listFunc ListFunc, interval time.Duration) {
 	go func() {
 		for {
+			fmt.Println("ListFunc start")
 			err := listFunc()
 			if err != nil {
 				utils.Error("Err occur when calling list func err: ", err)
@@ -63,17 +65,18 @@ func (a *ServerlessGateway) RUN() {
 	a.router = gin.Default()
 	a.BindHandler()
 	a.Watch()
+	a.List()
 	fmt.Println("serverlessGateway is running")
 	log.Fatal(a.router.Run(":8081"))
 }
 
 // Single Instance
-var serverlessGatewayInstance *ServerlessGateway
+var ServerlessGatewayInstance *ServerlessGateway
 
 func GetServerlessGatewayInstance() *ServerlessGateway {
-	if serverlessGatewayInstance == nil {
-		serverlessGatewayInstance = &ServerlessGateway{}
-		serverlessGatewayInstance.Init()
+	if ServerlessGatewayInstance == nil {
+		ServerlessGatewayInstance = &ServerlessGateway{}
+		ServerlessGatewayInstance.Init()
 	}
-	return serverlessGatewayInstance
+	return ServerlessGatewayInstance
 }

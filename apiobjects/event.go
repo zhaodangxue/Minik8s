@@ -1,9 +1,5 @@
 package apiobjects
 
-import (
-	"time"
-)
-
 type EventType string
 
 const (
@@ -36,10 +32,5 @@ const (
 )
 
 type TimeEvent struct {
-	// 定时器类型
-	Type TimerType `json:"type"`
-	// 开始时间
-	StartTime time.Time `json:"startTime"`
-	// 循环定时器的间隔秒数
-	Interval int64 `json:"interval"`
+	Cron string `json:"cron"`
 }
