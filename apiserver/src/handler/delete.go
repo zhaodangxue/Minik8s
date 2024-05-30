@@ -11,6 +11,7 @@ import (
 	"minik8s/global"
 	"minik8s/listwatch"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -34,7 +35,7 @@ func ServiceDeleteHandler(c *gin.Context) {
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.ServiceTopic(), string(topicMessageJson))
 
-    svc := apiobjects.Service{}
+	svc := apiobjects.Service{}
 	err := json.Unmarshal([]byte(val), &svc)
 	if err != nil {
 		log.Error("[Service Delete Handler] error unmarshalling service object: ", err)
@@ -44,7 +45,7 @@ func ServiceDeleteHandler(c *gin.Context) {
 		return
 	}
 	if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
-		err := etcd.Delete("/api/nodeport/service/"+svc.Data.Namespace+"/"+svc.Data.Name)
+		err := etcd.Delete("/api/nodeport/service/" + svc.Data.Namespace + "/" + svc.Data.Name)
 		if err != nil {
 			log.Error("[Service Delete Handler] error deleting node port: ", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -53,7 +54,7 @@ func ServiceDeleteHandler(c *gin.Context) {
 			return
 		}
 
-		err = etcd.Delete_prefix("api/nodeport/endpoint/"+svc.Data.Name)
+		err = etcd.Delete_prefix("api/nodeport/endpoint/" + svc.Data.Name)
 		if err != nil {
 			log.Error("[Service Delete Handler] error deleting node port endpoints: ", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -106,9 +107,9 @@ func EndpointDeleteHandler(c *gin.Context) {
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
 
-	url := "/api/nodeport/endpoint/" + serviceName + "/" + namespace+"/"+name
-	val2,err := etcd.Get(url)
-	if val2 == "" || err != nil{
+	url := "/api/nodeport/endpoint/" + serviceName + "/" + namespace + "/" + name
+	val2, err := etcd.Get(url)
+	if val2 == "" || err != nil {
 		c.String(http.StatusOK, "delete endpoint namespace:%s name:%s success", namespace, name)
 		return
 	}
@@ -150,6 +151,7 @@ func PodDeleteHandler(c *gin.Context) {
 	etcd.Delete(url)
 	etcd.Delete(binding.GetBindingPath())
 	listwatch.Publish(global.PodRelevantTopic(), string(msgJson2))
+	listwatch.Publish(global.PodStateTopic(), string(val))
 	ret := "delete podname:" + podName + " namespace:" + np + " success"
 	c.String(200, ret)
 }
@@ -216,11 +218,11 @@ func PVDeleteHandler(c *gin.Context) {
 	c.String(200, ret)
 }
 
-func DnsDeleteHandler(c *gin.Context) { 
+func DnsDeleteHandler(c *gin.Context) {
 	namespace := c.Param("namespace")
 	name := c.Param("name")
 
-	if namespace == "" || name == ""{
+	if namespace == "" || name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "namespace / name is empty",
 		})
@@ -229,7 +231,7 @@ func DnsDeleteHandler(c *gin.Context) {
 	url := "/api/dns/" + namespace + "/" + name
 
 	val, err := etcd.Get(url)
-	if val == "" || err != nil{
+	if val == "" || err != nil {
 		log.Error("[Dns Delete Handler] dns record not found")
 		c.String(http.StatusBadRequest, "dns/"+namespace+"/"+name+"/not found")
 		return
@@ -255,7 +257,7 @@ func DnsDeleteHandler(c *gin.Context) {
 	}
 	result := generateHost(dnsRecord.Host)
 	val2, err := etcd.Get(result)
-	if val2 == "" || err != nil{
+	if val2 == "" || err != nil {
 		log.Error("[Dns Delete Handler] dns record not found2")
 		c.String(http.StatusBadRequest, "dns/"+namespace+"/"+name+"/not found2")
 		return
