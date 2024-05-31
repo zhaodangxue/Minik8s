@@ -60,6 +60,23 @@ func NodeDeleteHandler(c *gin.Context) {
 				return
 			}
 		}
+		// 删除Pod中的状态
+		val, err := etcd.Get(pod.GetObjectPath())
+		if err != nil {
+			c.String(http.StatusInternalServerError, "get pod failed")
+			return
+		}
+		valJson := []byte(val)
+		pod := apiobjects.Pod{}
+		err = json.Unmarshal(valJson, &pod)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "unmarshal pod failed")
+			return
+		}
+		pod.Status.PodIP = ""
+		pod.Status.PodPhase = apiobjects.PodPhase_POD_CREATED
+		pod.Status.HostIP = ""
+		pod.Status.SandboxId = ""
 		// 发布Binding删除事件
 		bindingJson, err := json.Marshal(binding)
 		if err != nil {
