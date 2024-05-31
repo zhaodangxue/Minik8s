@@ -29,7 +29,13 @@ func TestPodCreate(t *testing.T) {
 			Containers: []apiobjects.Container{
 				{
 					Name:  "viewer",
-					Image: "dplsming/nginx-fileserver:1.0",
+					Image: "strm/helloworld-http",
+					Ports: []apiobjects.ContainerPort{
+						{
+							ContainerPort: 80,
+							HostPort:      9091,
+						},
+					},
 				},
 			},
 		},
