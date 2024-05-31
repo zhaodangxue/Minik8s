@@ -23,14 +23,14 @@ func TestTbl() table.Table {
 func PodTbl() table.Table {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("NAME", "NAMESPACE", "UUID", "STATUS", "CREATION")
+	tbl := table.New("NAME", "NAMESPACE", "UUID", "STATUS", "CREATION", "IP")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
 func NodeTbl() table.Table {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("NAME", "STATUS", "ROLES", "AGE", "VERSION")
+	tbl := table.New("NAME", "STATUS", "IP", "CREATION")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
@@ -77,6 +77,13 @@ func HPARecordTbl() table.Table {
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
+func FunctionTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Name", "MinReplicas", "MaxReplicas", "TargetQPSPerReplica", "ImageUrl", "Creation")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
+}
 func GetTestFromApiserver() (testyaml *apiobjects.TestYaml, err error) {
 	url := route.Prefix + route.TestCtlPath
 	err = utils.GetUnmarshal(url, &testyaml)
@@ -107,6 +114,16 @@ func GetHPAFromApiserver(namespace string) (hpas []*apiobjects.HorizontalPodAuto
 	err = utils.GetUnmarshal(url, &hpas)
 	return
 }
+func GetNodeFromApiserver() (nodes []*apiobjects.Node, err error) {
+	url := route.Prefix + route.NodePath
+	err = utils.GetUnmarshal(url, &nodes)
+	return
+}
+func GetFuncFromApiserver() (functions []*apiobjects.Function, err error) {
+	url := route.Prefix + route.FunctionPath
+	err = utils.GetUnmarshal(url, &functions)
+	return
+}
 
 //类似这样的GetPodFromApiserver函数等等,第一个（）里填的是查找所需的参数
 
@@ -127,7 +144,7 @@ func PrintPodStatusTable(namespace string) error {
 	}
 	tbl := PodTbl()
 	for _, pod := range pods {
-		tbl.AddRow(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, pod.ObjectMeta.UID, pod.Status.PodPhase, pod.ObjectMeta.CreationTimestamp.Format("2006-01-02 15:04:05"))
+		tbl.AddRow(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, pod.ObjectMeta.UID, pod.Status.PodPhase, pod.ObjectMeta.CreationTimestamp.Format("2006-01-02 15:04:05"), pod.Status.PodIP)
 	}
 	tbl.Print()
 	return nil
@@ -263,6 +280,30 @@ func PrintHPATable(namespace string) error {
 		strMem_HPA := fmt.Sprintf("%f", hpa.Stat.CurrentReplicaseMemUsage)
 		expected_HPA := fmt.Sprintf("%f", hpa.Spec.Metrics.MemoryUtilizationUsage)
 		tbl.AddRow(hpa.Name, hpa.Namespace, hpa.Spec.MinReplicas, hpa.Spec.MaxReplicas, strconv.Itoa(hpa.Stat.CurrnentReplicaseCPUUsage)+"/"+strconv.Itoa(hpa.Spec.Metrics.CPUUtilizationPercentage), strMem_HPA+"/"+expected_HPA, hpa.Spec.ScaleInterval)
+	}
+	tbl.Print()
+	return nil
+}
+func PrintNodeTable() error {
+	nodes, err := GetNodeFromApiserver()
+	if err != nil {
+		return err
+	}
+	tbl := NodeTbl()
+	for _, node := range nodes {
+		tbl.AddRow(node.Name, node.Status.State, node.Info.Ip, node.CreationTimestamp.Format("2006-01-02 15:04:05"))
+	}
+	tbl.Print()
+	return nil
+}
+func PrintFunctionTable() error {
+	functions, err := GetFuncFromApiserver()
+	if err != nil {
+		return err
+	}
+	tbl := FunctionTbl()
+	for _, function := range functions {
+		tbl.AddRow(function.Name, function.Spec.MinReplicas, function.Spec.MaxReplicas, function.Spec.TargetQPSPerReplica, function.Status.ImageUrl, function.CreationTimestamp.Format("2006-01-02 15:04:05"))
 	}
 	tbl.Print()
 	return nil

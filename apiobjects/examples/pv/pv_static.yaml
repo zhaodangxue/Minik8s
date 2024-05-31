@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfsserver
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: slow  
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+  nfs:
+    path: /home/nfs
+    server: 192.168.1.14

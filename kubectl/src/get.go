@@ -48,13 +48,15 @@ func RunGet_Cmd(apiObjType string, apiObjName string) error {
 	case "replicaset":
 		err = ctlutils.PrintReplicasetTable(namespace)
 	case "node":
-		fmt.Printf("get node Name:%s", apiObjName)
+		err = ctlutils.PrintNodeTable()
 	case "service":
 		err = ctlutils.PrintServiceTable()
 	case "dns":
 		err = ctlutils.PrintDNSTable()
 	case "hpa":
 		err = ctlutils.PrintHPATable(namespace)
+	case "function":
+		err = ctlutils.PrintFunctionTable()
 	}
 	return err
 }

@@ -1,0 +1,13 @@
+apiVersion: v1
+Kind: function
+metadata:
+  name: event_example
+  namespace: default
+spec:
+  minReplicas: 1
+  maxReplicas: 2
+  targetQPSPerReplica: 3
+buildOptions:
+  extraCommands:
+  - pip install redis
+  functionFileDir: /opt/minik8s/functions/event_example/

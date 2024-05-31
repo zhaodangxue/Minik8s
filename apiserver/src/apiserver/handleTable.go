@@ -64,6 +64,7 @@ var GetTable = map[string]HandlerFunc{
 	route.DnsGetAllPath:                        handler.DnsGetAllHandler,
 	route.HorizontalPodAutoscalerPathNamespace: hpa_handler.HPAGetWithNamespaceHandler,
 	route.HorizontalPodAutoscalerPath:          hpa_handler.HPAGetHandler,
+	route.FunctionPath:                         function_handler.FunctionGetHandler,
 }
 
 var PutTable = map[string]HandlerFunc{

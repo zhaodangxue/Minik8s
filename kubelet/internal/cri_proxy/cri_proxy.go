@@ -124,6 +124,7 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 			volumes := pod.Spec.Volumes
 			containerConfig.Mounts = MountContainer(volumes, volumemounts, pod.ObjectMeta.UID)
 		}
+
 		sandboxConfig.Metadata.Attempt = 1
 
 		createContainerRequest := &cri.CreateContainerRequest{

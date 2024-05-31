@@ -17,6 +17,9 @@ all: build
 build: 
 	make _build TAGS=$(RELEASE_TAGS)
 
+build_cgo0:
+	make build CGO_ENABLED=0
+
 build_dev:
 	make _build TAGS=$(DEV_TAGS)
 
@@ -24,6 +27,18 @@ install_dev:
 	mkdir -p $(DEV_INSTALL_DIR)
 	rm -rf $(DEV_INSTALL_DIR)/*
 	cp -r build/* $(DEV_INSTALL_DIR)
+
+deploy_no_bin:
+	echo "Deploying application..."
+	./scripts/deploy_to_master.sh no_bin
+	./scripts/deploy_to_worker.sh no_bin
+	echo "Application successfully deployed."
+
+deploy: build_cgo0
+	echo "Deploying application..."
+	./scripts/deploy_to_master.sh
+	./scripts/deploy_to_worker.sh
+	echo "Application successfully deployed."
 
 _build: prepare bin_targets scripts yamls serverless
 
@@ -39,7 +54,7 @@ deps:
 clean:
 	rm -rf $(BUILDDIR)
 
-.PHONY: all build _build prepare deps 
+.PHONY: all build _build prepare deps clean install_dev deploy_dev build_dev deploy_no_bin deploy build_cgo0
 
 ##### Binaries #####
 
