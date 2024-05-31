@@ -33,12 +33,12 @@ func FunctionApplyHandler(c *gin.Context) {
 	if val != "" {
 		var oldFunction apiobjects.Function
 		json.Unmarshal([]byte(val), &oldFunction)
-		oldFunction.ObjectMeta.UID = function.ObjectMeta.UID
+		function.ObjectMeta.UID = oldFunction.ObjectMeta.UID
 		topicMessage.ActionType = apiobjects.Update
-		oldFunctionJson, _ := json.Marshal(oldFunction)
-		topicMessage.Object = string(oldFunctionJson)
+		FunctionJson, _ := json.Marshal(function)
+		topicMessage.Object = string(FunctionJson)
 		topicMessageJson, _ := json.Marshal(topicMessage)
-		etcd.Put(url, string(oldFunctionJson))
+		etcd.Put(url, string(FunctionJson))
 		listwatch.Publish(global.FunctionTopic(), string(topicMessageJson))
 		c.String(200, "the function is updated")
 		return

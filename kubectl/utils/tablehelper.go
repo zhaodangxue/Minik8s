@@ -75,6 +75,13 @@ func HPARecordTbl() table.Table {
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
+func FunctionTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Name", "MinReplicas", "MaxReplicas", "TargetQPSPerReplica", "ImageUrl", "Creation")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
+}
 func GetTestFromApiserver() (testyaml *apiobjects.TestYaml, err error) {
 	url := route.Prefix + route.TestCtlPath
 	err = utils.GetUnmarshal(url, &testyaml)
@@ -108,6 +115,11 @@ func GetHPAFromApiserver(namespace string) (hpas []*apiobjects.HorizontalPodAuto
 func GetNodeFromApiserver() (nodes []*apiobjects.Node, err error) {
 	url := route.Prefix + route.NodePath
 	err = utils.GetUnmarshal(url, &nodes)
+	return
+}
+func GetFuncFromApiserver() (functions []*apiobjects.Function, err error) {
+	url := route.Prefix + route.FunctionPath
+	err = utils.GetUnmarshal(url, &functions)
 	return
 }
 
@@ -259,6 +271,18 @@ func PrintNodeTable() error {
 	tbl := NodeTbl()
 	for _, node := range nodes {
 		tbl.AddRow(node.Name, node.Status.State, node.Info.Ip, node.CreationTimestamp.Format("2006-01-02 15:04:05"))
+	}
+	tbl.Print()
+	return nil
+}
+func PrintFunctionTable() error {
+	functions, err := GetFuncFromApiserver()
+	if err != nil {
+		return err
+	}
+	tbl := FunctionTbl()
+	for _, function := range functions {
+		tbl.AddRow(function.Name, function.Spec.MinReplicas, function.Spec.MaxReplicas, function.Spec.TargetQPSPerReplica, function.Status.ImageUrl, function.CreationTimestamp.Format("2006-01-02 15:04:05"))
 	}
 	tbl.Print()
 	return nil
