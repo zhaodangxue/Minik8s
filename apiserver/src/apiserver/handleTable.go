@@ -55,6 +55,7 @@ var GetTable = map[string]HandlerFunc{
 	route.PVCPathNamespace:    handler.PVCGetWithNamespaceHandler,
 
 	route.NodePodBindingAllPath:                handler.NodePodBindingAllHandler,
+	route.NodePodBindingSpecified:              handler.NodePodBindingSpecifiedHandler,
 	route.PVPathSpecified:                      persistentvolume_handler.PVGetSpecifiedHandler,
 	route.PVCPathSpecified:                     persistentvolume_handler.PVCGetSpecifiedHandler,
 	route.PVCPath:                              persistentvolume_handler.PVCSGetHandler,

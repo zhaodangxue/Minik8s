@@ -27,3 +27,17 @@ func NodePodBindingAllHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, bindings)
 }
+func NodePodBindingSpecifiedHandler(c *gin.Context) {
+	namespace := c.Param("namespace")
+	name := c.Param("name")
+	value, err := etcd.Get(route.NodePodBindingAllPath + "/" + namespace + "/" + name)
+	if err != nil {
+		utils.Error("NodePodBindingSpecifiedHandler: Get failed: ", err)
+	}
+	var binding apiobjects.NodePodBinding
+	err = json.Unmarshal([]byte(value), &binding)
+	if err != nil {
+		utils.Error("NodePodBindingSpecifiedHandler: json.Unmarshal failed: ", err)
+	}
+	c.JSON(http.StatusOK, binding)
+}

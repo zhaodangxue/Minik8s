@@ -9,6 +9,7 @@ import (
 	"minik8s/listwatch"
 	sched_utils "minik8s/scheduler/utils"
 	"minik8s/utils"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -129,8 +130,39 @@ func (s *scheduler) reSchedule(msg *redis.Message) {
 	}
 	return
 }
+func (s *scheduler) CheckPodBinding() {
+	var pods []*apiobjects.Pod
+	err := utils.GetUnmarshal(route.Prefix+route.PodPath, &pods)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, pod := range pods {
+		url := route.Prefix + "/api/binding" + "/" + pod.Namespace + "/" + pod.Name
+		nodepodbinding := &apiobjects.NodePodBinding{}
+		err := utils.GetUnmarshal(url, nodepodbinding)
+		if err != nil {
+			fmt.Println(err)
+		}
+		if nodepodbinding.Node.ObjectMeta.Name == "" {
+			time.Sleep(3 * time.Second)
+			err = utils.GetUnmarshal(url, nodepodbinding)
+			if err != nil {
+				fmt.Println(err)
+			}
+			if nodepodbinding.Node.ObjectMeta.Name == "" {
+				err = s.Schedule(pod)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		}
+	}
+	time.Sleep(30 * time.Second)
+	return
+}
 func (s *scheduler) Start() {
 	go listwatch.Watch(global.StrategyUpdateTopic(), s.handleStrategyChange)
 	go listwatch.Watch(global.PodRelevantTopic(), s.doSchedule)
+	go s.CheckPodBinding()
 	listwatch.Watch(global.BindingTopic(), s.reSchedule)
 }

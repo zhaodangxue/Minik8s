@@ -42,6 +42,7 @@ const (
 	PVCPathDetail                        = "/api/persistentvolumeclaim/:namespace/:name/:storageclass"
 	NodeHealthPath                       = "/api/nodehealth"
 	NodePodBindingAllPath                = "/api/binding"
+	NodePodBindingSpecified              = "/api/binding/:namespace/:name"
 	PVDynamicAllocate                    = "/api/dynamic/allocatePV"
 	ReplicasetPath                       = "/api/replicaset"
 	ReplicasetPathNamespace              = "/api/replicaset/:namespace"
@@ -64,6 +65,6 @@ const (
 	FunctionPathNamespace = "/api/function/:namespace"
 	FunctionPathSpecified = "/api/function/:namespace/:name"
 
-	EventPath 		   = "/api/event"
+	EventPath          = "/api/event"
 	EventPathSpecified = "/api/event/:name"
 )
