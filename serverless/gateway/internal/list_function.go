@@ -77,8 +77,11 @@ func FunctionHandlerOnList() error {
 			}
 			//重置QPSCounter为0
 			ServerlessGatewayInstance.functions[name].QPSCounter.Store(0)
-			ServerlessGatewayInstance.functions[name].ScaleTarget = replicas
-			if replicas != tmp {
+			if function.Spec.MinReplicas == 0 {
+				ServerlessGatewayInstance.functions[name].ScaleTarget = replicas
+			}
+			if replicas != tmp && function.Spec.MinReplicas == 0 {
+				//只有当MinReplicas为0时才会进行扩缩容
 				replicaset.Spec.Replicas = replicas
 				url := route.Prefix + route.ReplicasetScale
 				_, err = utils.PutWithJson(url, replicaset)
