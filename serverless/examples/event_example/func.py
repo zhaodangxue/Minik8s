@@ -17,6 +17,7 @@ def main(params):
     res["last_invoke"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     res = str(res)
     r.set(func_log_key, res)
+    return {"res":res}
 
 if __name__ == "__main__":
     main({})

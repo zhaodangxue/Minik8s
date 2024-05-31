@@ -1,0 +1,14 @@
+{
+  "apiVersion": "/api/v1",
+  "kind": "Workflow",
+  "metadata": {
+    "namespace": "default",
+    "name": "event-test"
+  },
+  "begin": "event_example",
+  "nodes": {
+    "event_example": {
+      "type": "function"
+    }
+  }
+}

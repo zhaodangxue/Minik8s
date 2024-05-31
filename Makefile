@@ -34,7 +34,7 @@ deploy_no_bin:
 	./scripts/deploy_to_worker.sh no_bin
 	echo "Application successfully deployed."
 
-deploy: build_cgo0
+deploy: clean build_cgo0
 	echo "Deploying application..."
 	./scripts/deploy_to_master.sh
 	./scripts/deploy_to_worker.sh
