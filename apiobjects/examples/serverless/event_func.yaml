@@ -9,5 +9,5 @@ spec:
   targetQPSPerReplica: 3
 buildOptions:
   extraCommands:
-  - pip install redis
+  - "RUN pip install redis"
   functionFileDir: /opt/minik8s/functions/event_example/

@@ -3,7 +3,7 @@
 # This script is used to run the master node of the cluster
 
 timestamp=$(date +%Y-%m-%d-%H-%M-%S)
-log_path="/logs/minik8s/$timestamp"
+log_path="/opt/minik8s/logs/$timestamp"
 mkdir -p $log_path
 
 declare -A components_args

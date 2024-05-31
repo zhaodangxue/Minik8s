@@ -3,7 +3,7 @@ from datetime import datetime
 
 def main(params):
     # 更新redis
-    redis_url = "redis://127.0.0.1:6379"
+    redis_url = "redis://192.168.1.12:6379"
     func_log_key = "event-example-status"
 
     r = redis.StrictRedis.from_url(redis_url)
