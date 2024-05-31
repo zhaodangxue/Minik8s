@@ -24,6 +24,10 @@ func EventHandlerOnList() (err error) {
 			utils.Error("Unmarshal event failed: ", err)
 			continue
 		}
+		_, ok := events.EventStorageInstance.Events.Load(event.Name)
+		if ok {
+			continue
+		}
 		err = createEvent(&event)
 		if err != nil {
 			utils.Error("Create event failed: ", err)
