@@ -156,8 +156,8 @@ func HandleDelete(data []byte) {
 }
 
 func HandleUpdate(data []byte) {
-	//utils.Info("Handle Function Update")
-	utils.Error("Handle Function Update Don't Support")
+	utils.Info("Handle Function Update")
+	//utils.Error("Handle Function Update Don't Support")
 
 	function := &apiobjects.Function{}
 	err := json.Unmarshal(data, function)
@@ -169,7 +169,7 @@ func HandleUpdate(data []byte) {
 		"app": "function-" + function.ObjectMeta.Name + "-label",
 	}
 
-	// 1. create the replicaset
+	// 1. update the replicaset
 	replicaset := apiobjects.Replicaset{
 		Object: apiobjects.Object{
 			TypeMeta: apiobjects.TypeMeta{
@@ -212,27 +212,27 @@ func HandleUpdate(data []byte) {
 	url := route.Prefix + route.ReplicasetPath
 	utils.ApplyApiObject(url, replicaset)
 
-	// 2. create the service
-	service := apiobjects.Service{
-		APIVersion: "v1",
-		Data: apiobjects.MetaData{
-			Name:      "function-" + function.ObjectMeta.Name + "-service",
-			Namespace: function.ObjectMeta.Namespace,
-		},
-		Spec: apiobjects.ServiceSpec{
-			Selector: labels,
-			Type:     apiobjects.ServiceTypeClusterIP,
-			Ports: []apiobjects.ServicePort{
-				{
-					Name:       "function-port",
-					Protocol:   apiobjects.ProtocolTCP,
-					Port:       8080,
-					TargetPort: "function-port",
-				},
-			},
-		},
-	}
-	url = route.Prefix + route.ServiceApplyPath
-	utils.ApplyApiObject(url, service)
+	// // 2. create the service
+	// service := apiobjects.Service{
+	// 	APIVersion: "v1",
+	// 	Data: apiobjects.MetaData{
+	// 		Name:      "function-" + function.ObjectMeta.Name + "-service",
+	// 		Namespace: function.ObjectMeta.Namespace,
+	// 	},
+	// 	Spec: apiobjects.ServiceSpec{
+	// 		Selector: labels,
+	// 		Type:     apiobjects.ServiceTypeClusterIP,
+	// 		Ports: []apiobjects.ServicePort{
+	// 			{
+	// 				Name:       "function-port",
+	// 				Protocol:   apiobjects.ProtocolTCP,
+	// 				Port:       8080,
+	// 				TargetPort: "function-port",
+	// 			},
+	// 		},
+	// 	},
+	// }
+	// url = route.Prefix + route.ServiceApplyPath
+	// utils.ApplyApiObject(url, service)
 
 }
