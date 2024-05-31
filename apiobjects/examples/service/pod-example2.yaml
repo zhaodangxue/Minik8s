@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod2
+  namespace: default
+  labels:
+    app: hello
+spec:
+  restartPolicy: Always
+  containers:
+    - name: helloContainer
+      image: ubuntu:20.04
+      ports:
+        - name: hello
+          containerPort: 6810
+          hostPort: 6810
+      volumeMounts:
+        - name: volume
+          mountPath: /data
+  volumes:
+    - name: volume
+      hostPath:
+        path: /pod

@@ -1,8 +1,10 @@
 package ctlutils
 
 import (
+	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+	"minik8s/apiserver/src/etcd"
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
 	"strconv"
@@ -182,19 +184,38 @@ func PrintServiceTable() error {
 	}
 	tbl := ServiceTbl()
 	for _, svc := range svcs {
+		edpts := []*apiobjects.Endpoint{}
+		values, err := etcd.Get_prefix("/api/endpoint/" + svc.Data.Name + "/" + svc.Data.Namespace)
+		if err != nil {
+			fmt.Println(err)
+		}
+		var PodIp string
+		for _, value := range values {
+			var endpoint apiobjects.Endpoint
+			err := json.Unmarshal([]byte(value), &endpoint)
+			if err != nil {
+				fmt.Println(err)
+			}
+			PodIp += endpoint.Spec.DestIP + ":" + strconv.FormatInt(int64(endpoint.Spec.DestPort),10) + ","
+			edpts = append(edpts, &endpoint)
+		}
 		var clusterIP string
-		var externalIP string
 		var ports string
+		var selector string
+		for key, value := range svc.Spec.Selector {
+			selector += key + ":" + value + ", "
+		}
+
 		for _, p := range svc.Spec.Ports {
-			ports += p.Name + ":" + strconv.FormatInt(int64(p.Port), 10) + "/" + string(p.Protocol) + ", "
+			ports += p.Name + ":" + strconv.FormatInt(int64(p.Port), 10) + "/ TargetPort:" + p.TargetPort + ", "
 		}
 		if svc.Status.ClusterIP == "" {
 			clusterIP = "<none>"
 		} else {
 			clusterIP = svc.Status.ClusterIP
 		}
-		externalIP = "<none>"
-		tbl.AddRow(svc.Data.Name, svc.Data.Namespace, svc.Spec.Type, clusterIP, externalIP, ports)
+
+		tbl.AddRow(svc.Data.Name, selector, svc.Spec.Type, clusterIP, ports, PodIp)
 	}
 	tbl.Print()
 	return nil
