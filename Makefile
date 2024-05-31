@@ -25,6 +25,12 @@ install_dev:
 	rm -rf $(DEV_INSTALL_DIR)/*
 	cp -r build/* $(DEV_INSTALL_DIR)
 
+deploy:
+	echo "Deploying application..."
+	./scripts/deploy_to_master.sh
+	./scripts/deploy_to_worker.sh
+	echo "Application successfully deployed."
+
 _build: prepare bin_targets scripts yamls serverless
 
 prepare: deps
@@ -39,7 +45,7 @@ deps:
 clean:
 	rm -rf $(BUILDDIR)
 
-.PHONY: all build _build prepare deps 
+.PHONY: all build _build prepare deps clean install_dev deploy build_dev
 
 ##### Binaries #####
 
