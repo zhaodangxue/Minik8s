@@ -38,6 +38,8 @@ func TestPodCreate(t *testing.T) {
 					},
 				},
 			},
+			MemLimit: 200 * 1024 * 1024, // 200MB
+			CpuLimit: 0.5,	// 50%
 		},
 		Status: apiobjects.PodState{},
 	}

@@ -33,8 +33,15 @@ func getSandboxConfig(pod *apiobjects.Pod) (sandboxConfig cri.PodSandboxConfig) 
 		}
 	}
 
+	const CpuPeriod = 1000000
+
 	linux := cri.LinuxPodSandboxConfig{}
 	linux.CgroupParent = "/kubelet/pod-" + pod.ObjectMeta.UID
+	linux.Resources = &cri.LinuxContainerResources{
+		CpuPeriod:  CpuPeriod,
+		CpuQuota:   int64(float32(CpuPeriod) * pod.Spec.CpuLimit),
+		MemoryLimitInBytes: pod.Spec.MemLimit,
+	}
 
 	sandboxConfig = cri.PodSandboxConfig{
 		Metadata: &cri.PodSandboxMetadata{
