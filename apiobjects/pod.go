@@ -13,10 +13,10 @@ type PodSpec struct {
 	NodeSelector map[string]string `yaml:"nodeSelector"`
 	// 限制内存的使用量, 单位是字节
 	// 0表示不限制
-	MemLimit	 int64            `yaml:"memLimit, omitempty"`
+	MemLimit	 int64            `yaml:"memLimit,omitempty"`
 	// 限制CPU的使用率
 	// 0表示不限制
-	CpuLimit	 float32            `yaml:"cpuLimit, omitempty"`
+	CpuLimit	 float32            `yaml:"cpuLimit,omitempty"`
 }
 
 func (c *Pod) AddLabel(key, value string) {
