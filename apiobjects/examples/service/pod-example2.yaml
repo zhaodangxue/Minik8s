@@ -9,11 +9,11 @@ spec:
   restartPolicy: Always
   containers:
     - name: helloContainer
-      image: ubuntu:20.04
+      image: strm/helloworld-http
       ports:
         - name: hello
-          containerPort: 6810
-          hostPort: 6810
+          containerPort: 80
+          hostPort: 81
       volumeMounts:
         - name: volume
           mountPath: /data

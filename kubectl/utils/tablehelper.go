@@ -58,7 +58,7 @@ func ReplicasetTbl() table.Table {
 func ServiceTbl() table.Table {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("NAME", "NameSpace", "TYPE", "CLUSTER-IP", "EXTERNAL-IP", "PORT(S)")
+	tbl := table.New("NAME", "Selector", "TYPE", "CLUSTER-IP", "PORT(S)", "ENDPOINTS")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
@@ -206,7 +206,7 @@ func PrintServiceTable() error {
 		if err != nil {
 			fmt.Println(err)
 		}
-		var PodIp string
+		PodIp := ""
 		for _, value := range values {
 			var endpoint apiobjects.Endpoint
 			err := json.Unmarshal([]byte(value), &endpoint)
@@ -217,8 +217,8 @@ func PrintServiceTable() error {
 			edpts = append(edpts, &endpoint)
 		}
 		var clusterIP string
-		var ports string
-		var selector string
+	    ports := ""
+		selector := ""
 		for key, value := range svc.Spec.Selector {
 			selector += key + ":" + value + ", "
 		}
@@ -230,6 +230,10 @@ func PrintServiceTable() error {
 			clusterIP = "<none>"
 		} else {
 			clusterIP = svc.Status.ClusterIP
+		}
+	    
+		if PodIp == "" {
+			PodIp = "<none>"
 		}
 
 		tbl.AddRow(svc.Data.Name, selector, svc.Spec.Type, clusterIP, ports, PodIp)

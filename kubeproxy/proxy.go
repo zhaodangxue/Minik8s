@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"minik8s/apiobjects"
+	"minik8s/apiserver/src/route"
 	"minik8s/utils"
 
 	//"minik8s/utils"
@@ -178,4 +179,29 @@ func (e ProxyEndpointHandler) HandleUpdate(message []byte) {
 
 func (e ProxyEndpointHandler) GetType() string {
 	return "proxyendpointHandler"
+}
+
+func CheckAllServiceAndEndpoint(){
+	utils.Info("CheckAllServiceandEndpoint")
+	svc_list := []*apiobjects.Service{}
+	err := utils.GetUnmarshal(route.Prefix+"/api/get/allservices", &svc_list)
+	if err != nil {
+		utils.Error("get svc list error")
+	}
+
+	// edptList := []*apiobjects.Endpoint{}
+	// err = utils.GetUnmarshal(route.Prefix + route.GetAllEndpointsPath, &edptList)
+	// if err != nil {
+	// 	utils.Info("[ServiceController] get all endpoints error")
+	// }
+	for _, svc := range svc_list {
+		for _, p := range svc.Spec.Ports {
+			ipvs.AddService(svc.Status.ClusterIP, uint16(p.Port))
+	
+			if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
+				ipvs.AddService(utils.GetLocalIP(), uint16(p.Port))
+			}
+		}
+	}
+
 }
