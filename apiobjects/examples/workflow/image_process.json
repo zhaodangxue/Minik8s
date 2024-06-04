@@ -1,0 +1,47 @@
+{
+    "apiVersion": "/api/v1",
+    "kind": "Workflow",
+    "metadata": {
+      "namespace": "default",
+      "name": "image_process"
+    },
+    "begin": "extract_meta",
+    "nodes": {
+      "extract_meta": {
+        "type": "function",
+        "next": "judge"
+      },
+      "judge": {
+        "type": "branch",
+        "branchs": [
+          {
+            "variable": "image_size/width",
+            "IntegerGreaterThan": 500,
+            "next": "fail_handler"
+          },
+          {
+            "variable": "image_size/height",
+            "IntegerGreaterThan": 500,
+            "next": "fail_handler"
+          },
+          {
+            "variable": "image_size/height",
+            "IntegerGreaterThan": 0, 
+            "next": "detect_cat",
+            "//": "tricky way to always select last branch"
+          }
+        ]
+      },
+      "detect_cat": {
+        "type": "function",
+        "next": "thumbnail"
+      },
+      "thumbnail": {
+        "type": "function"
+      },
+      "fail_handler": {
+        "type": "function"
+      }
+    }
+  }
+  

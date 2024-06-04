@@ -7,13 +7,21 @@ params:{
     couchdb_username: "",
     couchdb_password: "",
     id: "",
-    new_doc_id: ""
+    new_doc_id: "",
+    image_size: {
+        width: 0,
+        height: 0
+    }
 }
 res:{
     couchdb_username: "",
     couchdb_password: "",
     id: "",
-    new_doc_id: ""
+    new_doc_id: "",
+    image_size: {
+        width: 0,
+        height: 0
+    }
 }
 """
 
