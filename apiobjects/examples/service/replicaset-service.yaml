@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: function-get_ip-service
+  namespace: default
+spec:
+  selector:
+    app: function-get_ip-label
+  type: NodePort
+  ports:
+    - name: function-port
+      protocol: TCP
+      port: 23457 # 对外暴露的端口
+      targetPort: function-port # 转发的端口的名字，pod对应的端口名字
