@@ -8,6 +8,7 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/etcd"
 	"minik8s/apiserver/src/route"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,7 +24,9 @@ func NodeGetHandler(c *gin.Context) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		nodes = append(nodes, &node)
+		if node.TypeMeta.Kind == "Node" {
+		   nodes = append(nodes, &node)
+		}
 	}
 	c.JSON(http.StatusOK, nodes)
 }
