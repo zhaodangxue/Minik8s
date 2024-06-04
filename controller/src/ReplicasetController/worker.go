@@ -67,12 +67,15 @@ func (c *worker) GetPodsByReplicasetUID() []*apiobjects.Pod {
 
 func (c *worker) NumPods(pods []*apiobjects.Pod) (int, float32, float32) {
 	c.mtx.Lock()
-	count := len(pods)
+	count := 0
 	var cpu float32
 	var mem float32
 	for _, pod := range pods {
-		cpu += pod.Stats.CpuUsage.GetCpuUsage()
-		mem += pod.Stats.MemoryUsage.GetMemUsage()
+		if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING {
+			count++
+			cpu += pod.Stats.CpuUsage.GetCpuUsage()
+			mem += pod.Stats.MemoryUsage.GetMemUsage()
+		}
 	}
 	var AverageCPUPercent float32
 	var AverageMemPercent float32

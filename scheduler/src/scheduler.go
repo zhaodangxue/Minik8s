@@ -47,6 +47,10 @@ func (s *scheduler) SendScheduleInfoToApiServer(pod *apiobjects.Pod, node *apiob
 	if err != nil {
 		fmt.Println(err)
 	}
+	_, err = utils.PutWithJson(route.Prefix+route.PodPath+"/"+pod.Namespace+"/"+pod.Name, pod)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 func (s *scheduler) selectStrategy(strategy byte) {
 	s.strategySelector = sched_utils.NewStrategy(strategy)

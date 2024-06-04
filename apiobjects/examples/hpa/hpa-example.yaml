@@ -10,7 +10,7 @@ spec:
     apiVersion: v1
     kind: ReplicaSet # we only support replicaSet now
     metadata:
-      name: rs
+      name: function-get_ip-rs
   metrics:
-    CPUUtilizationPercentage: 5
-  scaleInterval: 25
+    CPUUtilizationPercentage: 70
+  scaleInterval: 15
