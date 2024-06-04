@@ -25,7 +25,10 @@
             "next": "fail_handler"
           },
           {
-            "next": "detect_cat"
+            "variable": "image_size/height",
+            "IntegerGreaterThan": 0, 
+            "next": "detect_cat",
+            "//": "tricky way to always select last branch"
           }
         ]
       },
