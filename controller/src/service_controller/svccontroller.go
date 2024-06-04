@@ -202,6 +202,10 @@ func (s SvcEndpointHandler) HandleUpdate(message []byte) {
 	//遍历service列表，检查所有的service，如果有对应这个Pod的endpoint,且Pod更新之后不符合selector条件，则删除对应的endpoints
 	//                                如果没有对应这个Pod的endpoint,但Pod更新之后符合selector条件，则创建对应的endpoints
 	for _, svc := range svcList {
+		if _,ok := svcToEndpoints[svc.Status.ClusterIP];!ok {
+			utils.Error("[ServiceController] HandleUpdate error: ", svc.Status.ClusterIP)
+			return
+		}
 		exist := isEndpointExist(svcToEndpoints[svc.Status.ClusterIP], pod.Status.PodIP)
 		fit := IsLabelEqual(svc.Spec.Selector, pod.Labels)
 		if !exist && fit {
