@@ -69,6 +69,7 @@ func PodApplyHandler(c *gin.Context) {
 		pod.ObjectMeta.UID = utils.NewUUID()
 	}
 	pod.CreationTimestamp = time.Now()
+	pod.Status.PodPhase = apiobjects.PodPhase_POD_CREATED
 	for _, volume := range pod.Spec.Volumes {
 		if volume.NFS != nil {
 			volume.NFS.BindingPath = "/home/kubelet/volumes/" + utils.NewUUID()
@@ -210,11 +211,11 @@ func ServiceCreateHandler(c *gin.Context) {
 	if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
 		etcd.Put("/api/nodeport/service/"+svc.Data.Namespace+"/"+svc.Data.Name, string(svcJson))
 		// var pods []*apiobjects.Pod
-	    // values, err := etcd.Get_prefix(route.PodPath)
-	    // if err != nil {
+		// values, err := etcd.Get_prefix(route.PodPath)
+		// if err != nil {
 		//     fmt.Println(err)
-	    // }
-	    // for _, value := range values {
+		// }
+		// for _, value := range values {
 		//     utils.Info("pod value: ", value)
 		//     var pod apiobjects.Pod
 		//     err := json.Unmarshal([]byte(value), &pod)
@@ -222,7 +223,7 @@ func ServiceCreateHandler(c *gin.Context) {
 		// 	     fmt.Println(err)
 		//     }
 		//     pods = append(pods, &pod)
-	    // }
+		// }
 		// for _, pod := range pods{
 		// 	//筛选符合selector条件的pod
 		// 	if pod.Status.PodPhase == apiobjects.PodPhase_POD_RUNNING && IsLabelEqual(svc.Spec.Selector, pod.Labels) {
@@ -232,6 +233,7 @@ func ServiceCreateHandler(c *gin.Context) {
 	}
 	c.String(http.StatusOK, "ok")
 }
+
 // func createEndpoints(svc *apiobjects.Service, pod *apiobjects.Pod) {
 // 	for _, port := range svc.Spec.Ports {
 // 		dstPort := findDstPort(port.TargetPort, pod.Spec.Containers)
@@ -268,7 +270,6 @@ func ServiceCreateHandler(c *gin.Context) {
 // 	}
 // }
 
-
 func ServiceUpdateHandler(c *gin.Context) {
 	svc := apiobjects.Service{}
 	action := apiobjects.Update
@@ -296,7 +297,6 @@ func ServiceUpdateHandler(c *gin.Context) {
 	c.String(http.StatusOK, "ok")
 }
 
-
 func EndpointCreateHandler(c *gin.Context) {
 	endpoint := apiobjects.Endpoint{}
 	action := apiobjects.Create
@@ -312,9 +312,9 @@ func EndpointCreateHandler(c *gin.Context) {
 	if endpoint.Data.Namespace == "" {
 		endpoint.Data.Namespace = "default"
 	}
-	if endpoint.Spec.SvcIP ==  "HostIP" {
+	if endpoint.Spec.SvcIP == "HostIP" {
 		log.Info("[EndpointCreateHandler] endpoint.Spec.SvcIP is HostIP")
-		url := "/api/nodeport/endpoint/" + endpoint.ServiceName + "/" + endpoint.Data.Namespace+"/"+endpoint.Data.Name
+		url := "/api/nodeport/endpoint/" + endpoint.ServiceName + "/" + endpoint.Data.Namespace + "/" + endpoint.Data.Name
 		val, _ := etcd.Get(url)
 		if val != "" {
 			c.String(http.StatusOK, "endpoint/"+endpoint.Data.Namespace+"/"+endpoint.Data.Name+"/already exists")
@@ -328,7 +328,7 @@ func EndpointCreateHandler(c *gin.Context) {
 		}
 		topicMessageJson, _ := json.Marshal(topicMessage)
 		listwatch.Publish(global.EndpointTopic(), string(topicMessageJson))
-        return
+		return
 	}
 	url := endpoint.GetObjectPath()
 	val, _ := etcd.Get(url)
@@ -408,7 +408,7 @@ func DnsApplyHandler(c *gin.Context) {
 		}
 	}
 
-    // 2. save the DNSRecord and the path in the etcd
+	// 2. save the DNSRecord and the path in the etcd
 	url_dns := dnsRecord.GetObjectPath()
 	val, _ := etcd.Get(url_dns)
 	if val != "" {

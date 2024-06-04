@@ -5,6 +5,7 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/api"
 	"minik8s/apiserver/src/etcd"
+	"minik8s/apiserver/src/route"
 	"minik8s/global"
 	"minik8s/listwatch"
 	"minik8s/utils"
@@ -93,4 +94,29 @@ func NodeHealthHandler(c *gin.Context) {
 	listwatch.Publish(global.NodeStateTopic(), string(message_payload))
 
 	c.JSON(http.StatusOK, response)
+}
+func PodUpdateHandler(c *gin.Context) {
+	name := c.Param("name")
+	namespace := c.Param("namespace")
+	val, _ := etcd.Get(route.PodPath + "/" + namespace + "/" + name)
+	if val == "" {
+		c.String(http.StatusNotFound, "Pod not found")
+		return
+	}
+	pod := apiobjects.Pod{}
+	err := json.Unmarshal([]byte(val), &pod)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if pod.Status.PodPhase == apiobjects.PodPhase_POD_CREATED {
+		pod.Status.PodPhase = apiobjects.PodPhase_POD_PENDING
+	}
+	podJson, err := json.Marshal(pod)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	etcd.Put(pod.GetObjectPath(), string(podJson))
+	c.JSON(http.StatusOK, pod)
 }
