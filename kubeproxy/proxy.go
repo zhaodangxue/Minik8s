@@ -113,17 +113,17 @@ func (p ProxyServiceHandler) HandleDelete(message []byte) {
 		ipvs.DeleteService(key)
 
 		if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
-			var IP string
-			if utils.GetLocalIP() == "192.168.1.12" {
-				IP = "10.119.13.186"
+			// var IP string
+			// if utils.GetLocalIP() == "192.168.1.12" {
+			// 	IP = "10.119.13.186"
 				
-			}else if utils.GetLocalIP() == "192.168.1.14" {
-				IP = "10.119.13.140"
+			// }else if utils.GetLocalIP() == "192.168.1.14" {
+			// 	IP = "10.119.13.140"
 				
-			}else if utils.GetLocalIP() == "192.168.1.15"{
-				IP = "10.119.13.254"
-			}
-			key := IP + ":" + strconv.Itoa(int(p.Port))
+			// }else if utils.GetLocalIP() == "192.168.1.15"{
+			// 	IP = "10.119.13.254"
+			// }
+			key := utils.GetLocalIP() + ":" + strconv.Itoa(int(p.Port))
 			ipvs.DeleteService(key)
 		}
 	}
@@ -137,17 +137,17 @@ func (p ProxyServiceHandler) HandleUpdate(message []byte) {
 		ipvs.AddService(svc.Status.ClusterIP, uint16(p.Port))
 
 		if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
-			var IP string
-			if utils.GetLocalIP() == "192.168.1.12" {
-				IP = "10.119.13.186"
+			// var IP string
+			// if utils.GetLocalIP() == "192.168.1.12" {
+			// 	IP = "10.119.13.186"
 				
-			}else if utils.GetLocalIP() == "192.168.1.14" {
-				IP = "10.119.13.140"
+			// }else if utils.GetLocalIP() == "192.168.1.14" {
+			// 	IP = "10.119.13.140"
 				
-			}else if utils.GetLocalIP() == "192.168.1.15"{
-				IP = "10.119.13.254"
-			}
-			ipvs.AddService(IP, uint16(p.Port))
+			// }else if utils.GetLocalIP() == "192.168.1.15"{
+			// 	IP = "10.119.13.254"
+			// }
+			ipvs.AddService(utils.GetLocalIP(), uint16(p.Port))
 		}
 	}
 }
@@ -165,18 +165,18 @@ func (e ProxyEndpointHandler) HandleCreate(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
 	if edpt.Spec.SvcIP == "HostIP" {
-		var IP string
-		if utils.GetLocalIP() == "192.168.1.12" {
-			IP = "10.119.13.186"
+		// var IP string
+		// if utils.GetLocalIP() == "192.168.1.12" {
+		// 	IP = "10.119.13.186"
 			
-		}else if utils.GetLocalIP() == "192.168.1.14" {
-			IP = "10.119.13.140"
+		// }else if utils.GetLocalIP() == "192.168.1.14" {
+		// 	IP = "10.119.13.140"
 			
-		}else if utils.GetLocalIP() == "192.168.1.15"{
-			IP = "10.119.13.254"
-		}
+		// }else if utils.GetLocalIP() == "192.168.1.15"{
+		// 	IP = "10.119.13.254"
+		// }
 		log.Info("[proxy] Add HostIP Endpoint: svcIP:", edpt.Spec.SvcIP, "SvcPort:", edpt.Spec.SvcPort, "DestIP:", edpt.Spec.DestIP, "DestPort:", edpt.Spec.DestPort)
-		edpt.Spec.SvcIP = IP
+		edpt.Spec.SvcIP = utils.GetLocalIP()
 		ipvs.AddService(edpt.Spec.SvcIP, uint16(edpt.Spec.SvcPort))
 		key := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
 		ipvs.AddEndpoint(key, edpt.Spec.DestIP, uint16(edpt.Spec.DestPort))
@@ -192,17 +192,17 @@ func (e ProxyEndpointHandler) HandleDelete(message []byte) {
 	edpt := &apiobjects.Endpoint{}
 	edpt.UnMarshalJSON(message)
 	if edpt.Spec.SvcIP == "HostIP" {
-		var IP string
-		if utils.GetLocalIP() == "192.168.1.12" {
-			IP = "10.119.13.186"
+		// var IP string
+		// if utils.GetLocalIP() == "192.168.1.12" {
+		// 	IP = "10.119.13.186"
 			
-		}else if utils.GetLocalIP() == "192.168.1.14" {
-			IP = "10.119.13.140"
+		// }else if utils.GetLocalIP() == "192.168.1.14" {
+		// 	IP = "10.119.13.140"
 			
-		}else if utils.GetLocalIP() == "192.168.1.15"{
-			IP = "10.119.13.254"
-		}
-		edpt.Spec.SvcIP = IP
+		// }else if utils.GetLocalIP() == "192.168.1.15"{
+		// 	IP = "10.119.13.254"
+		// }
+		edpt.Spec.SvcIP = utils.GetLocalIP()
 		svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
 		dstKey := edpt.Spec.DestIP + ":" + strconv.Itoa(int(edpt.Spec.DestPort))
 		ipvs.DeleteEndpoint(svcKey, dstKey)
@@ -239,17 +239,17 @@ func CheckAllServiceAndEndpoint(){
 			ipvs.AddService(svc.Status.ClusterIP, uint16(p.Port))
 	
 			if svc.Spec.Type == apiobjects.ServiceTypeNodePort {
-				var IP string
-				if utils.GetLocalIP() == "192.168.1.12" {
-					IP = "10.119.13.186"
+				// var IP string
+				// if utils.GetLocalIP() == "192.168.1.12" {
+				// 	IP = "10.119.13.186"
 					
-				}else if utils.GetLocalIP() == "192.168.1.14" {
-					IP = "10.119.13.140"
+				// }else if utils.GetLocalIP() == "192.168.1.14" {
+				// 	IP = "10.119.13.140"
 					
-				}else if utils.GetLocalIP() == "192.168.1.15"{
-					IP = "10.119.13.254"
-				}
-				ipvs.AddService(IP, uint16(p.Port))
+				// }else if utils.GetLocalIP() == "192.168.1.15"{
+				// 	IP = "10.119.13.254"
+				// }
+				ipvs.AddService(utils.GetLocalIP(), uint16(p.Port))
 			}
 		}
 	}
