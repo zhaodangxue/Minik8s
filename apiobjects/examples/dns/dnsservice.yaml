@@ -6,9 +6,9 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: nginx
+    app: hello
   ports:
-    - name: service-port1
-      port: 22222
+    - name: hello-port
+      port: 1234
       targetPort: hello
       protocol: TCP 

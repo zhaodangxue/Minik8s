@@ -6,9 +6,9 @@ host: minik8s.com
 paths:
   - service: dns-service
     pathName: path1
-    port: 22222
+    port: 1234
   - service: dns-service2
     pathName: path2
-    port: 34567
+    port: 2345
 
 
