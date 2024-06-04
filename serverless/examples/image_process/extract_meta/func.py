@@ -13,7 +13,11 @@ res:{
     couchdb_username: "",
     couchdb_password: "",
     id: "",
-    new_doc_id: ""
+    new_doc_id: "",
+    image_size: {
+        width: 0,
+        height: 0
+    }
 }
 """
 
@@ -42,4 +46,5 @@ def main(params):
 
     res = params
     res['new_doc_id'] = target_doc['_id']
+    res['image_size'] = {'width': img.shape[1], 'height': img.shape[0]}
     return res
