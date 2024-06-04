@@ -206,6 +206,7 @@ func (e ProxyEndpointHandler) HandleDelete(message []byte) {
 		svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
 		dstKey := edpt.Spec.DestIP + ":" + strconv.Itoa(int(edpt.Spec.DestPort))
 		ipvs.DeleteEndpoint(svcKey, dstKey)
+		return
 	}
 
 	svcKey := edpt.Spec.SvcIP + ":" + strconv.Itoa(int(edpt.Spec.SvcPort))
