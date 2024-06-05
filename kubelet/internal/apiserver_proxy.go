@@ -47,3 +47,12 @@ func GetAllBindings() (bindings []apiobjects.NodePodBinding, err error) {
 	}
 	return
 }
+
+func GetPodByPath(podPath string) (pod *apiobjects.Pod, err error) {
+	// Get pod from apiserver
+	err = utils.GetUnmarshal(route.Prefix+podPath, &pod)
+	if err != nil {
+		return
+	}
+	return
+}

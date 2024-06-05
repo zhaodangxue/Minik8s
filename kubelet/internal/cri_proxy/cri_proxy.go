@@ -166,6 +166,7 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 }
 
 func DeletePod(podSandboxId string) (err error) {
+	utils.Info("DeletePod with ID:", podSandboxId)
 	ctx := getContext()
 
 	runtimeServiceClient, err := getRuntimeServiceClient()
