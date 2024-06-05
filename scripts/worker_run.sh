@@ -7,11 +7,8 @@ log_path="/opt/minik8s/logs/$timestamp"
 mkdir -p $log_path
 
 declare -A components_args
-components_args["apiserver"]=""
-components_args["scheduler"]=""
-components_args["ctlmgr"]="127.0.0.1:8080"
-components_args["sl_gtw"]=""
-components_args["proxy"]=""
+components_args["kubelet"]=""
+components_args["kubeproxy"]=""
 
 function killall(){
     echo "Killing all components..."
@@ -24,12 +21,12 @@ function killall(){
 
 function start(){
     killall
-    echo "Starting master node..."
+    echo "Starting worker node..."
     for component in "${!components_args[@]}"; do
         echo "Starting $component..."
         nohup ./$component ${components_args[$component]} > $log_path/$component.log 2>&1 &
     done
-    echo "Master node started"
+    echo "Worker node started"
 }
 
 # 定义主程序，如果第一个参数为start，则执行start函数，否则执行killall函数
