@@ -85,12 +85,15 @@ serverless_gateway:
 
 ##### Scripts #####
 
-scripts: master_run
+scripts: master_run worker_run
 
-.PHONY: scripts master_run
+.PHONY: scripts master_run worker_run
 
 master_run:
 	cp scripts/master_run.sh $(BINDIR)
+
+worker_run:
+	cp scripts/worker_run.sh $(BINDIR)
 
 ##### Yamls #####
 
