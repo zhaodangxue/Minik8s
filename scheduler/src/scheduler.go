@@ -14,6 +14,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const BindingCheckInterval = 5 * time.Second
+
 type Scheduler interface {
 	Start()
 	Schedule(pod *apiobjects.Pod) error
@@ -32,7 +34,7 @@ func New() Scheduler {
 func (s *scheduler) GetAllNodesFromApiServer() (nodes []*apiobjects.Node) {
 	err := utils.GetUnmarshal(route.Prefix+route.NodePath, &nodes)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 	utils.Info("get all nodes from apiserver")
 	return
@@ -45,11 +47,11 @@ func (s *scheduler) SendScheduleInfoToApiServer(pod *apiobjects.Pod, node *apiob
 	url := route.Prefix + "/api/binding" + "/" + pod.Namespace + "/" + pod.Name + "/" + node.ObjectMeta.Name
 	_, err := utils.PostWithJson(url, binding)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 	_, err = utils.PutWithJson(route.Prefix+route.PodPath+"/"+pod.Namespace+"/"+pod.Name, pod)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 }
 func (s *scheduler) selectStrategy(strategy byte) {
@@ -66,7 +68,7 @@ func (s *scheduler) handleStrategyChange(msg *redis.Message) {
 	case "MininumMemStrategy":
 		strategyType = sched_utils.MininumMemStrategy
 	default:
-		fmt.Println("unknow strategy")
+		utils.Error("unknow strategy")
 	}
 	s.selectStrategy(strategyType)
 	fmt.Printf("strategy change to %s\n", strategy)
@@ -99,7 +101,7 @@ func (s *scheduler) doSchedule(msg *redis.Message) {
 	topicMessage := apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 	if topicMessage.ActionType == apiobjects.Delete {
 		return
@@ -107,61 +109,52 @@ func (s *scheduler) doSchedule(msg *redis.Message) {
 	pod := &apiobjects.Pod{}
 	err = json.Unmarshal([]byte(topicMessage.Object), pod)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 	err = s.Schedule(pod)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 }
 func (s *scheduler) reSchedule(msg *redis.Message) {
 	topicMessage := apiobjects.TopicMessage{}
 	err := json.Unmarshal([]byte(msg.Payload), &topicMessage)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 	if topicMessage.ActionType == apiobjects.Delete {
 		nodepodbinding := &apiobjects.NodePodBinding{}
 		err = json.Unmarshal([]byte(topicMessage.Object), nodepodbinding)
 		if err != nil {
-			fmt.Println(err)
+			utils.Error(err)
 		}
 		pod := &nodepodbinding.Pod
 		err = s.Schedule(pod)
 		if err != nil {
-			fmt.Println(err)
+			utils.Error(err)
 		}
 	}
 	return
 }
 func (s *scheduler) CheckPodBinding() {
+	utils.Debug("check pod binding")
 	var pods []*apiobjects.Pod
 	err := utils.GetUnmarshal(route.Prefix+route.PodPath, &pods)
 	if err != nil {
-		fmt.Println(err)
+		utils.Error(err)
 	}
 	for _, pod := range pods {
 		url := route.Prefix + "/api/binding" + "/" + pod.Namespace + "/" + pod.Name
 		nodepodbinding := &apiobjects.NodePodBinding{}
 		err := utils.GetUnmarshal(url, nodepodbinding)
 		if err != nil {
-			fmt.Println(err)
+			utils.Error(err)
 		}
-		if nodepodbinding.Node.ObjectMeta.Name == "" {
-			time.Sleep(3 * time.Second)
-			err = utils.GetUnmarshal(url, nodepodbinding)
-			if err != nil {
-				fmt.Println(err)
-			}
-			if nodepodbinding.Node.ObjectMeta.Name == "" {
-				err = s.Schedule(pod)
-				if err != nil {
-					fmt.Println(err)
-				}
-			}
+		if nodepodbinding.Pod.ObjectMeta.Name == "" {
+			err = s.Schedule(pod)
 		}
 	}
-	time.Sleep(30 * time.Second)
+	time.Sleep(BindingCheckInterval)
 	return
 }
 func (s *scheduler) Start() {
