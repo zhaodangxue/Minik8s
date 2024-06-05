@@ -31,9 +31,13 @@ func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (p
 		utils.Error("SendHealthReport json.Unmarshal error:", err, "\nresponseStr:", responseStr)
 		return
 	}
-	
+
 	for _, podPath := range response.UnmatchedPodPaths {
-		podsToDelete = append(podsToDelete, pods[podPath])
+		pod, ok := pods[podPath]
+		if !ok {
+			continue
+		}
+		podsToDelete = append(podsToDelete, pod)
 	}
 
 	return
@@ -42,17 +46,12 @@ func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (p
 func GetAllBindings() (bindings []apiobjects.NodePodBinding, err error) {
 	// Get all bindings from apiserver
 	err = utils.GetUnmarshal(route.Prefix+route.NodePodBindingAllPath, &bindings)
-	if err != nil {
-		return
-	}
 	return
 }
 
-func GetPodByPath(podPath string) (pod *apiobjects.Pod, err error) {
+func GetBindingByPath(podRef *apiobjects.ObjectRef) (binding *apiobjects.NodePodBinding, err error) {
 	// Get pod from apiserver
-	err = utils.GetUnmarshal(route.Prefix+podPath, &pod)
-	if err != nil {
-		return
-	}
+	bindingPath := "/api/binding/" + podRef.Namespace + "/" + podRef.Name
+	err = utils.GetUnmarshal(route.Prefix+bindingPath, &binding)
 	return
 }

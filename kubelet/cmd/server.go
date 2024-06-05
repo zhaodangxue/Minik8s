@@ -178,11 +178,14 @@ func healthReport() {
 		if !ok {
 			utils.Warn("kubelet:healthReport running pod not in kubelet internal list: ", ref.GetObjectPath())
 			// Check if the pod is in the cluster
-			clusterPod, err := internal.GetPodByPath(ref.GetObjectPath())
+			clusterBinding, err := internal.GetBindingByPath(ref)
 			if err == nil {
 				utils.Warn("kubelet:healthReport pod not in kubelet internal list but in cluster: ", ref.GetObjectPath())
 				// Add the pod to kubelet internal list
-				server.Pods[ref.GetObjectPath()] = clusterPod
+				pod := clusterBinding.Pod
+				pod.Status.SandboxId = podStatus.Status.Id
+				pod.Status.HostIP = server.Node.Info.Ip
+				server.Pods[ref.GetObjectPath()] = &pod
 			} else {
 				// CHECK: 考虑不同的出错可能
 				utils.Warn("kubelet:healthReport pod not in kubelet internal list and not in cluster: ", ref.GetObjectPath())
