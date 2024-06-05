@@ -137,25 +137,26 @@ func (s *scheduler) reSchedule(msg *redis.Message) {
 	return
 }
 func (s *scheduler) CheckPodBinding() {
-	utils.Debug("check pod binding")
-	var pods []*apiobjects.Pod
-	err := utils.GetUnmarshal(route.Prefix+route.PodPath, &pods)
-	if err != nil {
-		utils.Error(err)
-	}
-	for _, pod := range pods {
-		url := route.Prefix + "/api/binding" + "/" + pod.Namespace + "/" + pod.Name
-		nodepodbinding := &apiobjects.NodePodBinding{}
-		err := utils.GetUnmarshal(url, nodepodbinding)
+	for{
+		utils.Debug("check pod binding")
+		var pods []*apiobjects.Pod
+		err := utils.GetUnmarshal(route.Prefix+route.PodPath, &pods)
 		if err != nil {
 			utils.Error(err)
 		}
-		if nodepodbinding.Pod.ObjectMeta.Name == "" {
-			err = s.Schedule(pod)
+		for _, pod := range pods {
+			url := route.Prefix + "/api/binding" + "/" + pod.Namespace + "/" + pod.Name
+			nodepodbinding := &apiobjects.NodePodBinding{}
+			err := utils.GetUnmarshal(url, nodepodbinding)
+			if err != nil {
+				utils.Error(err)
+			}
+			if nodepodbinding.Pod.ObjectMeta.Name == "" {
+				err = s.Schedule(pod)
+			}
 		}
+		time.Sleep(BindingCheckInterval)
 	}
-	time.Sleep(BindingCheckInterval)
-	return
 }
 func (s *scheduler) Start() {
 	go listwatch.Watch(global.StrategyUpdateTopic(), s.handleStrategyChange)
