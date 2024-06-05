@@ -4,22 +4,34 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var logLevel = logrus.DebugLevel
+
+var log *logrus.Logger = nil
+
+func init() {
+	if log == nil {
+		log = logrus.New()
+	}
+	log.SetLevel(logLevel)
+	log.SetReportCaller(true)
+}
+
 func Info(args ...interface{}) {
-	logrus.Info(args...);
+	log.Info(args...);
 }
 
 func Warn(args ...interface{}) {
-	logrus.Warn(args...);
+	log.Warn(args...);
 }
 
 func Debug(args ...interface{}) {
-	logrus.Debug(args...);
+	log.Debug(args...);
 }
 
 func Fatal(args ...interface{}) {
-	logrus.Fatal(args...);
+	log.Fatal(args...);
 }
 
 func Error(args ...interface{}) {
-	logrus.Error(args...);
+	log.Error(args...);
 }
