@@ -12,5 +12,5 @@ spec:
     metadata:
       name: function-get_ip-rs
   metrics:
-    CPUUtilizationPercentage: 50
+    MemoryUtilizationUsage: 0.2 # unit: GB
   scaleInterval: 30

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: pod3
+  name: pod4
   namespace: default
   labels:
     app: nginx
@@ -31,4 +31,4 @@ spec:
   volumes:
     - name: volume
       persistentVolumeClaim:
-        claimName: pvc-sc-example
+        claimName: pvc-sc-example1
