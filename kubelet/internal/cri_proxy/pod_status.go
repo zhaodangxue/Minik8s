@@ -133,7 +133,14 @@ func UpdatePodStatus(pod *apiobjects.Pod) {
 		utils.Error("getPodStats error:", err)
 		return
 	}
-	pod.Stats.CpuUsage.TotalNanos = podStats.Stats.Linux.Cpu.UsageNanoCores.Value
+
+	utils.Debug("UpdatePodStatus: Pod stats:", podStats)
+
+	if podStats.Stats.Linux.Cpu.UsageNanoCores == nil {
+		pod.Stats.CpuUsage.TotalNanos = 0
+	} else {
+		pod.Stats.CpuUsage.TotalNanos = podStats.Stats.Linux.Cpu.UsageNanoCores.Value
+	}
 	pod.Stats.MemoryUsage.WorkingSetBytes = podStats.Stats.Linux.Memory.WorkingSetBytes.Value
 	pod.Stats.MemoryUsage.AvailableBytes = podStats.Stats.Linux.Memory.AvailableBytes.Value
 	pod.Stats.MemoryUsage.UsageBytes = podStats.Stats.Linux.Memory.UsageBytes.Value
