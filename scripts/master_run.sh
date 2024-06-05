@@ -11,7 +11,7 @@ components_args["apiserver"]=""
 components_args["scheduler"]=""
 components_args["ctlmgr"]="127.0.0.1:8080"
 components_args["sl_gtw"]=""
-components_args["proxy"]=""
+components_args["kubeproxy"]=""
 
 function killall(){
     echo "Killing all components..."
