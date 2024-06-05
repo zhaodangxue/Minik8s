@@ -6,6 +6,7 @@ import (
 	"minik8s/apiserver/src/etcd"
 	"minik8s/global"
 	"minik8s/listwatch"
+	"minik8s/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,8 +28,8 @@ func NodeDeleteHandler(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "delete node namespace:%s name:%s failed", namespace, name)
 		return
 	}
-	pod := apiobjects.Pod{}
-	err = json.Unmarshal([]byte(value), &pod)
+	node := apiobjects.Node{}
+	err = json.Unmarshal([]byte(value), &node)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "unmarshal node failed")
 		return
@@ -47,6 +48,7 @@ func NodeDeleteHandler(c *gin.Context) {
 		binding := apiobjects.NodePodBinding{}
 		err := json.Unmarshal([]byte(value), &binding)
 		if err != nil {
+			utils.Warn("unmarshal binding failed")
 			c.String(http.StatusInternalServerError, "unmarshal binding failed")
 			// TODO: fault tolerance
 			return
@@ -55,14 +57,16 @@ func NodeDeleteHandler(c *gin.Context) {
 		if binding.Node.GetObjectPath() == nodePath {
 			err := etcd.Delete(binding.GetBindingPath())
 			if err != nil {
+				utils.Warn("delete binding failed")
 				c.String(http.StatusInternalServerError, "delete binding failed")
 				// TODO: fault tolerance
 				return
 			}
 		}
 		// 删除Pod中的状态
-		val, err := etcd.Get(pod.GetObjectPath())
+		val, err := etcd.Get(binding.Pod.GetObjectPath())
 		if err != nil {
+			utils.Warn("get pod failed")
 			c.String(http.StatusInternalServerError, "get pod failed")
 			return
 		}
@@ -70,16 +74,22 @@ func NodeDeleteHandler(c *gin.Context) {
 		pod := apiobjects.Pod{}
 		err = json.Unmarshal(valJson, &pod)
 		if err != nil {
+			utils.Warn("unmarshal pod failed")
 			c.String(http.StatusInternalServerError, "unmarshal pod failed")
 			return
 		}
-		pod.Status.PodIP = ""
-		pod.Status.PodPhase = apiobjects.PodPhase_POD_CREATED
-		pod.Status.HostIP = ""
-		pod.Status.SandboxId = ""
+		cleanUpPod(&pod)
+		valJson, err = json.Marshal(pod)
+		if err != nil {
+			utils.Warn("marshal pod failed")
+			c.String(http.StatusInternalServerError, "marshal pod failed")
+			return
+		}
+		etcd.Put(pod.GetObjectPath(), string(valJson))
 		// 发布Binding删除事件
 		bindingJson, err := json.Marshal(binding)
 		if err != nil {
+			utils.Warn("marshal binding failed")
 			c.String(http.StatusInternalServerError, "marshal binding failed")
 			return
 		}
@@ -89,6 +99,7 @@ func NodeDeleteHandler(c *gin.Context) {
 		}
 		messageJson, err := json.Marshal(message)
 		if err != nil {
+			utils.Warn("marshal message failed")
 			c.String(http.StatusInternalServerError, "marshal message failed")
 			return
 		}
@@ -96,4 +107,11 @@ func NodeDeleteHandler(c *gin.Context) {
 	}
 
 	// TODO: 发布Node删除事件
+}
+
+func cleanUpPod(pod *apiobjects.Pod) {
+	pod.Status.PodIP = ""
+	pod.Status.PodPhase = apiobjects.PodPhase_POD_CREATED
+	pod.Status.HostIP = ""
+	pod.Status.SandboxId = ""
 }
