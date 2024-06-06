@@ -15,17 +15,17 @@
         "type": "branch",
         "branchs": [
           {
-            "variable": "image_size/width",
-            "IntegerGreaterThan": 500,
+            "variable": "image_size.width",
+            "IntegerGreaterThan": 1000,
             "next": "fail_handler"
           },
           {
-            "variable": "image_size/height",
-            "IntegerGreaterThan": 500,
+            "variable": "image_size.height",
+            "IntegerGreaterThan": 1000,
             "next": "fail_handler"
           },
           {
-            "variable": "image_size/height",
+            "variable": "image_size.height",
             "IntegerGreaterThan": 0, 
             "next": "detect_cat",
             "//": "tricky way to always select last branch"
