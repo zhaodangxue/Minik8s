@@ -56,6 +56,7 @@ func getSandboxConfig(pod *apiobjects.Pod) (sandboxConfig cri.PodSandboxConfig) 
 		Linux:        &linux,
 		Windows:      nil,
 		PortMappings: portMappings,
+		LogDirectory: "/var/log/pods/pod_" + pod.ObjectMeta.Namespace + "_" + pod.ObjectMeta.Name,
 	}
 	return
 }
@@ -124,6 +125,7 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 			Labels:     container.Labels,
 			Mounts:     nil,
 			Devices:    nil,
+			LogPath:    "container/container_" + container.Name + ".log",
 		}
 
 		// VolumeMounts
