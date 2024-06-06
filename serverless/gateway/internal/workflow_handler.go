@@ -128,7 +128,7 @@ func JudgeReplicas(name string) string {
 		if err := json.Unmarshal([]byte(fun), &function); err != nil {
 			return err.Error()
 		}
-		replicaset.Spec.Replicas = function.Spec.MinReplicas
+		replicaset.Spec.Replicas = 1
 		url := route.Prefix + route.ReplicasetScale
 		_, err := utils.PutWithJson(url, replicaset)
 		if err != nil {
