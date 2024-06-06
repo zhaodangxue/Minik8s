@@ -11,10 +11,10 @@ app = Flask(__name__)
 def work():
     try:
         params = json.loads(request.get_data())
-    except json.JSONDecodeError:
-        params = ""
-    finally:
         res = func.main(params)
+    except Exception as e:
+        res = {'error': str(e)}
+    finally:
         return json.dumps(res)
 
 

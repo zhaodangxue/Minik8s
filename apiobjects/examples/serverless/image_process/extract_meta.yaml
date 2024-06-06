@@ -9,5 +9,5 @@ spec:
   targetQPSPerReplica: 50
 buildOptions:
   extraCommands:
-  - "RUN pip install couchdb opencv-python"
+  - "RUN pip install couchdb opencv-python-headless"
   functionFileDir: /opt/minik8s/functions/image_process/extract_meta/

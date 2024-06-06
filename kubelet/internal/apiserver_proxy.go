@@ -5,8 +5,10 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/api"
 	"minik8s/apiserver/src/route"
+	"minik8s/kubelet/internal/config"
 	"minik8s/utils"
 )
+
 
 func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (podsToDelete []*apiobjects.Pod, err error) {
 	// Send changed pods to apiserver
@@ -20,7 +22,7 @@ func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (p
 		request.Pods = append(request.Pods, pod)
 	}
 
-	responseStr, err := utils.PutWithJson(route.Prefix+route.NodeHealthPath, request)
+	responseStr, err := utils.PutWithJson(config.ServerUrl+route.NodeHealthPath, request)
 	if err != nil {
 		utils.Error("SendHealthReport PutWithJson error:", err)
 		return
@@ -45,13 +47,13 @@ func SendHealthReport(node *apiobjects.Node, pods map[string]*apiobjects.Pod) (p
 
 func GetAllBindings() (bindings []apiobjects.NodePodBinding, err error) {
 	// Get all bindings from apiserver
-	err = utils.GetUnmarshal(route.Prefix+route.NodePodBindingAllPath, &bindings)
+	err = utils.GetUnmarshal(config.ServerUrl+route.NodePodBindingAllPath, &bindings)
 	return
 }
 
 func GetBindingByPath(podRef *apiobjects.ObjectRef) (binding *apiobjects.NodePodBinding, err error) {
 	// Get pod from apiserver
 	bindingPath := "/api/binding/" + podRef.Namespace + "/" + podRef.Name
-	err = utils.GetUnmarshal(route.Prefix+bindingPath, &binding)
+	err = utils.GetUnmarshal(config.ServerUrl+bindingPath, &binding)
 	return
 }

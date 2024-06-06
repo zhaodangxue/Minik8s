@@ -4,6 +4,7 @@ import numpy as np
 
 """
 params:{
+    couchdb_host: "",
     couchdb_username: "",
     couchdb_password: "",
     id: "",
@@ -21,9 +22,9 @@ def get_image_from_attachment(db, doc_id, attachment_name):
     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
     return img
 
-def func(params):
+def main(params):
     # Connect to CouchDB
-    couch = couchdb.Server()
+    couch = couchdb.Server(params['couchdb_host'])
     couch.resource.credentials = (params['couchdb_username'], params['couchdb_password'])
     target_doc_id = params['new_doc_id']
     db = couch['images']

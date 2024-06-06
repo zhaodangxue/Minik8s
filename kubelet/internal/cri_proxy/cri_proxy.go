@@ -4,6 +4,7 @@ import (
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	"minik8s/global"
+	"minik8s/kubelet/internal/config"
 	"minik8s/utils"
 	"os/exec"
 
@@ -55,6 +56,7 @@ func getSandboxConfig(pod *apiobjects.Pod) (sandboxConfig cri.PodSandboxConfig) 
 		Linux:        &linux,
 		Windows:      nil,
 		PortMappings: portMappings,
+		LogDirectory: "/var/log/pods/pod_" + pod.ObjectMeta.Namespace + "_" + pod.ObjectMeta.Name,
 	}
 	return
 }
@@ -123,6 +125,7 @@ func CreatePod(pod *apiobjects.Pod) (err error) {
 			Labels:     container.Labels,
 			Mounts:     nil,
 			Devices:    nil,
+			LogPath:    "container/container_" + container.Name + ".log",
 		}
 
 		// VolumeMounts
@@ -253,7 +256,7 @@ func NFSMountLocal(server_ip string, server_path string, uuid string, DirName st
 	return
 }
 func PVMountLocal(pvcName string, pvcNamespace string, uuid string) (local_path string) {
-	url := route.Prefix + route.PVCPath + "/" + pvcNamespace + "/" + pvcName
+	url := config.ServerUrl + route.PVCPath + "/" + pvcNamespace + "/" + pvcName
 	var pvc apiobjects.PersistentVolumeClaim
 	err := utils.GetUnmarshal(url, &pvc)
 	if err != nil {

@@ -5,8 +5,8 @@ metadata:
   namespace: default
 spec:
   minReplicas: 1
-  maxReplicas: 5
-  targetQPSPerReplica: 20
+  maxReplicas: 2
+  targetQPSPerReplica: 50
 buildOptions:
   extraCommands:
   functionFileDir: /opt/minik8s/functions/image_process/fail_handler/

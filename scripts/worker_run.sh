@@ -7,8 +7,8 @@ log_path="/opt/minik8s/logs/$timestamp"
 mkdir -p $log_path
 
 declare -A components_args
-components_args["kubelet"]=""
-components_args["kubeproxy"]=""
+components_args["kubelet"]="192.168.1.12:8080"
+components_args["kubeproxy"]="192.168.1.12:8080"
 
 function killall(){
     echo "Killing all components..."

@@ -9,6 +9,7 @@ import (
 	cri "minik8s/kubelet/internal/cri_proxy"
 	"minik8s/listwatch"
 	"minik8s/utils"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -219,7 +220,20 @@ func healthReport() {
 
 }
 
+func getMasterPath() string {
+	// 从参数中获取服务器url
+	if (len(os.Args) != 2) {
+		utils.Error("Usage: ./kubelet <server-url>")
+		utils.Error("Example: ./kubelet 192.168.1.12:8080")
+		os.Exit(1)
+	}
+	serverUrl := "http://" + os.Args[1]
+	return serverUrl
+}
+
 func main() {
+
+	config.ServerUrl = getMasterPath()
 
 	serverInit()
 
