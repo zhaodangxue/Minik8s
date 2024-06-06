@@ -129,6 +129,7 @@ func JudgeReplicas(name string) string {
 			return err.Error()
 		}
 		replicaset.Spec.Replicas = 1
+		ServerlessGatewayInstance.functions[name].ScaleTarget = 1
 		url := route.Prefix + route.ReplicasetScale
 		_, err := utils.PutWithJson(url, replicaset)
 		if err != nil {
