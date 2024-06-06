@@ -60,27 +60,25 @@ func FunctionHandlerOnList() error {
 			TargetQps := function.Spec.TargetQPSPerReplica
 			CurrentQps := ServerlessGatewayInstance.functions[name].QPSCounter.Load()
 			fmt.Println("CurrentQps: ", CurrentQps)
-			if CurrentQps == 0 {
+			if CurrentQps == 0 && function.Spec.MinReplicas == 0 {
 				replicas = 0
 			} else {
-				if CurrentQps/(int64(TargetQps)*60) > 1 {
+				if CurrentQps/(int64(TargetQps)*60) > int64(replicas) {
 					fmt.Println("CurrentQps/(int64(TargetQps)*60): ", CurrentQps/(int64(TargetQps)*60))
 					if replicas+1 <= function.Spec.MaxReplicas {
 						replicas = replicas + 1
 					}
-				} else if CurrentQps/(int64(TargetQps)*60) < 1 {
+				} else if CurrentQps/(int64(TargetQps)*60) < int64(replicas) {
 					fmt.Println("CurrentQps/(int64(TargetQps)*60): ", CurrentQps/(int64(TargetQps)*60))
-					if replicas-1 >= function.Spec.MinReplicas {
+					if replicas-1 >= max(function.Spec.MinReplicas,1) {
 						replicas = replicas - 1
 					}
 				}
 			}
 			//重置QPSCounter为0
 			ServerlessGatewayInstance.functions[name].QPSCounter.Store(0)
-			if function.Spec.MinReplicas == 0 {
-				ServerlessGatewayInstance.functions[name].ScaleTarget = replicas
-			}
-			if replicas != tmp && function.Spec.MinReplicas == 0 {
+			ServerlessGatewayInstance.functions[name].ScaleTarget = replicas
+			if replicas != tmp {
 				//只有当MinReplicas为0时才会进行扩缩容
 				replicaset.Spec.Replicas = replicas
 				url := route.Prefix + route.ReplicasetScale
