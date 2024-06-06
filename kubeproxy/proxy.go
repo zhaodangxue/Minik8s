@@ -25,6 +25,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var ServerUrl = ""
+
 // func main() {
 // 	ipvs.Init()
 // 	//ipvs.TestConfig()
