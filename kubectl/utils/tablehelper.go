@@ -23,7 +23,7 @@ func TestTbl() table.Table {
 func PodTbl() table.Table {
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("NAME", "NAMESPACE", "UUID", "STATUS", "CREATION", "IP")
+	tbl := table.New("NAME", "NAMESPACE", "UUID", "STATUS", "CREATION", "IP", "HOSTIP")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
@@ -144,7 +144,7 @@ func PrintPodStatusTable(namespace string) error {
 	}
 	tbl := PodTbl()
 	for _, pod := range pods {
-		tbl.AddRow(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, pod.ObjectMeta.UID, pod.Status.PodPhase, pod.ObjectMeta.CreationTimestamp.Format("2006-01-02 15:04:05"), pod.Status.PodIP)
+		tbl.AddRow(pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, pod.ObjectMeta.UID, pod.Status.PodPhase, pod.ObjectMeta.CreationTimestamp.Format("2006-01-02 15:04:05"), pod.Status.PodIP, pod.Status.HostIP)
 	}
 	tbl.Print()
 	return nil
@@ -213,11 +213,11 @@ func PrintServiceTable() error {
 			if err != nil {
 				fmt.Println(err)
 			}
-			PodIp += endpoint.Spec.DestIP + ":" + strconv.FormatInt(int64(endpoint.Spec.DestPort),10) + ","
+			PodIp += endpoint.Spec.DestIP + ":" + strconv.FormatInt(int64(endpoint.Spec.DestPort), 10) + ","
 			edpts = append(edpts, &endpoint)
 		}
 		var clusterIP string
-	    ports := ""
+		ports := ""
 		selector := ""
 		for key, value := range svc.Spec.Selector {
 			selector += key + ":" + value + ", "
@@ -231,7 +231,7 @@ func PrintServiceTable() error {
 		} else {
 			clusterIP = svc.Status.ClusterIP
 		}
-	    
+
 		if PodIp == "" {
 			PodIp = "<none>"
 		}
