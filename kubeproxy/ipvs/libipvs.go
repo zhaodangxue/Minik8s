@@ -2,13 +2,15 @@ package ipvs
 
 import (
 	"fmt"
+	"minik8s/utils"
+	"net"
 	"os/exec"
 	"strconv"
-	"github.com/mqliang/libipvs"
-	log "github.com/sirupsen/logrus"
-	"net"
 	"syscall"
 	"time"
+
+	"github.com/mqliang/libipvs"
+	log "github.com/sirupsen/logrus"
 	//"github.com/coreos/go-iptables/iptables"
 )
 
@@ -59,6 +61,16 @@ func addService(ip string, port uint16) *libipvs.Service {
 	}
 	//绑定ip地址到flannel.1网卡上
 	// 等价于命令ip addr add 10.10.0.1/24 dev flannel.1
+	if ip == utils.GetLocalIP() {
+		//配置iptables:添加SNAT规则
+	    // 等价于命令iptables -t nat -A POSTROUTING -m ipvs  --vaddr 10.9.0.1 --vport 12 -j MASQUERADE
+	    args := []string{"-t", "nat", "-A", "POSTROUTING", "-m", "ipvs", "--vaddr", ip, "--vport", strconv.Itoa(int(svc.Port)), "-j", "MASQUERADE"}
+	    _, err := exec.Command("iptables", args...).CombinedOutput()
+	    if err != nil {
+		   fmt.Println(err.Error())
+	    }
+		return svc
+	}
 	args := []string{"addr", "add", ip + "/24", "dev", "flannel.1"}
 	_, err := exec.Command("ip", args...).CombinedOutput()
 	if err != nil {
