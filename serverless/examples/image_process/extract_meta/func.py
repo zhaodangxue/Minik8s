@@ -5,11 +5,13 @@ import numpy as np
 
 """
 params:{
+    couchdb_host: "",
     couchdb_username: "",
     couchdb_password: "",
     id: ""
 }
 res:{
+    couchdb_host: "",
     couchdb_username: "",
     couchdb_password: "",
     id: "",
@@ -30,7 +32,8 @@ def get_image_from_attachment(db, doc_id, attachment_name):
 
 def main(params):
     # Connect to CouchDB
-    couch = couchdb.Server()
+    # Example Host: 'http://192.168.1.14:5984'
+    couch = couchdb.Server(params['couchdb_host'])
     couch.resource.credentials = (params['couchdb_username'], params['couchdb_password'])
     src_doc_id = params['id']
     db = couch['images']

@@ -4,6 +4,7 @@ import numpy as np
 
 """
 params:{
+    couchdb_host: "",
     couchdb_username: "",
     couchdb_password: "",
     id: "",
@@ -14,6 +15,7 @@ params:{
     }
 }
 res:{
+    couchdb_host: "",
     couchdb_username: "",
     couchdb_password: "",
     id: "",
@@ -34,7 +36,7 @@ def get_image_from_attachment(db, doc_id, attachment_name):
 
 def main(params):
     # Connect to CouchDB
-    couch = couchdb.Server()
+    couch = couchdb.Server(params['couchdb_host'])
     couch.resource.credentials = (params['couchdb_username'], params['couchdb_password'])
     src_doc_id = params['id']
     db = couch['images']
@@ -43,8 +45,9 @@ def main(params):
     img = get_image_from_attachment(db, src_doc_id, 'image')
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Detect cat face
-    cat_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalcatface.xml')
+    # Detect human face
+    cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+    cat_cascade = cv2.CascadeClassifier(cascade_path)
     cats = cat_cascade.detectMultiScale(img_gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     for (x, y, w, h) in cats:
         img = cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
