@@ -243,7 +243,8 @@ func main() {
 	for {
 		select {
 		case pod := <-server.PodCreateChan:
-			podCreateHandler(pod)
+			// CHECK: 考虑多线程同步
+			go podCreateHandler(pod)
 		case <-server.HealthReportChan:
 			healthReport()
 		}
