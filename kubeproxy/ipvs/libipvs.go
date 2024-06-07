@@ -140,12 +140,11 @@ func bindEndpoint(svc *libipvs.Service, ip string, port uint16) *libipvs.Destina
 
 func DeleteEndpoint(svcKey string, dstKey string) {
 	if svc, ok := Services[svcKey]; ok {
-		dstNode, ok := svc.Endpoints[dstKey]
-		if !ok || dstNode == nil{
-			utils.Warn("[kubeproxy] Delete endpoint ", dstKey, " service:", svcKey, "don't have this endpoint!")
+		if _,ok2 := svc.Endpoints[dstKey]; !ok2{
+			log.Info("Delete No exist endpoint")
 			return
 		}
-		dst := dstNode.Endpoint
+		dst := svc.Endpoints[dstKey].Endpoint
 		unbindEndpoint(svc.Service, dst)
 		delete(svc.Endpoints, dstKey)
 	}

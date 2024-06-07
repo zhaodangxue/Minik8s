@@ -6,9 +6,9 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: hello
+    app: hello2
   ports:
     - name: hello-port
       port: 2345
-      targetPort: hello
+      targetPort: hello2
       protocol: TCP
