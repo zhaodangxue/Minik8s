@@ -34,7 +34,7 @@ Job的执行是异步且一对一的，即一个Job对应一个Pod，对于watch
 其包含名为`job`的label。
 */
 type Job struct {
-	Object
+	Object  `yaml:",inline"`
 	Spec   JobSpec   `yaml:"spec"`
 	Status JobStatus `yaml:"-"`
 }
@@ -66,3 +66,29 @@ const (
 	JobState_Success JobState = "success"
 	JobState_Failed  JobState = "failed"
 )
+
+func GetPodFromJob(job *Job) *Pod {
+	return &Pod{
+		Object: Object{
+			ObjectMeta: ObjectMeta{
+				Name:      "job-pod-" + job.Namespace + "-" + job.Name,
+				Namespace: job.Namespace,
+				Labels: map[string]string{
+					"job": job.GetObjectPath(),
+				},
+			},
+			TypeMeta: TypeMeta{
+				ApiVersion: "v1",
+				Kind:       "Pod",
+			},
+		},
+		Spec: PodSpec{
+			Containers: []Container{
+				{
+					Name:  "job-container",
+					Image: job.Status.ImageUrl,
+				},
+			},
+		},
+	}
+}

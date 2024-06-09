@@ -5,6 +5,7 @@ import (
 	"minik8s/apiserver/src/handler/event"
 	function_handler "minik8s/apiserver/src/handler/function"
 	hpa_handler "minik8s/apiserver/src/handler/hpa"
+	"minik8s/apiserver/src/handler/job"
 	node "minik8s/apiserver/src/handler/node"
 	persistentvolume_handler "minik8s/apiserver/src/handler/persistentvolume"
 	replicaset_handler "minik8s/apiserver/src/handler/replicaset"
@@ -37,6 +38,7 @@ var PostTable = map[string]HandlerFunc{
 	route.WorkflowPath:                workflow_handler.WorkflowApplyHandler,
 	route.FunctionPath:                function_handler.FunctionApplyHandler,
 	route.EventPath:                   event.EventCreateHandler,
+	route.JobPath:            job.JobCreateHandler,
 }
 
 var GetTable = map[string]HandlerFunc{
@@ -66,6 +68,7 @@ var GetTable = map[string]HandlerFunc{
 	route.HorizontalPodAutoscalerPathNamespace: hpa_handler.HPAGetWithNamespaceHandler,
 	route.HorizontalPodAutoscalerPath:          hpa_handler.HPAGetHandler,
 	route.FunctionPath:                         function_handler.FunctionGetHandler,
+	route.JobPath:                              job.JobGetAllHandler,
 }
 
 var PutTable = map[string]HandlerFunc{
