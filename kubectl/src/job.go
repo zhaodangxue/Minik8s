@@ -81,6 +81,6 @@ func GetJobInCluster(namespace, name string) (*apiobjects.Job, error) {
 func GetAllJobsInCluster() ([]*apiobjects.Job, error) {
 	url := route.Prefix + route.JobPath
 	jobs := []*apiobjects.Job{}
-	err := utils.GetUnmarshal(url, jobs)
+	err := utils.GetUnmarshal(url, &jobs)
 	return jobs, err
 }
