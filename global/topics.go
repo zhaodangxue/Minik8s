@@ -18,6 +18,7 @@ const (
 	WorkflowTopic                = "workflow"                // 工作流相关的信息
 	Functiontopic                = "function"                // 函数相关的信息
 	eventTopic 				     = "event"                   // 事件
+	jobTopic					 = "job"                     // Job相关的信息
 )
 
 //	func PodUpdateTopic(pod apiobjects.Pod) string {
@@ -72,4 +73,7 @@ func FunctionTopic() string {
 }
 func EventTopic() string {
 	return eventTopic
+}
+func JobTopic() string {
+	return jobTopic
 }

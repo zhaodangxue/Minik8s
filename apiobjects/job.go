@@ -52,7 +52,7 @@ type JobStatus struct {
 	// 任务的输出(json字符串)
 	Output string
 	// 任务所在的pod的引用
-	PodRef PodRef
+	PodRef ObjectRef
 	// Pod的状态(cache，注意一致性)
 	PodIp string
 }
