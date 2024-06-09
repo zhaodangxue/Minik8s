@@ -6,4 +6,4 @@ metadata:
 spec:
   buildOptions:
     extraCommands: []
-    functionFileDir: /opt/minik8s/jobs/example_job/
+    functionFileDir: /opt/minik8s/job/functions/basic

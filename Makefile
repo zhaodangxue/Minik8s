@@ -7,6 +7,7 @@ BUILDDIR=build
 BINDIR=$(BUILDDIR)/bin
 YAMLDIR=$(BUILDDIR)/yamls
 IMAGEDIR=$(BUILDDIR)/imagebase
+JOBDIR=$(BUILDDIR)/job
 FUNCTIONDIR=$(BUILDDIR)/functions
 DEV_INSTALL_DIR=/tmp/minik8s
 
@@ -40,13 +41,14 @@ deploy: clean build_cgo0
 	./scripts/deploy_to_worker.sh
 	echo "Application successfully deployed."
 
-_build: prepare bin_targets scripts yamls serverless
+_build: prepare bin_targets scripts yamls serverless job
 
 prepare: deps
 	mkdir -p $(BINDIR)
 	mkdir -p $(YAMLDIR)
 	mkdir -p $(IMAGEDIR)
 	mkdir -p $(FUNCTIONDIR)
+	mkdir -p $(JOBDIR)
 
 deps:
 	go mod tidy
@@ -58,7 +60,7 @@ clean:
 
 ##### Binaries #####
 
-bin_targets: kubelet kubectl apiserver scheduler controller proxy serverless_gateway
+bin_targets: kubelet kubectl apiserver scheduler controller proxy serverless_gateway jobserver
 
 .PHONY: kubelet kubectl apiserver scheduler controller proxy
 
@@ -82,6 +84,9 @@ controller:
 
 serverless_gateway:
 	$(GOBUILD) -o $(BINDIR)/sl_gtw -v -tags $(TAGS) serverless/gateway/cmd/server.go
+
+jobserver:
+	$(GOBUILD) -o $(BINDIR)/jobserver -v -tags $(TAGS) jobserver/cmd/server.go
 
 ##### Scripts #####
 
@@ -115,3 +120,17 @@ image_base:
 	cp -r serverless/imagebase/* $(IMAGEDIR)
 
 .PHONY: serverless serverless_examples image_base
+
+##### Job #####
+
+job: job_function job_image_base
+
+job_image_base:
+	mkdir -p $(JOBDIR)/imagebase
+	cp -r jobserver/imagebase/imagedata $(JOBDIR)/imagebase/
+
+job_function:
+	mkdir -p $(JOBDIR)/functions
+	cp -r jobserver/examples/* $(JOBDIR)/functions
+
+.PHONY: job_function job job_image_base
