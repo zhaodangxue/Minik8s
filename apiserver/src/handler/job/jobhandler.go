@@ -26,8 +26,7 @@ func JobCreateHandler(c *gin.Context) {
 	url := job.GetObjectPath()
 	val, _ := etcd.Get(url)
 	if val != "" {
-		c.String(200, "The job " + job.Name + " is already exist")
-		return
+		utils.Info("JobCreateHandler: job already exists, replacing")
 	}
 	jobJson, _ := json.Marshal(job)
 	err = etcd.Put(url, string(jobJson))
