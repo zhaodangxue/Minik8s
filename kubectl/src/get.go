@@ -57,6 +57,12 @@ func RunGet_Cmd(apiObjType string, apiObjName string) error {
 		err = ctlutils.PrintHPATable(namespace)
 	case "function":
 		err = ctlutils.PrintFunctionTable()
+	case "job":
+		jobs, err := GetAllJobsInCluster();
+		if err != nil {
+			return err
+		}
+		err = ctlutils.PrintJobTable(jobs)
 	}
 	return err
 }

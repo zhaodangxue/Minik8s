@@ -29,6 +29,8 @@ func init() {
 	wfCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
 	funcCommand.Flags().StringVarP(&filepath, "filepath", "f", "", "input a yaml filepath")
 	funcCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
+	jobCommand.Flags().StringVarP(&filepath, "filepath", "f", "", "input a yaml filepath") // use in create
+	jobCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")	// use in get
 	eventCommand.Flags().StringVarP(&filepath, "filepath", "f", "", "input a json filepath")
 	eventCommand.Flags().StringVarP(&namespace, "namespace", "n", "default", "input a namespace")
 	applyCmd.MarkFlagRequired("filepath")
@@ -39,6 +41,7 @@ func init() {
 	rootCmd.AddCommand(schedCommand)
 	rootCmd.AddCommand(wfCommand)
 	rootCmd.AddCommand(funcCommand)
+	rootCmd.AddCommand(jobCommand)
 	rootCmd.AddCommand(eventCommand)
 }
 

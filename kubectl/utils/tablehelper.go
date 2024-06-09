@@ -84,6 +84,13 @@ func FunctionTbl() table.Table {
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 	return tbl
 }
+func JobTbl() table.Table {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Name", "Namespace", "JobState", "Otuput", "ImageUrl", "PodIp", "PodPath")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	return tbl
+}
 func GetTestFromApiserver() (testyaml *apiobjects.TestYaml, err error) {
 	url := route.Prefix + route.TestCtlPath
 	err = utils.GetUnmarshal(url, &testyaml)
@@ -308,6 +315,16 @@ func PrintFunctionTable() error {
 	tbl := FunctionTbl()
 	for _, function := range functions {
 		tbl.AddRow(function.Name, function.Spec.MinReplicas, function.Spec.MaxReplicas, function.Spec.TargetQPSPerReplica, function.Status.ImageUrl, function.CreationTimestamp.Format("2006-01-02 15:04:05"))
+	}
+	tbl.Print()
+	return nil
+}
+
+func PrintJobTable(jobs []*apiobjects.Job) error {
+	tbl := JobTbl()
+	for _, job := range jobs {
+		tbl.AddRow(job.Name, job.Namespace, job.Status.JobState, job.Status.Output, 
+			job.Status.ImageUrl, job.Status.PodIp, job.Status.PodRef.GetObjectPath())
 	}
 	tbl.Print()
 	return nil
