@@ -48,6 +48,8 @@ func CreateImage(input *apiobjects.Job) (string, error) {
 		log.Error("[CreateImage] save image error: ", err)
 		return "", err
 	}
+	// FIXME: 硬编码了registry的地址
+	imageName = "192.168.1.15:5000/" + imageName + ":latest"
 	return imageName, nil
 }
 
