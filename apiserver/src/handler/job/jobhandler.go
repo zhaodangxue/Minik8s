@@ -45,10 +45,20 @@ func JobCreateHandler(c *gin.Context) {
 
 func JobGetAllHandler(c *gin.Context) {
 	url := route.JobPath
-	jobs, err := etcd.Get_prefix(url)
+	jobJsons, err := etcd.Get_prefix(url)
 	if err != nil {
 		c.String(500, "Get jobs failed")
 		return
+	}
+	jobs := []*apiobjects.Job{}
+	for _, jobJson := range jobJsons {
+		job := &apiobjects.Job{}
+		err := json.Unmarshal([]byte(jobJson), job)
+		if err != nil {
+			utils.Error("JobGetAllHandler: ", err)
+			continue
+		}
+		jobs = append(jobs, job)
 	}
 	c.JSON(200, jobs)
 }

@@ -1,4 +1,4 @@
-package kubectl__test
+package kubectl_test
 
 import (
 	ctlutils "minik8s/kubectl/utils"
