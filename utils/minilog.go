@@ -13,7 +13,7 @@ func init() {
 		log = logrus.New()
 	}
 	log.SetLevel(logLevel)
-	log.SetReportCaller(true)
+	log.SetReportCaller(false)
 }
 
 func Info(args ...interface{}) {
