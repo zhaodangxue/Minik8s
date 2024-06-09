@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Job
+metadata:
+  name: example-job
+  namespace: default
+spec:
+  buildOptions:
+    extraCommands: []
+    functionFileDir: /opt/minik8s/jobs/example_job/

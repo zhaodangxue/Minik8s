@@ -34,6 +34,8 @@ type PodState struct {
 	PodIP  string
 }
 
+type PodRef ObjectRef
+
 type PodStats struct {
 	CpuUsage    CpuUsage
 	MemoryUsage MemoryUsage
