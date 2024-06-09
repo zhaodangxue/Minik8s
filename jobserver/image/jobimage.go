@@ -28,6 +28,7 @@ func CreateImage(input *apiobjects.Job) (string, error) {
 
 	// 1.2 create the image
 	cmd := exec.Command("docker", "build", "-t", imageName, dstFilePath)
+	log.Info("[CreateImage] create image: ", cmd.String())
 	err = cmd.Run()
 	if err != nil {
 		log.Error("[CreateImage] create image error: ", err)
