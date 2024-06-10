@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"minik8s/apiobjects"
 	"minik8s/apiserver/src/route"
 	"minik8s/utils"
@@ -35,4 +36,44 @@ func handlePodStateUpdate(pod *apiobjects.Pod){
 	job := iJob.(*apiobjects.Job)
 	job.Status.PodIp = pod.Status.PodIP
 	job.Status.PodRef = pod.GetObjectRef()
+}
+
+func collectJobStatus(job *apiobjects.Job){
+	utils.Info("Collecting job status: ", job)
+	if job.Status.PodRef.Name == "" || job.Status.PodIp == "" {
+		utils.Debug("Ignoring job ", job.ObjectMeta.Name, ": Job pod is not ready")
+		return
+	}
+	joburl := "http://" + job.Status.PodIp + ":8080/status"
+	jsonmap := make(map[string]interface{})
+	err := utils.GetUnmarshal(joburl, &jsonmap)
+	if err != nil {
+		utils.Error("Error GetUnmarshal job status: ", err)
+		return
+	}
+	job.Status.JobState = jsonmap["status"].(apiobjects.JobState)
+	if job.Status.JobState == apiobjects.JobState_Success || job.Status.JobState == apiobjects.JobState_Failed {
+		jsonByte, err := json.Marshal(jsonmap)
+		if err != nil {
+			utils.Error("Error marshalling job status: ", err)
+			return
+		}
+		job.Status.Output = string(jsonByte)
+	}
+	return
+}
+
+func callJobRun(job *apiobjects.Job, jsonStr string) (responseJson map[string]interface{}, err error) {
+	utils.Info("Calling job run: ", job)
+	if job.Status.PodRef.Name == "" || job.Status.PodIp == "" {
+		utils.Debug("Ignoring run job ", job.ObjectMeta.Name, ": Job pod is not ready")
+		return
+	}
+	joburl := "http://" + job.Status.PodIp + ":8080/run"
+	response, err := utils.PostWithString(joburl, jsonStr)
+	if err != nil {
+		return
+	}
+	err = utils.ReadUnmarshal(response.Body, &responseJson)
+	return
 }

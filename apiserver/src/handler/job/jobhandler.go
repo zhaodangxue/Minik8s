@@ -63,3 +63,19 @@ func JobGetAllHandler(c *gin.Context) {
 	}
 	c.JSON(200, jobs)
 }
+
+func JobUpdateAllHandler(c *gin.Context) {
+	jobs := []*apiobjects.Job{}
+	utils.ReadUnmarshal(c.Request.Body, jobs)
+	for _, job := range jobs {
+		jobJson, _ := json.Marshal(job)
+		err := etcd.Put(job.GetObjectPath(), string(jobJson))
+		if err != nil {
+			utils.Error("JobUpdateAllHandler: ", err)
+			c.String(500, "Update job failed")
+			return
+		}
+		utils.Info("JobUpdateAllHandler: job ", job.Name, " is updated")
+	}
+	c.String(200, "the job is updated")
+}

@@ -78,6 +78,7 @@ var PutTable = map[string]HandlerFunc{
 	route.ReplicasetScale:                      replicaset_handler.ReplicasetScaleHandler,
 	route.HorizontalPodAutoscalerPathSpecified: hpa_handler.HPAUpdateHandler,
 	route.PodPathDetail:                        handler.PodUpdateHandler,
+	route.JobPath:                              job.JobUpdateAllHandler,
 }
 
 var DeleteTable = map[string]HandlerFunc{
