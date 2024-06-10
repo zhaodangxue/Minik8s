@@ -51,7 +51,7 @@ func collectJobStatus(job *apiobjects.Job){
 		utils.Error("Error GetUnmarshal job status: ", err)
 		return
 	}
-	job.Status.JobState = jsonmap["status"].(apiobjects.JobState)
+	job.Status.JobState = apiobjects.JobState(jsonmap["status"].(string))
 	if job.Status.JobState == apiobjects.JobState_Success || job.Status.JobState == apiobjects.JobState_Failed {
 		jsonByte, err := json.Marshal(jsonmap)
 		if err != nil {

@@ -66,7 +66,8 @@ func JobGetAllHandler(c *gin.Context) {
 
 func JobUpdateAllHandler(c *gin.Context) {
 	jobs := []*apiobjects.Job{}
-	utils.ReadUnmarshal(c.Request.Body, jobs)
+	utils.ReadUnmarshal(c.Request.Body, &jobs)
+	utils.Debug("JobUpdateAllHandler: get jobs:", jobs)
 	for _, job := range jobs {
 		jobJson, _ := json.Marshal(job)
 		err := etcd.Put(job.GetObjectPath(), string(jobJson))

@@ -44,7 +44,16 @@ func ClusterFullCheck() {
 	jobStatusFullCheck()
 
 	// 推送所有job到cluster
-	utils.PutWithJson(route.Prefix+route.JobPath, Jobs())
+	sendingJobs := []*apiobjects.Job{}
+	Jobs().Range(func(key, value any) bool {
+		sendingJobs = append(sendingJobs, value.(*apiobjects.Job))
+		return true
+	})
+	utils.Debug("Put jobs: ", sendingJobs)
+	_, err = utils.PutWithJson(route.Prefix+route.JobPath, sendingJobs)
+	if err != nil {
+		utils.Error("Put Job states Error: ", err)
+	}
 }
 
 func getAllJobs() (jobs []*apiobjects.Job, err error) {
