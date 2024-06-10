@@ -62,7 +62,7 @@ clean:
 
 bin_targets: kubelet kubectl apiserver scheduler controller proxy serverless_gateway jobserver
 
-.PHONY: kubelet kubectl apiserver scheduler controller proxy
+.PHONY: kubelet kubectl apiserver scheduler controller proxy jobserver
 
 kubelet:
 	$(GOBUILD) -o $(BINDIR)/kubelet -v -tags $(TAGS) kubelet/cmd/server.go
