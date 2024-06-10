@@ -30,6 +30,7 @@ func JobMessageHandler(message *redis.Message) {
 	}
 	switch action {
 	case apiobjects.Create:
+	case apiobjects.Update:
 		handleJobCreate(&job)
 	default:
 		utils.Warn("Unknown action type: ", action)
@@ -46,17 +47,7 @@ func PodStateMessageHandler(message *redis.Message) {
 	}
 	switch action {
 	case apiobjects.Update:
-		jobPath, ok := pod.Labels["job"]
-		if !ok {
-			utils.Debug("Ignoring Pod ", pod.ObjectMeta.Name, ": Pod has no job label: job")
-			return
-		}
-		job, ok := Jobs().Load(jobPath)
-		if !ok {
-			utils.Debug("Ignoring Pod ", pod.ObjectMeta.Name, ": Job not found: ", jobPath)
-			return
-		}
-		handlePodStateUpdate(job.(*apiobjects.Job), &pod)
+		handlePodStateUpdate(&pod)
 	default:
 		utils.Debug("Not supported podState action type", action)
 	}

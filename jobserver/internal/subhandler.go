@@ -20,8 +20,19 @@ func handleJobCreate(job *apiobjects.Job){
 	Jobs().Store(job.GetObjectPath(), job)
 }
 
-func handlePodStateUpdate(job *apiobjects.Job, pod *apiobjects.Pod){
+func handlePodStateUpdate(pod *apiobjects.Pod){
+	jobPath, ok := pod.Labels["job"]
+	if !ok {
+		utils.Debug("Ignoring Pod ", pod.ObjectMeta.Name, ": Pod has no job label: job")
+		return
+	}
+	iJob, ok := Jobs().Load(jobPath)
+	if !ok {
+		utils.Warn("Ignoring Pod ", pod.ObjectMeta.Name, ": Job not found: ", jobPath)
+		return
+	}
 	utils.Info("Handling pod state update: ", pod)
+	job := iJob.(*apiobjects.Job)
 	job.Status.PodIp = pod.Status.PodIP
 	job.Status.PodRef = pod.GetObjectRef()
 }

@@ -14,6 +14,7 @@ import (
 
 func JobCreateHandler(c *gin.Context) {
 	var job apiobjects.Job
+	var action = apiobjects.Create
 	err := utils.ReadUnmarshal(c.Request.Body, &job)
 	if err != nil {
 		c.String(200, err.Error())
@@ -26,6 +27,7 @@ func JobCreateHandler(c *gin.Context) {
 	url := job.GetObjectPath()
 	val, _ := etcd.Get(url)
 	if val != "" {
+		action = apiobjects.Update
 		utils.Info("JobCreateHandler: job already exists, replacing")
 	}
 	jobJson, _ := json.Marshal(job)
@@ -35,7 +37,7 @@ func JobCreateHandler(c *gin.Context) {
 		return
 	}
 	var topicMessage apiobjects.TopicMessage
-	topicMessage.ActionType = apiobjects.Create
+	topicMessage.ActionType = action
 	topicMessage.Object = string(jobJson)
 	topicMessageJson, _ := json.Marshal(topicMessage)
 	listwatch.Publish(global.JobTopic(), string(topicMessageJson))
