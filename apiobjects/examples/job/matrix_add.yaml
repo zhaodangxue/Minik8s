@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Job
+metadata:
+  name: matrix-add
+  namespace: default
+spec:
+  buildOptions:
+    extraCommands: 
+    - RUN apt update
+    - RUN apt install -y ssh
+    - RUN pip install paramiko
+    functionFileDir: /opt/minik8s/job/functions/matrixadd
